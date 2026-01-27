@@ -61,19 +61,39 @@ jobs:
       run: npm ci
     
     - name: Generate Prisma client
-      run: npx prisma generate
+      run: |
+        echo "Generating Prisma client..."
+        npx prisma generate
+        echo "Prisma client generation completed"
+        echo "Checking generated files..."
+        ls -la node_modules/.prisma/ || echo "node_modules/.prisma not found"
     
     - name: Create .prisma/client symlink
-      run: mkdir -p .prisma && ln -sf node_modules/.prisma/client .prisma/client
+      run: |
+        echo "Creating .prisma/client symlink..."
+        mkdir -p .prisma
+        ln -sf node_modules/.prisma/client .prisma/client
+        echo "Symlink created:"
+        ls -la .prisma/
     
     - name: Build application
       run: |
         set -e
+        echo "Starting build..."
         npm run build
+        echo "Build command completed"
+        echo "Current directory: $(pwd)"
+        echo "Directory contents:"
+        ls -la
+        echo "Checking for .next directory..."
         if [ ! -d ".next" ]; then
           echo "ERROR: .next directory was not created by build"
+          echo "Listing node_modules/.prisma directory:"
+          ls -la node_modules/.prisma/ || echo "node_modules/.prisma not found"
           exit 1
         fi
+        echo ".next directory exists, contents:"
+        ls -la .next/
       env:
         DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
