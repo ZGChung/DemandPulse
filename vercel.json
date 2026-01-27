@@ -1,11 +1,5 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
   "routes": [
     {
       "src": "/api/(.*)",
@@ -34,10 +28,5 @@
     "RATE_LIMIT_MAX_REQUESTS": "100",
     "RATE_LIMIT_WINDOW_MS": "900000"
   },
-  "regions": ["hkg1", "sin1", "syd1", "hnd1", "cdg1", "iad1"],
-  "functions": {
-    "app/api/**/*.ts": {
-      "maxDuration": 10
-    }
-  }
+  "regions": ["hkg1", "sin1", "syd1", "hnd1", "cdg1", "iad1"]
 }
