@@ -1,0 +1,40 @@
+title = "DemandPulse Security Configuration"
+
+[[rules]]
+description = "API Keys"
+regex = '''(?i)(?:api[_-]?key|secret[_-]?key|private[_-]?key|access[_-]?token|auth[_-]?token)['"]?\s*[:=]\s*['"][a-z0-9_\-]{20,}['"]'''
+tags = ["key", "api-key"]
+
+[[rules]]
+description = "DeepSeek API Key"
+regex = '''sk-[a-zA-Z0-9]{20,}'''
+tags = ["key", "deepseek"]
+
+[[rules]]
+description = "Database URLs"
+regex = '''(?:postgres|mysql|mongodb)://[^@]+@[^/]+/[^?\s]+'''
+tags = ["database", "credentials"]
+
+[[rules]]
+description = "JWT Secrets"
+regex = '''(?i)jwt[_-]?secret['"]?\s*[:=]\s*['"][a-z0-9_\-]{20,}['"]'''
+tags = ["jwt", "secret"]
+
+[[rules]]
+description = "Environment files"
+regex = '''\.env'''
+tags = ["env"]
+
+[allowlist]
+description = "Allowed patterns"
+paths = [
+  ".env.example",
+  ".env.local.example",
+  "**/*.test.ts",
+  "**/*.test.js",
+  "**/__tests__/**"
+]
+
+[[allowlist.regexes]]
+description = "Test API keys"
+regex = '''sk-test-.*'''

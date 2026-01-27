@@ -1,0 +1,43 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Authorization"
+      }
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1",
+      "headers": {
+        "X-Frame-Options": "DENY",
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "origin-when-cross-origin",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
+      }
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_APP_URL": "https://demandpulse.vercel.app",
+    "ENABLE_CLAUDE_CODE_PLUGIN": "true",
+    "ENABLE_AI_PROCESSING": "true",
+    "RATE_LIMIT_MAX_REQUESTS": "100",
+    "RATE_LIMIT_WINDOW_MS": "900000"
+  },
+  "regions": ["hkg1", "sin1", "syd1", "hnd1", "cdg1", "iad1"],
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 10
+    }
+  }
+}
