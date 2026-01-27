@@ -91,6 +91,9 @@ jobs:
     
     - name: Build application
       run: |
+        # Enable debug output
+        set -x
+        
         # Simple build with explicit failure
         echo "Running: npm run build"
         npm run build
