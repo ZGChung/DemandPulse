@@ -1,0 +1,211 @@
+// DemandPulse Database Schema
+// Designed with privacy and security as first principles
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Core requirement tracking with privacy controls
+model Requirement {
+  id                     String   @id @default(cuid())
+  
+  // Requirement content (user-provided)
+  originalRequirement    String   @db.Text
+  summarizedRequirement  String   @db.Text
+  
+  // Context from Claude Code
+  conversationId         String
+  workspacePath          String?
+  detectedAt             DateTime
+  
+  // Consent information
+  dataCollectionConsent  Boolean  @default(false)
+  contactConsent         Boolean  @default(false)
+  anonymizationConsent   Boolean  @default(true)
+  userProvidedEmail      String?  @db.VarChar(255)
+  consentedAt            DateTime?
+  
+  // Processing status
+  status                 RequirementStatus @default(PENDING)
+  processedAt            DateTime?
+  
+  // Privacy controls
+  anonymizedData         Json?    @db.JsonB // Stores anonymized version if consent given
+  dataRetentionDays      Int      @default(365)
+  scheduledDeletionAt    DateTime?
+  
+  // Timestamps
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  
+  // Indexes for performance and privacy compliance
+  @@index([conversationId])
+  @@index([status])
+  @@index([scheduledDeletionAt])
+  @@unique([conversationId, detectedAt])
+  
+  // Privacy constraint: If anonymization is consented, email must be null
+  @@check("(anonymizationConsent = true AND userProvidedEmail IS NULL) OR anonymizationConsent = false")
+}
+
+// AI processing results for requirements
+model RequirementProcessing {
+  id               String   @id @default(cuid())
+  requirementId    String   @unique
+  requirement      Requirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  
+  // AI analysis results
+  embeddings       Json?    @db.JsonB // Vector embeddings for clustering
+  categories       String[] // AI-detected categories
+  confidence       Float    @default(0.0)
+  processingLog    String   @db.Text
+  
+  // Timestamps
+  processedAt      DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  @@index([requirementId])
+}
+
+// Clustered requirements (similar needs grouped together)
+model RequirementCluster {
+  id               String   @id @default(cuid())
+  name             String
+  description      String   @db.Text
+  centroidEmbedding Json?   @db.JsonB // Center point of cluster
+  
+  // Statistics
+  requirementCount Int      @default(0)
+  firstDetectedAt  DateTime
+  lastDetectedAt   DateTime @updatedAt
+  
+  // Timestamps
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  // Relationships
+  requirements     Requirement[]
+  
+  @@index([createdAt])
+  @@index([requirementCount])
+}
+
+// Trend analysis over time
+model TrendAnalysis {
+  id               String   @id @default(cuid())
+  date             DateTime @unique // Date of analysis (daily)
+  
+  // Trend metrics
+  totalRequirements Int     @default(0)
+  newClusters       Int     @default(0)
+  topCategories     Json    @db.JsonB // JSON array of top categories
+  
+  // Growth metrics
+  growthRate        Float   @default(0.0)
+  trendingKeywords  String[] // Keywords showing growth
+  
+  // Timestamps
+  analyzedAt        DateTime @default(now())
+  
+  @@index([date])
+}
+
+// Privacy audit log (GDPR compliance)
+model PrivacyAuditLog {
+  id               String   @id @default(cuid())
+  
+  // Action information
+  action           PrivacyAction
+  entityType       String   // "Requirement", "User", etc.
+  entityId         String?
+  
+  // Actor information (system or user)
+  actorType        ActorType @default(SYSTEM)
+  actorId          String?
+  
+  // Changes made
+  changes          Json?    @db.JsonB
+  reason           String?  @db.Text
+  
+  // Timestamps
+  performedAt      DateTime @default(now())
+  
+  // Indexes for compliance reporting
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([performedAt])
+}
+
+// Data deletion queue for GDPR compliance
+model DataDeletionQueue {
+  id               String   @id @default(cuid())
+  
+  // What to delete
+  entityType       String   // "Requirement", "UserData", etc.
+  entityId         String
+  deletionReason   DeletionReason
+  
+  // Processing status
+  status           DeletionStatus @default(PENDING)
+  scheduledAt      DateTime
+  processedAt      DateTime?
+  
+  // Audit information
+  requestedBy      String?  // User ID or system process
+  auditLogId       String?  // Link to audit log
+  
+  // Timestamps
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  @@unique([entityType, entityId])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+// Enums for type safety
+enum RequirementStatus {
+  PENDING
+  PROCESSING
+  PROCESSED
+  CLUSTERED
+  REJECTED
+  DELETED
+}
+
+enum PrivacyAction {
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  EXPORT
+  ANONYMIZE
+  CONSENT_CHANGE
+}
+
+enum ActorType {
+  SYSTEM
+  USER
+  ADMIN
+  AUTOMATED
+}
+
+enum DeletionReason {
+  RETENTION_EXPIRED
+  USER_REQUEST
+  CONSENT_REVOKED
+  SYSTEM_CLEANUP
+}
+
+enum DeletionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
