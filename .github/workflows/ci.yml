@@ -29,7 +29,7 @@ jobs:
       run: npx prisma generate
     
     - name: Create .prisma/client symlink
-      run: mkdir -p .prisma && ln -sf ../node_modules/.prisma/client .prisma/client
+      run: mkdir -p .prisma && ln -sf node_modules/.prisma/client .prisma/client
     
     - name: Run linting
       run: npm run lint --if-present
@@ -64,10 +64,11 @@ jobs:
       run: npx prisma generate
     
     - name: Create .prisma/client symlink
-      run: mkdir -p .prisma && ln -sf ../node_modules/.prisma/client .prisma/client
+      run: mkdir -p .prisma && ln -sf node_modules/.prisma/client .prisma/client
     
     - name: Build application
       run: |
+        set -e
         npm run build
         if [ ! -d ".next" ]; then
           echo "ERROR: .next directory was not created by build"
@@ -88,7 +89,6 @@ jobs:
         name: build-artifacts
         path: .next/
         retention-days: 7
-        if-no-files-found: warn
 
   deploy:
     needs: build
