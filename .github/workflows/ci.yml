@@ -76,24 +76,51 @@ jobs:
         echo "Symlink created:"
         ls -la .prisma/
     
+    - name: Check environment before build
+      run: |
+        echo "=== ENVIRONMENT CHECK ==="
+        echo "Node version: $(node --version)"
+        echo "NPM version: $(npm --version)"
+        echo "Current directory: $(pwd)"
+        echo "Checking Prisma client..."
+        ls -la node_modules/.prisma/ || echo "node_modules/.prisma not found"
+        echo "Checking .prisma symlink..."
+        ls -la .prisma/ || echo ".prisma directory not found"
+        echo "Checking TypeScript configuration..."
+        cat tsconfig.json | grep -A5 -B5 "\.prisma/client"
+    
     - name: Build application
       run: |
-        set -e
-        echo "Starting build..."
-        npm run build --verbose
-        echo "Build command completed"
+        echo "=== STARTING BUILD ==="
         echo "Current directory: $(pwd)"
-        echo "Directory contents:"
+        echo "Initial directory contents:"
         ls -la
+        
+        echo "=== RUNNING NEXT.JS BUILD ==="
+        # Run build and capture exit code
+        BUILD_EXIT_CODE=0
+        npm run build --verbose || BUILD_EXIT_CODE=$?
+        echo "Build exit code: $BUILD_EXIT_CODE"
+        
+        echo "=== CHECKING BUILD RESULTS ==="
+        echo "Directory contents after build:"
+        ls -la
+        
         echo "Checking for .next directory..."
-        if [ ! -d ".next" ]; then
-          echo "ERROR: .next directory was not created by build"
-          echo "Listing node_modules/.prisma directory:"
+        if [ -d ".next" ]; then
+          echo "✓ .next directory exists"
+          echo ".next directory contents:"
+          ls -la .next/
+          echo "=== BUILD SUCCESS ==="
+          exit 0
+        else
+          echo "✗ ERROR: .next directory was not created by build"
+          echo "Build exit code was: $BUILD_EXIT_CODE"
+          echo "Checking node_modules/.prisma directory:"
           ls -la node_modules/.prisma/ || echo "node_modules/.prisma not found"
+          echo "=== BUILD FAILED ==="
           exit 1
         fi
-        echo ".next directory exists, contents:"
-        ls -la .next/
       env:
         DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
