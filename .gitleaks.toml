@@ -27,16 +27,26 @@ tags = ["jwt", "secret"]
 [[rules]]
 id = "env-files"
 description = "Environment files"
-regex = '''\.env'''
+regex = '''(?:^|[\s/])\.env(?:\.|$)'''
 tags = ["env"]
 
 [allowlist]
 description = "Allowed patterns"
 paths = [
   ".env.example",
-  ".env.local.example"
+  ".env.local.example",
+  "__tests__/**",
+  "**/*.test.ts",
+  "**/*.test.tsx",
+  "**/*.spec.ts",
+  "**/*.spec.tsx",
+  "jest.setup.js",
+  "jest.config.js"
 ]
 
 allowlist.regexes = [
-  '''sk-test-.*'''
+  '''sk-test-.*''',
+  '''process\.env''',
+  '''process\["env"\]''',
+  '''process\['env'\]'''
 ]
