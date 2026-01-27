@@ -55,7 +55,14 @@ describe('Environment Validation', () => {
     })
 
     it('should return default value for missing optional env var', () => {
+      // Temporarily delete the env var to test default value
+      const originalValue = process.env.NEXT_PUBLIC_APP_NAME
+      delete process.env.NEXT_PUBLIC_APP_NAME
       expect(getEnv('NEXT_PUBLIC_APP_NAME' as any, 'DefaultApp')).toBe('DefaultApp')
+      // Restore the original value
+      if (originalValue !== undefined) {
+        process.env.NEXT_PUBLIC_APP_NAME = originalValue
+      }
     })
   })
 

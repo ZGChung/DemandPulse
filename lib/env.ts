@@ -13,6 +13,7 @@ const optionalEnvVars = [
   'RATE_LIMIT_WINDOW_MS',
   'ENABLE_CLAUDE_CODE_PLUGIN',
   'ENABLE_AI_PROCESSING',
+  'NEXT_PUBLIC_APP_NAME',
 ] as const
 
 type RequiredEnvVar = typeof requiredEnvVars[number]

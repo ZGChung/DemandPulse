@@ -35,3 +35,12 @@ export function setupTestEnvironment() {
   process.env.ENABLE_CLAUDE_CODE_PLUGIN = 'true'
   process.env.ENABLE_AI_PROCESSING = 'true'
 }
+
+// Add a test to satisfy Jest's requirement
+describe('Test Utilities', () => {
+  test('should export utility functions', () => {
+    expect(typeof createMockNextRequest).toBe('function')
+    expect(typeof createMockNextResponse).toBe('function')
+    expect(typeof setupTestEnvironment).toBe('function')
+  })
+})

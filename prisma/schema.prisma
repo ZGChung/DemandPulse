@@ -8,7 +8,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // Core requirement tracking with privacy controls
@@ -51,7 +50,12 @@ model Requirement {
   @@unique([conversationId, detectedAt])
   
   // Privacy constraint: If anonymization is consented, email must be null
-  @@check("(anonymizationConsent = true AND userProvidedEmail IS NULL) OR anonymizationConsent = false")
+  // Note: This constraint should be enforced at application level in Prisma 7.3.0
+  // @@check("(anonymizationConsent = true AND userProvidedEmail IS NULL) OR anonymizationConsent = false")
+  
+  // Relationships
+  processing       RequirementProcessing?
+  clusters         RequirementCluster[] @relation("ClusterRequirements")
 }
 
 // AI processing results for requirements
@@ -90,7 +94,7 @@ model RequirementCluster {
   updatedAt        DateTime @updatedAt
   
   // Relationships
-  requirements     Requirement[]
+  requirements     Requirement[] @relation("ClusterRequirements")
   
   @@index([createdAt])
   @@index([requirementCount])

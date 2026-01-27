@@ -1,5 +1,6 @@
-import { PrismaClient, RequirementStatus, PrivacyAction, ActorType } from '@prisma/client'
-import { CollectedRequirement } from '@/types/claude-code'
+import { PrismaClient } from '../lib/generated/prisma'
+import { RequirementStatus, PrivacyAction, ActorType } from '../lib/generated/prisma/enums'
+import { CollectedRequirement } from '../types/claude-code'
 
 export class DatabaseService {
   private prisma: PrismaClient
@@ -93,7 +94,7 @@ export class DatabaseService {
       })
 
       // Apply privacy controls to all requirements
-      return requirements.map(req => this.applyPrivacyControls(req, false))
+      return requirements.map((req: any) => this.applyPrivacyControls(req, false))
     } catch (error) {
       console.error('Error fetching requirements by status:', error)
       throw new Error('Failed to fetch requirements')
