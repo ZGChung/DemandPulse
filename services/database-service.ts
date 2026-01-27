@@ -1,6 +1,5 @@
-import { PrismaClient } from '../lib/generated/prisma'
-import { RequirementStatus, PrivacyAction, ActorType } from '../lib/generated/prisma/enums'
-import { CollectedRequirement } from '../types/claude-code'
+import { PrismaClient, RequirementStatus, PrivacyAction, ActorType } from '@prisma/client'
+import { CollectedRequirement } from '@/types/claude-code'
 
 export class DatabaseService {
   private prisma: PrismaClient
