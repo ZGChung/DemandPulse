@@ -100,6 +100,15 @@ jobs:
           echo "SUCCESS: .next directory exists"
           echo "Contents of .next/:"
           ls -la .next/
+          
+          # Check if .next directory is empty
+          if [ -z "$(ls -A .next/)" ]; then
+            echo "WARNING: .next directory is empty!"
+            echo "Build may have failed silently."
+            exit 1
+          else
+            echo "SUCCESS: .next directory contains files"
+          fi
         else
           echo "FAILURE: .next directory was not created"
           echo "Current directory: $(pwd)"
