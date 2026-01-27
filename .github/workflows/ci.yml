@@ -98,6 +98,10 @@ jobs:
         echo "Installing Vercel CLI..."
         npm install --global vercel@latest
         
+        # Pull project settings
+        echo "Pulling Vercel project settings..."
+        vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        
         # Build with Vercel
         echo "Running: vercel build --prod"
         vercel build --prod
