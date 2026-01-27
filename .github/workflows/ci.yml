@@ -91,34 +91,20 @@ jobs:
     
     - name: Build application
       run: |
-        echo "=== STARTING BUILD ==="
-        echo "Current directory: $(pwd)"
-        echo "Initial directory contents:"
-        ls -la
+        # Simple build with explicit failure
+        echo "Running: npm run build"
+        npm run build
         
-        echo "=== RUNNING NEXT.JS BUILD ==="
-        # Run build and capture exit code
-        BUILD_EXIT_CODE=0
-        npm run build --verbose || BUILD_EXIT_CODE=$?
-        echo "Build exit code: $BUILD_EXIT_CODE"
-        
-        echo "=== CHECKING BUILD RESULTS ==="
-        echo "Directory contents after build:"
-        ls -la
-        
-        echo "Checking for .next directory..."
+        echo "Checking if .next directory was created..."
         if [ -d ".next" ]; then
-          echo "✓ .next directory exists"
-          echo ".next directory contents:"
+          echo "SUCCESS: .next directory exists"
+          echo "Contents of .next/:"
           ls -la .next/
-          echo "=== BUILD SUCCESS ==="
-          exit 0
         else
-          echo "✗ ERROR: .next directory was not created by build"
-          echo "Build exit code was: $BUILD_EXIT_CODE"
-          echo "Checking node_modules/.prisma directory:"
-          ls -la node_modules/.prisma/ || echo "node_modules/.prisma not found"
-          echo "=== BUILD FAILED ==="
+          echo "FAILURE: .next directory was not created"
+          echo "Current directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
           exit 1
         fi
       env:
