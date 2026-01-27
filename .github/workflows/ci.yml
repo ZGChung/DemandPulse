@@ -67,12 +67,20 @@ jobs:
       run: mkdir -p .prisma && ln -sf ../node_modules/.prisma/client .prisma/client
     
     - name: Build application
-      run: npm run build
+      run: |
+        npm run build
+        if [ ! -d ".next" ]; then
+          echo "ERROR: .next directory was not created by build"
+          exit 1
+        fi
       env:
         DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
         NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+    
+    - name: Verify build output
+      run: ls -la .next/ || echo "No .next directory found"
     
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -80,6 +88,7 @@ jobs:
         name: build-artifacts
         path: .next/
         retention-days: 7
+        if-no-files-found: warn
 
   deploy:
     needs: build
@@ -119,8 +128,6 @@ jobs:
     
     - name: Check for secrets
       uses: gitleaks/gitleaks-action@v2
-      with:
-        config-path: .gitleaks.toml
     
     - name: Dependency review
       uses: actions/dependency-review-action@v3
