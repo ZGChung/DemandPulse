@@ -128,11 +128,15 @@ jobs:
     - name: Verify build output
       run: ls -la .next/ || echo "No .next directory found"
     
-    - name: Upload build artifacts
+    - name: Upload source code for Vercel deployment
       uses: actions/upload-artifact@v4
       with:
-        name: build-artifacts
-        path: ./.next
+        name: source-code
+        path: |
+          .
+          !.next
+          !node_modules
+          !.git
         retention-days: 7
         include-hidden-files: true
         if-no-files-found: error
@@ -145,21 +149,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Download build artifacts
+    - name: Download source code for Vercel deployment
       uses: actions/download-artifact@v4
       with:
-        name: build-artifacts
-        path: .next/
-    
-    - name: Debug - Check build artifacts before deployment
-      run: |
-        echo "=== DEBUG: Checking build artifacts ==="
-        echo "Current directory: $(pwd)"
-        echo "Listing .next directory:"
-        ls -la .next/ || echo ".next directory not found"
-        echo "Checking .next/server directory:"
-        ls -la .next/server/ || echo ".next/server directory not found"
-        echo "=== DEBUG COMPLETE ==="
+        name: source-code
+        path: ./
     
     - name: Deploy to Vercel
       uses: amondnet/vercel-action@v25
@@ -167,7 +161,7 @@ jobs:
         vercel-token: ${{ secrets.VERCEL_TOKEN }}
         vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
         vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        vercel-args: '--prod --debug --skip-build'
+        vercel-args: '--prod'
         working-directory: .
     
     - name: Run database migrations
