@@ -80,7 +80,7 @@ jobs:
       run: |
         set -e
         echo "Starting build..."
-        npm run build
+        npm run build --verbose
         echo "Build command completed"
         echo "Current directory: $(pwd)"
         echo "Directory contents:"
