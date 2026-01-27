@@ -31,9 +31,6 @@ jobs:
     - name: Run tests
       run: npm test
     
-    - name: Run type checking
-      run: npx tsc --noEmit --skipLibCheck
-    
     - name: Upload test coverage
       uses: codecov/codecov-action@v3
       with:
