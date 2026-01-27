@@ -30,9 +30,7 @@ description = "Allowed patterns"
 paths = [
   ".env.example",
   ".env.local.example",
-  "**/*.test.ts",
-  "**/*.test.js",
-  "**/__tests__/**"
+  "__tests__/**"
 ]
 
 allowlist.regexes = [

@@ -163,10 +163,10 @@ jobs:
       run: |
         echo "Running Prisma migrations..."
         echo "DATABASE_URL is set: ${#DATABASE_URL} characters"
-        # Create .env file for Prisma 5.0.0
-        echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
         npx prisma migrate deploy
         echo "Migrations completed"
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
   security:
     runs-on: ubuntu-latest
