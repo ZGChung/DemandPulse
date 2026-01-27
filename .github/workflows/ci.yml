@@ -151,13 +151,24 @@ jobs:
         name: build-artifacts
         path: .next/
     
+    - name: Debug - Check build artifacts before deployment
+      run: |
+        echo "=== DEBUG: Checking build artifacts ==="
+        echo "Current directory: $(pwd)"
+        echo "Listing .next directory:"
+        ls -la .next/ || echo ".next directory not found"
+        echo "Checking .next/server directory:"
+        ls -la .next/server/ || echo ".next/server directory not found"
+        echo "=== DEBUG COMPLETE ==="
+    
     - name: Deploy to Vercel
       uses: amondnet/vercel-action@v25
       with:
         vercel-token: ${{ secrets.VERCEL_TOKEN }}
         vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
         vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        vercel-args: '--prod'
+        vercel-args: '--prod --debug'
+        working-directory: .
     
     - name: Run database migrations
       run: |
