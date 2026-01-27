@@ -35,5 +35,6 @@ paths = [
   "**/__tests__/**"
 ]
 
-[[allowlist.regexes]]
-regex = '''sk-test-.*'''
+allowlist.regexes = [
+  '''sk-test-.*'''
+]
