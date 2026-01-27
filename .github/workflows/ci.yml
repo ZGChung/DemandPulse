@@ -182,3 +182,4 @@ jobs:
     
     - name: Dependency review
       uses: actions/dependency-review-action@v3
+      if: github.event_name == 'pull_request'
