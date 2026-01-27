@@ -1,6 +1,5 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   env: {
     // Expose environment variables to the browser
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
