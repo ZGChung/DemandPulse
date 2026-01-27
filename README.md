@@ -2,6 +2,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 Deployment test: $(date)
 
+CI/CD test: $(date)
+
 ## Getting Started
 
 First, run the development server:
