@@ -147,13 +147,22 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
-    - uses: actions/checkout@v4
-    
     - name: Download source code for Vercel deployment
       uses: actions/download-artifact@v4
       with:
         name: source-code
         path: ./
+    
+    - name: Verify downloaded source code
+      run: |
+        echo "=== VERIFYING DOWNLOADED SOURCE CODE ==="
+        echo "Current directory: $(pwd)"
+        echo "Directory contents:"
+        ls -la
+        echo "Checking package.json:"
+        cat package.json
+        echo "Checking if node_modules exists:"
+        ls -la node_modules/ 2>/dev/null || echo "node_modules not found (expected)"
     
     - name: Deploy to Vercel
       uses: amondnet/vercel-action@v25

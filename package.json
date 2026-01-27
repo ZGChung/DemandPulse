@@ -2,6 +2,7 @@
   "name": "demand-pulse",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -13,7 +14,7 @@
   },
   "dependencies": {
     "@prisma/client": "^7.3.0",
-    "next": "14.2.25",
+    "next": "^14.2.26",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
