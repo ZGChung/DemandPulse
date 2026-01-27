@@ -1,26 +1,31 @@
 title = "DemandPulse Security Configuration"
 
 [[rules]]
+id = "api-keys"
 description = "API Keys"
 regex = '''(?i)(?:api[_-]?key|secret[_-]?key|private[_-]?key|access[_-]?token|auth[_-]?token)['"]?\s*[:=]\s*['"][a-z0-9_\-]{20,}['"]'''
 tags = ["key", "api-key"]
 
 [[rules]]
+id = "deepseek-api-key"
 description = "DeepSeek API Key"
 regex = '''sk-[a-zA-Z0-9]{20,}'''
 tags = ["key", "deepseek"]
 
 [[rules]]
+id = "database-urls"
 description = "Database URLs"
 regex = '''(?:postgres|mysql|mongodb)://[^@]+@[^/]+/[^?\s]+'''
 tags = ["database", "credentials"]
 
 [[rules]]
+id = "jwt-secrets"
 description = "JWT Secrets"
 regex = '''(?i)jwt[_-]?secret['"]?\s*[:=]\s*['"][a-z0-9_\-]{20,}['"]'''
 tags = ["jwt", "secret"]
 
 [[rules]]
+id = "env-files"
 description = "Environment files"
 regex = '''\.env'''
 tags = ["env"]
