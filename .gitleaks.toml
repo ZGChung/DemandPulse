@@ -29,8 +29,7 @@ tags = ["env"]
 description = "Allowed patterns"
 paths = [
   ".env.example",
-  ".env.local.example",
-  "__tests__/**"
+  ".env.local.example"
 ]
 
 allowlist.regexes = [
