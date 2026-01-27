@@ -162,8 +162,11 @@ jobs:
     - name: Run database migrations
       run: |
         echo "Running Prisma migrations..."
-        DATABASE_URL=${{ secrets.DATABASE_URL }} npx prisma migrate deploy
+        echo "DATABASE_URL is set: ${#DATABASE_URL} characters"
+        npx prisma migrate deploy
         echo "Migrations completed"
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
   security:
     runs-on: ubuntu-latest
