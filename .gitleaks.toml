@@ -36,5 +36,4 @@ paths = [
 ]
 
 [[allowlist.regexes]]
-description = "Test API keys"
 regex = '''sk-test-.*'''
