@@ -137,6 +137,7 @@ jobs:
           !.next
           !node_modules
           !.git
+          !package-lock.json
         retention-days: 7
         include-hidden-files: true
         if-no-files-found: error
