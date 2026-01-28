@@ -5,7 +5,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { validateEnv } from '../lib/env.ts';
+import { validateEnv } from '../lib/env';
 import dotenv from 'dotenv';
 
 // Load environment variables from .env.local

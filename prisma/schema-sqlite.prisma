@@ -8,6 +8,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 // Core requirement tracking with privacy controls
@@ -32,7 +33,6 @@ model Requirement {
 
   // User association (optional - for authenticated users)
   userId                String?
-  user                  User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   // Processing status
   status                 RequirementStatus @default(PENDING)
@@ -120,9 +120,7 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  // Relationships
-  accounts      Account[]
-  sessions      Session[]
+  // Link to requirements (optional)
   requirements  Requirement[]
 
   @@index([email])

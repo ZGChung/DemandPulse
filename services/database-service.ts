@@ -1,11 +1,12 @@
 import { PrismaClient, RequirementStatus, PrivacyAction, ActorType } from '@prisma/client'
 import { CollectedRequirement } from '@/types/claude-code'
+import { prisma } from '@/lib/prisma'
 
 export class DatabaseService {
   private prisma: PrismaClient
 
   constructor() {
-    this.prisma = new PrismaClient()
+    this.prisma = prisma
   }
 
   async storeRequirement(collectedRequirement: CollectedRequirement, userId?: string): Promise<string> {
