@@ -56,6 +56,21 @@ jobs:
       with:
         fetch-depth: 0
     
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm install --legacy-peer-deps
+    
+    - name: Generate Prisma client
+      run: npx prisma generate
+    
+    - name: Create .prisma/client symlink
+      run: mkdir -p .prisma && ln -sf node_modules/.prisma/client .prisma/client
+    
     - name: Deploy to Vercel
       uses: amondnet/vercel-action@v25
       with:
