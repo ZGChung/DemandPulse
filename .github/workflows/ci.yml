@@ -89,39 +89,31 @@ jobs:
         echo "Checking TypeScript configuration..."
         cat tsconfig.json | grep -A5 -B5 "\.prisma/client"
     
-    - name: Build application with Vercel
+    - name: Build application
       run: |
         # Enable debug output
         set -x
         
-        # Install Vercel CLI
-        echo "Installing Vercel CLI..."
-        npm install --global vercel@latest
+        # Simple build with explicit failure
+        echo "Running: npm run build"
+        npm run build
         
-        # Pull project settings
-        echo "Pulling Vercel project settings..."
-        vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-        
-        # Build with Vercel
-        echo "Running: vercel build --prod"
-        vercel build --prod
-        
-        echo "Checking if .vercel/output directory was created..."
-        if [ -d ".vercel/output" ]; then
-          echo "SUCCESS: .vercel/output directory exists"
-          echo "Contents of .vercel/output/:"
-          ls -la .vercel/output/
+        echo "Checking if .next directory was created..."
+        if [ -d ".next" ]; then
+          echo "SUCCESS: .next directory exists"
+          echo "Contents of .next/:"
+          ls -la .next/
           
-          # Check if .vercel/output directory is empty
-          if [ -z "$(ls -A .vercel/output/)" ]; then
-            echo "WARNING: .vercel/output directory is empty!"
+          # Check if .next directory is empty
+          if [ -z "$(ls -A .next/)" ]; then
+            echo "WARNING: .next directory is empty!"
             echo "Build may have failed silently."
             exit 1
           else
-            echo "SUCCESS: .vercel/output directory contains files"
+            echo "SUCCESS: .next directory contains files"
           fi
         else
-          echo "FAILURE: .vercel/output directory was not created"
+          echo "FAILURE: .next directory was not created"
           echo "Current directory: $(pwd)"
           echo "Directory contents:"
           ls -la
@@ -134,14 +126,15 @@ jobs:
         NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
     
     - name: Verify build output
-      run: ls -la .vercel/output/ || echo "No .vercel/output directory found"
+      run: ls -la .next/ || echo "No .next directory found"
     
-    - name: Upload build artifacts for Vercel deployment
+    - name: Upload source code for Vercel deployment
       uses: actions/upload-artifact@v4
       with:
-        name: build-artifacts
+        name: source-code
         path: |
           .
+          !.next
           !node_modules
           !.git
         retention-days: 7
@@ -159,22 +152,22 @@ jobs:
       with:
         fetch-depth: 0
     
-    - name: Download build artifacts for Vercel deployment
+    - name: Download source code for Vercel deployment
       uses: actions/download-artifact@v4
       with:
-        name: build-artifacts
+        name: source-code
         path: ./
     
-    - name: Verify downloaded build artifacts
+    - name: Verify downloaded source code
       run: |
-        echo "=== VERIFYING DOWNLOADED BUILD ARTIFACTS ==="
+        echo "=== VERIFYING DOWNLOADED SOURCE CODE ==="
         echo "Current directory: $(pwd)"
         echo "Directory contents:"
         ls -la
-        echo "Checking if .vercel/output directory exists:"
-        ls -la .vercel/output/ 2>/dev/null || echo ".vercel/output directory not found"
         echo "Checking package.json:"
         cat package.json
+        echo "Checking if node_modules exists:"
+        ls -la node_modules/ 2>/dev/null || echo "node_modules not found (expected)"
     
     - name: Deploy to Vercel
       uses: amondnet/vercel-action@v25
@@ -182,7 +175,7 @@ jobs:
         vercel-token: ${{ secrets.VERCEL_TOKEN }}
         vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
         vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        vercel-args: '--prod --prebuilt'
+        vercel-args: '--prod'
         working-directory: .
     
     - name: Run database migrations
