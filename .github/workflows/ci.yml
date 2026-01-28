@@ -97,6 +97,9 @@ jobs:
         # Enable debug output
         set -x
         
+        echo "Pulling Vercel project settings..."
+        vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        
         echo "Running vercel build to generate pre-built artifacts..."
         vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
         
