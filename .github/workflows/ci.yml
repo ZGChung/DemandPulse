@@ -139,16 +139,6 @@ jobs:
     - name: Verify build output
       run: ls -la .next/ || echo "No .next directory found"
     
-    - name: Upload Vercel build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: vercel-build
-        path: |
-          .vercel/output
-          node_modules
-        retention-days: 7
-        include-hidden-files: true
-        if-no-files-found: error
 
   deploy:
     needs: build
@@ -161,28 +151,38 @@ jobs:
       with:
         fetch-depth: 0
     
-    - name: Download Vercel build artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: vercel-build
-        path: .
     
-    - name: Verify downloaded build artifacts
+    - name: Verify source code
       run: |
-        echo "=== VERIFYING DOWNLOADED BUILD ARTIFACTS ==="
+        echo "=== VERIFYING SOURCE CODE ==="
         echo "Current directory: $(pwd)"
         echo "Directory contents:"
         ls -la
-        echo "Checking .vercel/output directory:"
-        ls -la .vercel/output/ 2>/dev/null || echo ".vercel/output not found"
+        echo "Checking if .next directory exists:"
+        ls -la .next/ 2>/dev/null || echo ".next directory not found"
+    
+    - name: Setup Node.js for deploy
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies for deploy
+      run: npm ci
+    
+    - name: Generate Prisma client for deploy
+      run: npx prisma generate
+    
+    - name: Create .prisma/client symlink for deploy
+      run: mkdir -p .prisma && ln -sf node_modules/.prisma/client .prisma/client
     
     - name: Install Vercel CLI
       run: npm install --global vercel@latest
       
-    - name: Deploy pre-built artifacts to Vercel
+    - name: Deploy to Vercel
       run: |
-        echo "Deploying pre-built artifacts to Vercel..."
-        vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+        echo "Deploying to Vercel..."
+        vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
       env:
         DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
