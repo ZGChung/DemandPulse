@@ -3,8 +3,35 @@ import { NextResponse } from "next/server";
 
 export default withAuth(
   function middleware(req) {
-    // You can add additional logic here if needed
-    return NextResponse.next();
+    // Handle CORS preflight requests
+    if (req.method === 'OPTIONS' && req.nextUrl.pathname.startsWith('/api/')) {
+      const response = new NextResponse(null, { status: 204 });
+      response.headers.set('Access-Control-Allow-Origin', process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
+      response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      response.headers.set('Access-Control-Allow-Credentials', 'true');
+      response.headers.set('Access-Control-Max-Age', '86400'); // 24 hours
+      return response;
+    }
+
+    // Add security headers to all responses
+    const response = NextResponse.next();
+
+    // Add CORS headers for API routes
+    if (req.nextUrl.pathname.startsWith('/api/')) {
+      response.headers.set('Access-Control-Allow-Origin', process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
+      response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      response.headers.set('Access-Control-Allow-Credentials', 'true');
+    }
+
+    // Additional security headers
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('X-Frame-Options', 'DENY');
+    response.headers.set('X-XSS-Protection', '1; mode=block');
+    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+    return response;
   },
   {
     callbacks: {
@@ -19,11 +46,9 @@ export default withAuth(
 export const config = {
   matcher: [
     /*
-     * Protect specific routes:
-     * - API routes that need authentication
-     * - Dashboard pages
+     * Apply middleware to all routes for security headers
+     * Specific authentication is handled in individual routes
      */
-    // "/api/requirements/:path*", // We'll handle auth in the route itself
-    "/dashboard/:path*", // Protect dashboard pages (if we add them)
+    "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 };
