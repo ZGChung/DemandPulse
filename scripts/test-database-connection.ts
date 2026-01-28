@@ -5,7 +5,11 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { validateEnv } from '../lib/env';
+import { validateEnv } from '../lib/env.ts';
+import dotenv from 'dotenv';
+
+// Load environment variables from .env.local
+dotenv.config({ path: '.env.local' });
 
 async function testDatabaseConnection() {
   console.log('🔍 Testing database connection...\n');
@@ -36,10 +40,17 @@ async function testDatabaseConnection() {
 
   // Basic URL validation
   try {
-    const url = new URL(databaseUrl.replace('postgresql://', 'http://'));
-    console.log(`   ✅ Valid URL format`);
-    console.log(`   Host: ${url.hostname}`);
-    console.log(`   Database: ${url.pathname.replace('/', '') || 'default'}\n`);
+    if (databaseUrl.startsWith('postgresql://')) {
+      const url = new URL(databaseUrl.replace('postgresql://', 'http://'));
+      console.log(`   ✅ PostgreSQL URL format`);
+      console.log(`   Host: ${url.hostname}`);
+      console.log(`   Database: ${url.pathname.replace('/', '') || 'default'}\n`);
+    } else if (databaseUrl.startsWith('file:')) {
+      console.log(`   ✅ SQLite URL format`);
+      console.log(`   Database file: ${databaseUrl.replace('file:', '')}\n`);
+    } else {
+      console.log(`   ⚠️  Unknown URL format: ${databaseUrl.substring(0, 50)}...\n`);
+    }
   } catch (error) {
     console.log('   ⚠️  URL format warning (continuing anyway)');
   }
@@ -53,23 +64,51 @@ async function testDatabaseConnection() {
     });
 
     // Test connection with a simple query
-    const result = await prisma.$queryRaw`SELECT version() as version`;
-    console.log('   ✅ Database connection successful!');
+    let result;
+    if (databaseUrl.startsWith('postgresql://')) {
+      result = await prisma.$queryRaw`SELECT version() as version`;
+      console.log('   ✅ Database connection successful!');
 
-    if (result && Array.isArray(result) && result[0]) {
-      const version = (result[0] as any).version;
-      console.log(`   PostgreSQL Version: ${version.split(',')[0]}`);
+      if (result && Array.isArray(result) && result[0]) {
+        const version = (result[0] as any).version;
+        console.log(`   PostgreSQL Version: ${version.split(',')[0]}`);
+      }
+    } else if (databaseUrl.startsWith('file:')) {
+      // SQLite connection test
+      result = await prisma.$queryRaw`SELECT sqlite_version() as version`;
+      console.log('   ✅ Database connection successful!');
+
+      if (result && Array.isArray(result) && result[0]) {
+        const version = (result[0] as any).version;
+        console.log(`   SQLite Version: ${version}`);
+      }
+    } else {
+      console.log('   ✅ Database connection successful! (unknown database type)');
     }
 
     // Test if tables exist
     console.log('\n4. Checking database schema...');
     try {
-      const tables = await prisma.$queryRaw`
-        SELECT table_name
-        FROM information_schema.tables
-        WHERE table_schema = 'public'
-        ORDER BY table_name
-      `;
+      let tables;
+      if (databaseUrl.startsWith('postgresql://')) {
+        tables = await prisma.$queryRaw`
+          SELECT table_name
+          FROM information_schema.tables
+          WHERE table_schema = 'public'
+          ORDER BY table_name
+        `;
+      } else if (databaseUrl.startsWith('file:')) {
+        // SQLite table query
+        tables = await prisma.$queryRaw`
+          SELECT name as table_name
+          FROM sqlite_master
+          WHERE type='table' AND name NOT LIKE 'sqlite_%'
+          ORDER BY name
+        `;
+      } else {
+        console.log('   ℹ️  Cannot check tables for unknown database type');
+        return;
+      }
 
       if (Array.isArray(tables) && tables.length > 0) {
         console.log(`   ✅ Found ${tables.length} table(s):`);
@@ -102,6 +141,14 @@ async function testDatabaseConnection() {
     } else if (error.message.includes('does not exist')) {
       console.log('\n   💡 Database Does Not Exist:');
       console.log('   Create the database first or check the database name');
+    } else if (error.message.includes('engine type "client"')) {
+      console.log('\n   💡 Prisma Client Configuration Issue:');
+      console.log('   Current schema is configured for PostgreSQL');
+      console.log('   For SQLite testing, update the schema or use PostgreSQL');
+      console.log('\n   Quick options:');
+      console.log('   1. Use simple test: npm run db:simple-test');
+      console.log('   2. Set up PostgreSQL locally');
+      console.log('   3. Use Neon PostgreSQL (cloud)');
     }
 
     return;
