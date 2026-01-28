@@ -71,6 +71,9 @@ jobs:
     - name: Create .prisma/client symlink
       run: mkdir -p .prisma && ln -sf node_modules/.prisma/client .prisma/client
     
+    - name: Build project
+      run: npm run build
+    
     - name: Deploy to Vercel
       uses: amondnet/vercel-action@v25
       with:
@@ -107,8 +110,6 @@ jobs:
     
     - name: Check for secrets
       uses: gitleaks/gitleaks-action@v2
-      with:
-        config-path: .gitleaks.toml
     
     - name: Dependency review
       uses: actions/dependency-review-action@v3
