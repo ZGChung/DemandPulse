@@ -169,14 +169,18 @@ jobs:
         echo "Checking if node_modules exists:"
         ls -la node_modules/ 2>/dev/null || echo "node_modules not found (expected)"
     
-    - name: Deploy to Vercel
-      uses: vercel/actions/deploy@v1
-      with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        vercel-args: '--prod'
-        working-directory: .
+    - name: Install Vercel CLI
+      run: npm install --global vercel@latest
+      
+    - name: Deploy to Vercel using CLI
+      run: |
+        echo "Deploying to Vercel..."
+        vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+      env:
+        DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+        NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
     
     - name: Run database migrations
       run: |
