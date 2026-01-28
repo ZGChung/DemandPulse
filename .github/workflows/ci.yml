@@ -75,13 +75,10 @@ jobs:
       run: npm run build
     
     - name: Deploy to Vercel
-      uses: amondnet/vercel-action@v25
-      with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        vercel-args: '--prod'
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+      run: |
+        npx vercel@latest deploy --prod --token=${{ secrets.VERCEL_TOKEN }} \
+          --scope=${{ secrets.VERCEL_ORG_ID }} \
+          --project=${{ secrets.VERCEL_PROJECT_ID }}
       env:
         DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
