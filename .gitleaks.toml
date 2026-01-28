@@ -37,7 +37,10 @@ paths = [
   ".env.local.example",
   "jest.setup.js",
   "jest.config.js",
-  "DEPLOYMENT.md"
+  "DEPLOYMENT.md",
+  "**/.next/**",
+  "**/node_modules/**",
+  "**/coverage/**"
 ]
 
 allowlist.regexes = [
