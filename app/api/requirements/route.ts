@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { DataCollectionFlow } from '@/services/data-collection-flow'
+import { DatabaseService } from '@/services/database-service'
 import { env } from '@/lib/env'
 
 // Initialize services
@@ -102,20 +103,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // In a real implementation, we would store the collected requirement in a database
-    // For now, we'll just return success
-    console.log('Requirement collected:', {
-      id: result.collectedRequirement?.id,
-      summary: result.collectedRequirement?.summarizedRequirement,
-      consent: result.collectedRequirement?.consent.consentOptions,
-    })
+    // Store the requirement in the database
+    const databaseService = new DatabaseService()
+    let storedRequirementId: string
+    try {
+      storedRequirementId = await databaseService.storeRequirement(result.collectedRequirement!)
+
+      // Log successful collection
+      console.log('Requirement collected and stored:', {
+        id: storedRequirementId,
+        summary: result.collectedRequirement?.summarizedRequirement,
+        consent: result.collectedRequirement?.consent.consentOptions,
+      })
+    } catch (error) {
+      console.error('Failed to store requirement:', error)
+      return NextResponse.json(
+        {
+          error: 'Failed to store requirement',
+          message: error instanceof Error ? error.message : 'Database error'
+        },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json(
       {
         success: true,
-        requirementId: result.collectedRequirement?.id,
-        message: 'Requirement successfully collected',
-        retentionDays: dataCollectionFlow.getFlowStatistics(), // Placeholder
+        requirementId: storedRequirementId,
+        message: 'Requirement successfully collected and stored',
+        retentionDays: 365, // Default retention period
+        privacyNotice: 'Your requirement has been stored with the privacy controls you selected.',
       },
       {
         status: 201,
@@ -141,19 +158,56 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  // This endpoint would return requirements in a real implementation
-  // For now, return a placeholder response
-  return NextResponse.json(
-    {
-      message: 'Requirements API is working',
-      endpoints: {
-        POST: '/api/requirements - Submit a new requirement',
+  try {
+    // Get query parameters
+    const { searchParams } = new URL(request.url)
+    const status = searchParams.get('status')
+    const limit = parseInt(searchParams.get('limit') || '50')
+    const offset = parseInt(searchParams.get('offset') || '0')
+    
+    // Get statistics
+    const databaseService = new DatabaseService()
+    const statistics = await databaseService.getStatistics()
+
+    // Get recent requirements
+    const requirements = await databaseService.getRequirementsByStatus(
+      status as any || 'PROCESSED',
+      Math.min(limit, 100) // Cap at 100 for performance
+    )
+    
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          statistics,
+          requirements: requirements.slice(offset, offset + limit),
+          pagination: {
+            total: requirements.length,
+            limit,
+            offset,
+            hasMore: offset + limit < requirements.length,
+          },
+        },
+        endpoints: {
+          POST: '/api/requirements - Submit a new requirement',
+          GET: '/api/requirements - Get requirements (optional query: status, limit, offset)',
+        },
+        rateLimit: {
+          maxRequests: env.rateLimitMaxRequests(),
+          windowMs: env.rateLimitWindowMs(),
+        },
       },
-      rateLimit: {
-        maxRequests: env.rateLimitMaxRequests(),
-        windowMs: env.rateLimitWindowMs(),
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error('Error fetching requirements:', error)
+    
+    return NextResponse.json(
+      { 
+        error: 'Failed to fetch requirements',
+        message: error instanceof Error ? error.message : 'Database error'
       },
-    },
-    { status: 200 }
-  )
+      { status: 500 }
+    )
+  }
 }

@@ -1,4 +1,16 @@
 import '@testing-library/jest-dom'
+import { TextEncoder, TextDecoder } from 'util'
+
+// Polyfill TextEncoder/TextDecoder for environments (like Jest) where they may be missing.
+// Prisma client and other libraries expect these to exist on the global object.
+if (!global.TextEncoder) {
+  global.TextEncoder = TextEncoder
+}
+
+if (!global.TextDecoder) {
+  // eslint-disable-next-line no-undef
+  global.TextDecoder = TextDecoder
+}
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({

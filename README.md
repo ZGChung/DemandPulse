@@ -1,41 +1,146 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DemandPulse
 
-Deployment test: $(date)
+**Real-time demand radar for the AI-native developer era**
 
-CI/CD test: $(date)
+DemandPulse aggregates and analyzes developer needs from AI coding workflows, providing a live signal of unmet market opportunities. The platform captures high-level requirement descriptions (not code) from developers using AI assistants, analyzes them with AI, and visualizes what developers are actually trying to build right now.
 
-## Getting Started
+## 🚀 Live Demo
 
-First, run the development server:
+- **Production**: https://demand-pulse.vercel.app
+- **GitHub Actions**: CI/CD pipeline with automated testing and deployment
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 📋 Features
+
+### Current Implementation
+- ✅ Real-time dashboard with demand overview
+- ✅ Requirement statistics and trending clusters
+- ✅ Claude Code integration for data collection
+- ✅ AI-powered requirement processing
+- ✅ Privacy-first design with user consent
+- ✅ PostgreSQL database with Prisma ORM
+- ✅ CI/CD pipeline with GitHub Actions
+- ✅ Automated deployment to Vercel
+
+### Coming Soon
+- 🔄 Real-time data ingestion from AI coding tools
+- 🔄 Advanced clustering and trend detection
+- 🔄 Developer opt-in connection layer
+- 🔄 B2B subscription dashboard
+- 🔄 API for demand intelligence
+
+## 🏗️ Architecture
+
+```
+Frontend: Next.js 14 (App Router) + TypeScript + Tailwind CSS
+Backend: Next.js API Routes + Prisma ORM
+Database: PostgreSQL (Neon.tech)
+AI Processing: DeepSeek API
+CI/CD: GitHub Actions → Vercel
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Getting Started
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Prerequisites
+- Node.js 20+
+- PostgreSQL database
+- DeepSeek API key
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Installation
 
-## Learn More
+1. Clone the repository:
+```bash
+git clone https://github.com/ZGChung/DemandPulse.git
+cd DemandPulse
+```
 
-To learn more about Next.js, take a look at the following resources:
+2. Install dependencies:
+```bash
+npm install
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
+# Edit .env.local with your configuration
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. Set up database:
+```bash
+npx prisma generate
+npx prisma db push
+```
 
-## Deploy on Vercel
+5. Run development server:
+```bash
+npm run dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+6. Open http://localhost:3000
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-CI/CD test Tue Jan 27 21:57:08 CST 2026
+## 📊 Development Roadmap
+
+### Phase 1: Core Platform (Current)
+- [x] Basic dashboard UI
+- [x] API infrastructure
+- [x] Database schema
+- [x] CI/CD pipeline
+- [x] Claude Code integration
+
+### Phase 2: Data Collection & Processing
+- [ ] Real-time requirement ingestion
+- [ ] AI-powered clustering
+- [ ] Trend detection algorithms
+- [ ] Data anonymization pipeline
+
+### Phase 3: Intelligence Layer
+- [ ] Advanced analytics dashboard
+- [ ] Search and discovery
+- [ ] API for external access
+- [ ] Custom reporting
+
+### Phase 4: Monetization & Scale
+- [ ] B2B subscription system
+- [ ] Developer connection layer
+- [ ] Enterprise features
+- [ ] Multi-region deployment
+
+## 🔧 API Endpoints
+
+- `GET /api/health` - System health check
+- `POST /api/requirements` - Submit new requirements
+- `GET /api/requirements` - Get requirements (with filtering)
+
+## 🧪 Testing
+
+```bash
+# Run tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run linting
+npm run lint
+
+# Type checking
+npm run typecheck
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+## 📞 Contact
+
+For questions or feedback, please open an issue on GitHub.
+
+---
+*Last updated: $(date)*

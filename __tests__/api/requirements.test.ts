@@ -6,6 +6,21 @@ import { DataCollectionFlow } from '@/services/data-collection-flow'
 // Mock the services
 jest.mock('@/services/data-collection-flow')
 
+// Mock the database service to avoid initializing a real PrismaClient in tests
+jest.mock('@/services/database-service', () => {
+  return {
+    DatabaseService: jest.fn().mockImplementation(() => ({
+      storeRequirement: jest.fn(),
+      getStatistics: jest.fn().mockResolvedValue({
+        totalRequirements: 0,
+        byStatus: { pending: 0, processed: 0, clustered: 0 },
+        privacyMetrics: { withContactConsent: 0, withAnonymization: 0 },
+      }),
+      getRequirementsByStatus: jest.fn().mockResolvedValue([]),
+    })),
+  }
+})
+
 describe('Requirements API Contract', () => {
   let mockDataCollectionFlow: jest.Mocked<DataCollectionFlow>
 

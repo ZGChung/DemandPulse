@@ -83,8 +83,9 @@ export const env = {
   // Required
   deepseekApiKey: () => getEnv('DEEPSEEK_API_KEY'),
   appUrl: () => getEnv('NEXT_PUBLIC_APP_URL'),
+  nextPublicAppUrl: () => getEnv('NEXT_PUBLIC_APP_URL'),
   appName: () => getEnv('NEXT_PUBLIC_APP_NAME', 'DemandPulse'),
-  
+
   // Optional with defaults
   databaseUrl: () => getEnv('DATABASE_URL', ''),
   nextAuthSecret: () => getEnv('NEXTAUTH_SECRET', ''),
