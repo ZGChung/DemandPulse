@@ -77,8 +77,7 @@ jobs:
     - name: Deploy to Vercel
       run: |
         npx vercel@latest deploy --prod --token=${{ secrets.VERCEL_TOKEN }} \
-          --scope=${{ secrets.VERCEL_ORG_ID }} \
-          --project=${{ secrets.VERCEL_PROJECT_ID }}
+          --scope=${{ secrets.VERCEL_ORG_ID }}
       env:
         DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
