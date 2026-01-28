@@ -19,7 +19,8 @@
     "db:generate": "prisma generate",
     "auto-compact:start": "npx ts-node .claude/start-auto-compact.ts",
     "auto-compact:stop": "npx ts-node .claude/stop-auto-compact.ts",
-    "auto-compact:test": "npx ts-node .claude/test-auto-compact.ts"
+    "auto-compact:test": "npx ts-node .claude/test-auto-compact.ts",
+    "mock:claude-code": "npx tsx scripts/mock-claude-code.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",

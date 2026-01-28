@@ -1,0 +1,23 @@
+{
+  "name": "mock-claude-code",
+  "version": "1.0.0",
+  "description": "Simple mock Claude Code integration for testing DemandPulse",
+  "main": "mock-claude-code.js",
+  "scripts": {
+    "start": "node mock-claude-code.js",
+    "test": "node mock-claude-code.js --count=0",
+    "send-one": "node mock-claude-code.js --count=1",
+    "send-five": "node mock-claude-code.js --count=5",
+    "send-stream": "node mock-claude-code.js --interval=2000",
+    "help": "node mock-claude-code.js --help"
+  },
+  "dependencies": {
+    "uuid": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "keywords": ["claude-code", "mock", "testing", "api", "demandpulse"],
+  "author": "DemandPulse Team",
+  "license": "MIT"
+}
