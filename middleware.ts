@@ -49,6 +49,6 @@ export const config = {
      * Apply middleware to all routes for security headers
      * Specific authentication is handled in individual routes
      */
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/health|api/mock).*)",
   ],
 };

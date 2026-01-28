@@ -19,10 +19,17 @@ let prismaConfig: any = {
   log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
 };
 
-// For Prisma Data Platform (prisma+postgres:// URLs)
-if (databaseUrl.includes("prisma+postgres://")) {
+// Configure based on database URL
+if (databaseUrl.startsWith("file:")) {
+  // SQLite database
+  prismaConfig.adapter = "sqlite";
+} else if (databaseUrl.includes("prisma+postgres://")) {
+  // Prisma Data Platform
   console.log("Using Prisma Data Platform with accelerateUrl");
   prismaConfig.accelerateUrl = databaseUrl;
+} else if (databaseUrl.startsWith("postgresql://")) {
+  // Standard PostgreSQL
+  prismaConfig.adapter = "postgresql";
 }
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient(prismaConfig);
