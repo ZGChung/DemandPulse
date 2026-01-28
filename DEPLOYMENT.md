@@ -20,11 +20,22 @@ NEXT_PUBLIC_APP_NAME=DemandPulse
 DEEPSEEK_API_KEY=sk-your-deepseek-api-key
 
 # Database
-DATABASE_URL=postgresql://username:password@host:port/database
+# For SQLite (development/testing):
+DATABASE_URL=file:./dev.db
 
-# Authentication (Optional for MVP)
+# For PostgreSQL (production):
+# DATABASE_URL=postgresql://username:password@host:port/database?sslmode=require
+
+# For Prisma Data Platform:
+# DATABASE_URL=prisma+postgres://prisma:password@aws-us-east-1.prisma-data.com/?api_key=your_api_key
+
+# Authentication
 NEXTAUTH_SECRET=your-nextauth-secret-here
 NEXTAUTH_URL=https://your-domain.vercel.app
+
+# GitHub OAuth
+GITHUB_ID=your_github_oauth_client_id
+GITHUB_SECRET=your_github_oauth_client_secret
 
 # Rate limiting
 RATE_LIMIT_MAX_REQUESTS=100
@@ -99,6 +110,29 @@ npx prisma db push
 2. Get connection string from Dashboard
 3. Run migrations
 
+### Prisma 7.3.0 Configuration Notes
+
+The project uses Prisma 7.3.0 which has different configuration requirements:
+
+#### SQLite Configuration
+- Use `DATABASE_URL=file:./dev.db` for development
+- Prisma client will automatically detect SQLite
+
+#### PostgreSQL Configuration
+- Regular PostgreSQL: `DATABASE_URL=postgresql://...`
+- Prisma Data Platform: `DATABASE_URL=prisma+postgres://...`
+
+#### Important Changes in Prisma 7.3.0
+1. **Engine Types**: Prisma 7.3.0 uses engine type "client" by default
+2. **Adapter/AccelerateUrl**: For Prisma Data Platform URLs, `accelerateUrl` is required
+3. **SQLite Support**: Works out of the box with file URLs
+
+#### Troubleshooting Prisma Configuration
+If you see "Using engine type 'client' requires either 'adapter' or 'accelerateUrl'" error:
+- For SQLite: Ensure DATABASE_URL starts with `file:`
+- For PostgreSQL: Use regular connection string (not prisma+postgres:// unless using Prisma Data Platform)
+- For Prisma Data Platform: Configuration is handled automatically in `lib/prisma.ts`
+
 ### 5. CI/CD Pipeline
 
 The GitHub Actions workflow (`/.github/workflows/ci.yml`) automatically:
@@ -131,6 +165,28 @@ For users in China, configure:
 ENABLE_EXTERNAL_ANALYTICS=false
 USE_CHINA_OPTIMIZED_APIS=true
 ```
+
+## Testing & Development
+
+### Mock Claude Code Integration
+For development and testing without actual Claude Code installation:
+
+```bash
+# Test the mock integration
+npm run mock:claude-code -- --count=5
+
+# Options:
+# --count=N      Number of mock requirements to generate (default: 1)
+# --interval=N   Interval between requests in ms (default: 1000)
+# --api-url=URL  API endpoint URL (default: http://localhost:3000)
+# --verbose      Show detailed output
+
+# Mock API endpoints (development only):
+# POST /api/mock/requirements   - Submit mock requirement without authentication
+# GET  /api/mock/requirements?count=N - Generate mock requirements
+```
+
+See `MOCK-CLAUDE-CODE.md` for complete documentation.
 
 ## Monitoring & Maintenance
 
