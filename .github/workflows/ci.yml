@@ -43,13 +43,18 @@ jobs:
         file: ./coverage/lcov.info
         fail_ci_if_error: false
 
-  build:
+    
+
+  deploy:
     needs: test
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -61,119 +66,9 @@ jobs:
       run: npm ci
     
     - name: Generate Prisma client
-      run: |
-        echo "Generating Prisma client..."
-        npx prisma generate
-        echo "Prisma client generation completed"
-        echo "Checking generated files..."
-        ls -la node_modules/.prisma/ || echo "node_modules/.prisma not found"
-    
-    - name: Create .prisma/client symlink
-      run: |
-        echo "Creating .prisma/client symlink..."
-        mkdir -p .prisma
-        ln -sf node_modules/.prisma/client .prisma/client
-        echo "Symlink created:"
-        ls -la .prisma/
-    
-    - name: Check environment before build
-      run: |
-        echo "=== ENVIRONMENT CHECK ==="
-        echo "Node version: $(node --version)"
-        echo "NPM version: $(npm --version)"
-        echo "Current directory: $(pwd)"
-        echo "Checking Prisma client..."
-        ls -la node_modules/.prisma/ || echo "node_modules/.prisma not found"
-        echo "Checking .prisma symlink..."
-        ls -la .prisma/ || echo ".prisma directory not found"
-        echo "Checking TypeScript configuration..."
-        cat tsconfig.json | grep -A5 -B5 "\.prisma/client"
-    
-    - name: Install Vercel CLI for build
-      run: npm install --global vercel@latest
-    
-    - name: Build with Vercel for pre-built artifacts
-      run: |
-        # Enable debug output
-        set -x
-        
-        echo "Pulling Vercel project settings..."
-        vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-        
-        echo "Running next build first..."
-        npm run build
-        
-        echo "Checking .next directory..."
-        ls -la .next/ || echo "No .next directory found"
-        
-        echo "Running vercel build to generate pre-built artifacts..."
-        vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-        
-        echo "Checking if .vercel/output directory was created..."
-        if [ -d ".vercel/output" ]; then
-          echo "SUCCESS: .vercel/output directory exists"
-          echo "Contents of .vercel/output/:"
-          ls -la .vercel/output/
-          
-          # Check if .vercel/output directory is empty
-          if [ -z "$(ls -A .vercel/output/)" ]; then
-            echo "WARNING: .vercel/output directory is empty!"
-            echo "Build may have failed silently."
-            exit 1
-          else
-            echo "SUCCESS: .vercel/output directory contains files"
-          fi
-        else
-          echo "FAILURE: .vercel/output directory was not created"
-          echo "Current directory: $(pwd)"
-          echo "Directory contents:"
-          ls -la
-          exit 1
-        fi
-      env:
-        DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-        DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-        NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
-    
-    - name: Verify build output
-      run: ls -la .next/ || echo "No .next directory found"
-    
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
-    steps:
-    - name: Checkout repository (for git info)
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    
-    
-    - name: Verify source code
-      run: |
-        echo "=== VERIFYING SOURCE CODE ==="
-        echo "Current directory: $(pwd)"
-        echo "Directory contents:"
-        ls -la
-        echo "Checking if .next directory exists:"
-        ls -la .next/ 2>/dev/null || echo ".next directory not found"
-    
-    - name: Setup Node.js for deploy
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-    
-    - name: Install dependencies for deploy
-      run: npm ci
-    
-    - name: Generate Prisma client for deploy
       run: npx prisma generate
     
-    - name: Create .prisma/client symlink for deploy
+    - name: Create .prisma/client symlink
       run: mkdir -p .prisma && ln -sf node_modules/.prisma/client .prisma/client
     
     - name: Install Vercel CLI
