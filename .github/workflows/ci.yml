@@ -71,6 +71,11 @@ jobs:
     - name: Create .prisma/client symlink
       run: mkdir -p .prisma && ln -sf node_modules/.prisma/client .prisma/client
     
+    - name: Pull Vercel project settings
+      run: |
+        npx vercel@latest pull --yes --token=${{ secrets.VERCEL_TOKEN }} \
+          --scope=${{ secrets.VERCEL_ORG_ID }}
+    
     - name: Build project with Vercel
       run: |
         npx vercel@latest build --prod --token=${{ secrets.VERCEL_TOKEN }} \
