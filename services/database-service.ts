@@ -8,7 +8,7 @@ export class DatabaseService {
     this.prisma = new PrismaClient()
   }
 
-  async storeRequirement(collectedRequirement: CollectedRequirement): Promise<string> {
+  async storeRequirement(collectedRequirement: CollectedRequirement, userId?: string): Promise<string> {
     try {
       // Calculate data retention based on consent
       const dataRetentionDays = this.calculateRetentionDays(collectedRequirement.consent)
@@ -28,19 +28,22 @@ export class DatabaseService {
           conversationId: collectedRequirement.context.conversationId,
           workspacePath: collectedRequirement.context.workspacePath,
           detectedAt: collectedRequirement.context.timestamp,
-          
+
           // Consent information
           dataCollectionConsent: collectedRequirement.consent.consentOptions.dataCollection,
           contactConsent: collectedRequirement.consent.consentOptions.contact,
           anonymizationConsent: collectedRequirement.consent.consentOptions.anonymization,
           userProvidedEmail: collectedRequirement.consent.userProvidedEmail,
           consentedAt: collectedRequirement.consent.consentedAt,
-          
+
+          // User association (if authenticated)
+          userId: userId,
+
           // Privacy controls
           anonymizedData,
           dataRetentionDays,
           scheduledDeletionAt,
-          
+
           // Status
           status: 'PENDING',
         },
@@ -84,10 +87,15 @@ export class DatabaseService {
     }
   }
 
-  async getRequirementsByStatus(status: RequirementStatus, limit = 100) {
+  async getRequirementsByStatus(status: RequirementStatus, limit = 100, userId?: string) {
     try {
+      const whereClause: any = { status };
+      if (userId) {
+        whereClause.userId = userId;
+      }
+
       const requirements = await this.prisma.requirement.findMany({
-        where: { status },
+        where: whereClause,
         take: limit,
         orderBy: { detectedAt: 'desc' },
       })

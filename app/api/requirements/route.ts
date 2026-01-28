@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { DataCollectionFlow } from '@/services/data-collection-flow'
 import { DatabaseService } from '@/services/database-service'
 import { env } from '@/lib/env'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 // Initialize services
 const dataCollectionFlow = new DataCollectionFlow()
@@ -35,11 +37,21 @@ function checkRateLimit(ip: string): { allowed: boolean; remaining: number; rese
 
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     // Get client IP for rate limiting
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
-    
-    // Check rate limit
-    const rateLimitResult = checkRateLimit(ip)
+
+    // Check rate limit (per user)
+    const rateLimitKey = `${session.user.id}:${ip}`;
+    const rateLimitResult = checkRateLimit(rateLimitKey)
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         {
@@ -107,7 +119,10 @@ export async function POST(request: NextRequest) {
     const databaseService = new DatabaseService()
     let storedRequirementId: string
     try {
-      storedRequirementId = await databaseService.storeRequirement(result.collectedRequirement!)
+      storedRequirementId = await databaseService.storeRequirement(
+        result.collectedRequirement!,
+        session.user.id
+      )
 
       // Log successful collection
       console.log('Requirement collected and stored:', {
@@ -164,7 +179,11 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
-    
+
+    // Check authentication (optional for GET)
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+
     // Get statistics
     const databaseService = new DatabaseService()
     const statistics = await databaseService.getStatistics()
@@ -172,7 +191,8 @@ export async function GET(request: NextRequest) {
     // Get recent requirements
     const requirements = await databaseService.getRequirementsByStatus(
       status as any || 'PROCESSED',
-      Math.min(limit, 100) // Cap at 100 for performance
+      Math.min(limit, 100), // Cap at 100 for performance
+      userId // Optional user filter
     )
     
     return NextResponse.json(

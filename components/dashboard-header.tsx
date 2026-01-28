@@ -1,3 +1,5 @@
+import { AuthStatus } from "./AuthStatus";
+
 export default function DashboardHeader() {
   return (
     <header className="bg-white shadow">
@@ -9,7 +11,7 @@ export default function DashboardHeader() {
               Real-time demand radar for AI-native developers
             </p>
           </div>
-          
+
           <div className="mt-4 sm:mt-0 flex items-center space-x-4">
             <div className="hidden sm:block">
               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
@@ -17,7 +19,9 @@ export default function DashboardHeader() {
                 Live
               </span>
             </div>
-            
+
+            <AuthStatus />
+
             <button className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">
               Connect Claude Code
             </button>
