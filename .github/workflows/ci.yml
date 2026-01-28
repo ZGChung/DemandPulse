@@ -23,7 +23,7 @@ jobs:
         cache: 'npm'
     
     - name: Install dependencies
-      run: npm ci
+      run: npm install --legacy-peer-deps
     
     - name: Generate Prisma client
       run: npx prisma generate
@@ -56,28 +56,14 @@ jobs:
       with:
         fetch-depth: 0
     
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Generate Prisma client
-      run: npx prisma generate
-    
-    - name: Create .prisma/client symlink
-      run: mkdir -p .prisma && ln -sf node_modules/.prisma/client .prisma/client
-    
-    - name: Install Vercel CLI
-      run: npm install --global vercel@latest
-      
     - name: Deploy to Vercel
-      run: |
-        echo "Deploying to Vercel..."
-        vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+      uses: amondnet/vercel-action@v25
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        vercel-args: '--prod'
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
       env:
         DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
