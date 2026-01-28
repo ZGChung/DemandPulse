@@ -172,6 +172,13 @@ jobs:
     
     - name: Install Vercel CLI
       run: npm install --global vercel@latest
+    
+    - name: Remove package-lock.json for Vercel build
+      run: |
+        echo "Removing package-lock.json to avoid npm ci conflicts..."
+        rm -f package-lock.json
+        echo "Checking if package-lock.json was removed:"
+        ls -la package-lock.json 2>/dev/null || echo "package-lock.json not found (good!)"
       
     - name: Deploy to Vercel using CLI
       run: |
