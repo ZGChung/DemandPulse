@@ -137,7 +137,9 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: vercel-build
-        path: .vercel/output
+        path: |
+          .vercel/output
+          node_modules
         retention-days: 7
         include-hidden-files: true
         if-no-files-found: error
@@ -157,7 +159,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: vercel-build
-        path: .vercel/output
+        path: .
     
     - name: Verify downloaded build artifacts
       run: |
