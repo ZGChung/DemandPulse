@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { DataCollectionFlow } from '@/services/data-collection-flow'
-import { DatabaseService } from '@/services/database-service'
+// DatabaseService imported dynamically to avoid Prisma client issues with SQLite
 import { randomUUID } from 'crypto'
 
 // Initialize services
@@ -65,33 +65,49 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Store the requirement in the database
-    const databaseService = new DatabaseService()
+    // Store the requirement in the database (or mock storage for SQLite)
     let storedRequirementId: string
-    try {
-      // Use a mock user ID for development
-      const mockUserId = 'mock-user-' + randomUUID().slice(0, 8)
+    const databaseUrl = process.env.DATABASE_URL || ''
 
-      storedRequirementId = await databaseService.storeRequirement(
-        result.collectedRequirement!,
-        mockUserId
-      )
-
-      // Log successful collection
-      console.log('[Mock] Requirement collected and stored:', {
+    if (databaseUrl.startsWith('file:')) {
+      // SQLite database - use mock storage to avoid Prisma 7.3.0 adapter issues
+      storedRequirementId = 'mock-' + randomUUID().slice(0, 8)
+      console.log('[Mock] Requirement collected with mock storage (SQLite):', {
         id: storedRequirementId,
         summary: result.collectedRequirement?.summarizedRequirement,
         consent: result.collectedRequirement?.consent.consentOptions,
+        note: 'Using mock storage due to SQLite adapter limitations'
       })
-    } catch (error) {
-      console.error('[Mock] Failed to store requirement:', error)
-      return NextResponse.json(
-        {
-          error: 'Failed to store requirement',
-          message: error instanceof Error ? error.message : 'Database error'
-        },
-        { status: 500 }
-      )
+    } else {
+      // Use real database service for PostgreSQL (dynamic import to avoid Prisma issues)
+      try {
+        const { DatabaseService } = await import('@/services/database-service')
+        const databaseService = new DatabaseService()
+
+        // Use a mock user ID for development
+        const mockUserId = 'mock-user-' + randomUUID().slice(0, 8)
+
+        storedRequirementId = await databaseService.storeRequirement(
+          result.collectedRequirement!,
+          mockUserId
+        )
+
+        // Log successful collection
+        console.log('[Mock] Requirement collected and stored:', {
+          id: storedRequirementId,
+          summary: result.collectedRequirement?.summarizedRequirement,
+          consent: result.collectedRequirement?.consent.consentOptions,
+        })
+      } catch (error) {
+        console.error('[Mock] Failed to store requirement:', error)
+        return NextResponse.json(
+          {
+            error: 'Failed to store requirement',
+            message: error instanceof Error ? error.message : 'Database error'
+          },
+          { status: 500 }
+        )
+      }
     }
 
     return NextResponse.json(

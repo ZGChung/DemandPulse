@@ -1,5 +1,33 @@
 import { withAuth } from "next-auth/middleware";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
+
+// Public routes that don't require authentication
+function isPublicRoute(req: NextRequest): boolean {
+  const pathname = req.nextUrl.pathname;
+  const method = req.method;
+
+  // Health check endpoint
+  if (pathname === '/api/health') {
+    return true;
+  }
+
+  // Mock endpoints (development only)
+  if (pathname.startsWith('/api/mock/')) {
+    return true;
+  }
+
+  // GET /api/requirements (public read access)
+  if (method === 'GET' && pathname === '/api/requirements') {
+    return true;
+  }
+
+  // OPTIONS requests (CORS preflight)
+  if (method === 'OPTIONS') {
+    return true;
+  }
+
+  return false;
+}
 
 export default withAuth(
   function middleware(req) {
@@ -35,7 +63,14 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token,
+      authorized: ({ token, req }) => {
+        // Allow public routes without authentication
+        if (isPublicRoute(req)) {
+          return true;
+        }
+        // Require authentication for all other routes
+        return !!token;
+      },
     },
     pages: {
       signIn: "/auth/signin",
@@ -49,6 +84,6 @@ export const config = {
      * Apply middleware to all routes for security headers
      * Specific authentication is handled in individual routes
      */
-    "/((?!_next/static|_next/image|favicon.ico|api/health|api/mock).*)",
+    "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 };
