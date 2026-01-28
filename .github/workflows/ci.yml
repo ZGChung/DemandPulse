@@ -23,7 +23,7 @@ jobs:
         cache: 'npm'
     
     - name: Install dependencies
-      run: npm install --legacy-peer-deps
+      run: npm ci
     
     - name: Generate Prisma client
       run: npx prisma generate
@@ -43,18 +43,13 @@ jobs:
         file: ./coverage/lcov.info
         fail_ci_if_error: false
 
-    
-
-  deploy:
+  build:
     needs: test
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+    - uses: actions/checkout@v4
     
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -63,27 +58,120 @@ jobs:
         cache: 'npm'
     
     - name: Install dependencies
-      run: npm install --legacy-peer-deps
+      run: npm ci
     
     - name: Generate Prisma client
-      run: npx prisma generate
+      run: |
+        echo "Generating Prisma client..."
+        npx prisma generate
+        echo "Prisma client generation completed"
+        echo "Checking generated files..."
+        ls -la node_modules/.prisma/ || echo "node_modules/.prisma not found"
     
     - name: Create .prisma/client symlink
-      run: mkdir -p .prisma && ln -sf node_modules/.prisma/client .prisma/client
+      run: |
+        echo "Creating .prisma/client symlink..."
+        mkdir -p .prisma
+        ln -sf node_modules/.prisma/client .prisma/client
+        echo "Symlink created:"
+        ls -la .prisma/
     
-    - name: Deploy to Vercel
-      uses: amondnet/vercel-action@v25
-      with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        vercel-args: '--prod'
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+    - name: Check environment before build
+      run: |
+        echo "=== ENVIRONMENT CHECK ==="
+        echo "Node version: $(node --version)"
+        echo "NPM version: $(npm --version)"
+        echo "Current directory: $(pwd)"
+        echo "Checking Prisma client..."
+        ls -la node_modules/.prisma/ || echo "node_modules/.prisma not found"
+        echo "Checking .prisma symlink..."
+        ls -la .prisma/ || echo ".prisma directory not found"
+        echo "Checking TypeScript configuration..."
+        cat tsconfig.json | grep -A5 -B5 "\.prisma/client"
+    
+    - name: Build application
+      run: |
+        # Enable debug output
+        set -x
+        
+        # Simple build with explicit failure
+        echo "Running: npm run build"
+        npm run build
+        
+        echo "Checking if .next directory was created..."
+        if [ -d ".next" ]; then
+          echo "SUCCESS: .next directory exists"
+          echo "Contents of .next/:"
+          ls -la .next/
+          
+          # Check if .next directory is empty
+          if [ -z "$(ls -A .next/)" ]; then
+            echo "WARNING: .next directory is empty!"
+            echo "Build may have failed silently."
+            exit 1
+          else
+            echo "SUCCESS: .next directory contains files"
+          fi
+        else
+          echo "FAILURE: .next directory was not created"
+          echo "Current directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
+          exit 1
+        fi
       env:
         DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
         NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+    
+    - name: Verify build output
+      run: ls -la .next/ || echo "No .next directory found"
+    
+    - name: Upload source code for Vercel deployment
+      uses: actions/upload-artifact@v4
+      with:
+        name: source-code
+        path: |
+          .
+          !.next
+          !node_modules
+          !.git
+        retention-days: 7
+        include-hidden-files: true
+        if-no-files-found: error
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Download source code for Vercel deployment
+      uses: actions/download-artifact@v4
+      with:
+        name: source-code
+        path: ./
+    
+    - name: Verify downloaded source code
+      run: |
+        echo "=== VERIFYING DOWNLOADED SOURCE CODE ==="
+        echo "Current directory: $(pwd)"
+        echo "Directory contents:"
+        ls -la
+        echo "Checking package.json:"
+        cat package.json
+        echo "Checking if node_modules exists:"
+        ls -la node_modules/ 2>/dev/null || echo "node_modules not found (expected)"
+    
+    - name: Deploy to Vercel
+      uses: amondnet/vercel-action@v25
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+        vercel-args: '--prod'
+        working-directory: .
     
     - name: Run database migrations
       run: |
@@ -99,8 +187,6 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
     
     - name: Run security audit
       run: npm audit --audit-level=high || true
