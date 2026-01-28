@@ -170,7 +170,7 @@ jobs:
         ls -la node_modules/ 2>/dev/null || echo "node_modules not found (expected)"
     
     - name: Deploy to Vercel
-      uses: amondnet/vercel-action@v25
+      uses: vercel/actions/deploy@v1
       with:
         vercel-token: ${{ secrets.VERCEL_TOKEN }}
         vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
