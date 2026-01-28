@@ -47,3 +47,6 @@ ds_api_key.txt
 *.secret
 
 /lib/generated/prisma
+
+# Claude Code
+.claude/

@@ -9,7 +9,12 @@
     "postinstall": "prisma generate",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "auto-compact:start": "npx ts-node .claude/start-auto-compact.ts",
+    "auto-compact:stop": "npx ts-node .claude/stop-auto-compact.ts",
+    "auto-compact:test": "npx ts-node .claude/test-auto-compact.ts",
+    "auto-compact:hooks-test": "node .claude/hooks/test-hooks.js",
+    "auto-compact:integration": "node .claude/hooks/auto-compact-integration.js"
   },
   "dependencies": {
     "@prisma/client": "^7.3.0",

@@ -60,6 +60,10 @@ export type HookEvent =
   | 'conversation_end'
   | 'code_generated'
   | 'requirement_detected'
+  | 'context_limit_approaching'
+  | 'context_limit_reached'
+  | 'auto_compact_triggered'
+  | 'compact_command_executed'
 
 export interface HookHandler {
   event: HookEvent
