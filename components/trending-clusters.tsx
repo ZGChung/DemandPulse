@@ -1,3 +1,5 @@
+import { FaShareAlt } from 'react-icons/fa';
+
 export default function TrendingClusters() {
   const clusters = [
     {
@@ -41,6 +43,16 @@ export default function TrendingClusters() {
       description: 'CI/CD, deployment, and infrastructure',
     },
   ]
+
+  const handleShare = async (cluster: any) => {
+    const text = `Check out this trending developer need: ${cluster.name} - ${cluster.description}. Discover more on DemandPulse!`;
+    try {
+      await navigator.clipboard.writeText(text);
+      alert('Copied to clipboard!');
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   return (
     <div className="bg-white shadow rounded-lg">
@@ -107,7 +119,14 @@ export default function TrendingClusters() {
                     </span>
                   </div>
                 </div>
-                <div className="ml-4 flex-shrink-0">
+                <div className="ml-4 flex-shrink-0 flex items-center space-x-2">
+                  <button
+                    onClick={() => handleShare(cluster)}
+                    className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                    title="Share this trend"
+                  >
+                    <FaShareAlt className="w-4 h-4" />
+                  </button>
                   <button className="text-sm font-medium text-blue-600 hover:text-blue-500">
                     View
                   </button>

@@ -1,4 +1,5 @@
 import { AuthStatus } from "./AuthStatus";
+import SubmitRequirementButton from "./submit-requirement-button";
 
 export default function DashboardHeader() {
   return (
@@ -21,6 +22,8 @@ export default function DashboardHeader() {
             </div>
 
             <AuthStatus />
+
+            <SubmitRequirementButton />
 
             <button className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">
               Connect Claude Code
