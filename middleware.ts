@@ -1,6 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { withAuth } from "next-auth/middleware";
 
+import { validateCSRFToken, setCSRFTokenCookie, getCSRFTokenFromRequest } from "@/lib/csrf";
+
 // Public routes that don't require authentication
 function isPublicRoute(req: NextRequest): boolean {
   const pathname = req.nextUrl.pathname;
@@ -59,11 +61,47 @@ export default withAuth(
       response.headers.set("Access-Control-Allow-Credentials", "true");
     }
 
+    // CSRF protection for state-changing API requests
+    if (req.nextUrl.pathname.startsWith("/api/")) {
+      const method = req.method.toUpperCase();
+      const isSafeMethod = ["GET", "HEAD", "OPTIONS"].includes(method);
+
+      // Skip CSRF for public routes
+      if (!isPublicRoute(req)) {
+        if (!isSafeMethod) {
+          // Validate CSRF token for unsafe methods
+          const csrfValidation = validateCSRFToken(req);
+          if (!csrfValidation.valid) {
+            return new NextResponse(
+              JSON.stringify({ error: "CSRF validation failed", message: csrfValidation.error }),
+              {
+                status: 403,
+                headers: {
+                  "Content-Type": "application/json",
+                  ...response.headers,
+                },
+              }
+            );
+          }
+        } else if (method === "GET") {
+          // Set CSRF token cookie for GET requests if not present
+          const existingToken = getCSRFTokenFromRequest(req);
+          if (!existingToken) {
+            setCSRFTokenCookie(response);
+          }
+        }
+      }
+    }
+
     // Additional security headers
     response.headers.set("X-Content-Type-Options", "nosniff");
     response.headers.set("X-Frame-Options", "DENY");
     response.headers.set("X-XSS-Protection", "1; mode=block");
     response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+    response.headers.set(
+      "Content-Security-Policy",
+      "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self';"
+    );
 
     return response;
   },

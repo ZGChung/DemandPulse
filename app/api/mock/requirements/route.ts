@@ -1,7 +1,14 @@
 import { randomUUID } from "crypto";
 
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
+import { sanitizeText } from "@/lib/validation";
+import {
+  requirementSubmissionSchema,
+  validateRequirementSubmission,
+  validateQueryParams,
+} from "@/lib/validation-middleware";
 import { DataCollectionFlow } from "@/services/data-collection-flow";
 // DatabaseService imported dynamically to avoid Prisma client issues with SQLite
 
@@ -23,32 +30,58 @@ export async function POST(request: NextRequest) {
 
   try {
     // Parse request body
-    const body = await request.json().catch(() => null);
+    let body;
+    try {
+      body = await request.json();
+    } catch (_error) {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+    }
 
     if (!body || typeof body !== "object") {
       return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
     }
 
-    const {
-      requirementId = randomUUID(),
-      originalRequirement,
-      summarizedRequirement,
-      context,
-      consent,
-    } = body;
+    // Add requirementId if missing (backward compatibility for mock endpoint)
+    const validatedBody = {
+      ...body,
+      requirementId: body.requirementId || randomUUID(),
+    };
 
-    // Validate required fields
-    if (!originalRequirement || !summarizedRequirement || !context || !consent) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    // Validate against Zod schema
+    let validatedData;
+    try {
+      validatedData = requirementSubmissionSchema.parse(validatedBody);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const errors = error.errors.map((err) => ({
+          path: err.path.join("."),
+          message: err.message,
+        }));
+        return NextResponse.json({ error: "Validation failed", details: errors }, { status: 400 });
+      }
+      throw error;
     }
+
+    // Run custom validation
+    const customValidation = validateRequirementSubmission(validatedData);
+    if (!customValidation.valid) {
+      return NextResponse.json(
+        { error: "Validation failed", details: customValidation.errors },
+        { status: 400 }
+      );
+    }
+
+    // Sanitize text fields
+    validatedData.originalRequirement = sanitizeText(validatedData.originalRequirement);
+    validatedData.summarizedRequirement = sanitizeText(validatedData.summarizedRequirement);
 
     // Process consent and collect requirement
     const result = await dataCollectionFlow.handleUserConsent(
-      requirementId,
-      originalRequirement,
-      summarizedRequirement,
-      context,
-      consent
+      validatedData.requirementId,
+      validatedData.originalRequirement,
+      validatedData.summarizedRequirement,
+      validatedData.context,
+      validatedData.consent
     );
 
     if (!result.success) {
@@ -144,61 +177,98 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { searchParams } = new URL(request.url);
-  const count = parseInt(searchParams.get("count") || "1");
+  try {
+    const { searchParams } = new URL(request.url);
 
-  // Generate mock requirements
-  const mockRequirements = Array.from({ length: Math.min(count, 10) }, (_, i) => {
-    const templates = [
-      {
-        original:
-          "I need to add user authentication to my Next.js app. Can you help me set up NextAuth.js with Google OAuth?",
-        summary: "Add NextAuth.js authentication with Google OAuth provider",
-        intent: "feature_request",
-      },
-      {
-        original:
-          "There's a bug where the API returns 500 error when the database connection times out. Need to add proper error handling and retry logic.",
-        summary: "Fix database connection timeout error with retry logic",
-        intent: "bug_fix",
-      },
-      {
-        original:
-          "The current dashboard is slow when loading large datasets. Can we implement virtual scrolling or pagination?",
-        summary: "Optimize dashboard performance with virtual scrolling",
-        intent: "improvement",
-      },
-    ];
+    // Define schema for mock query parameters
+    const mockQuerySchema = z.object({
+      count: z
+        .string()
+        .regex(/^\d+$/)
+        .transform(Number)
+        .pipe(z.number().min(1).max(100))
+        .optional(),
+    });
 
-    const template = templates[i % templates.length];
-    const now = new Date().toISOString();
-
-    return {
-      requirementId: randomUUID(),
-      originalRequirement: template.original,
-      summarizedRequirement: template.summary,
-      context: {
-        conversationId: randomUUID(),
-        workspacePath: "/Users/dev/projects/my-app",
-        timestamp: now,
-      },
-      consent: {
-        consentOptions: {
-          dataCollection: true,
-          contact: i % 3 === 0, // 33% chance of contact consent
-          anonymization: i % 2 === 0, // 50% chance of anonymization
+    // Validate query parameters
+    const validationResult = validateQueryParams(searchParams, mockQuerySchema);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid query parameters",
+          details: validationResult.errors.map((err) => ({
+            path: err.path.join("."),
+            message: err.message,
+          })),
         },
-        userProvidedEmail: i % 4 === 0 ? `user${i}@example.com` : undefined,
-        consentedAt: now,
-      },
-    };
-  });
+        { status: 400 }
+      );
+    }
 
-  return NextResponse.json({
-    success: true,
-    count: mockRequirements.length,
-    requirements: mockRequirements,
-    endpoint: "POST /api/mock/requirements - Submit a mock requirement (no auth required)",
-    note: "This endpoint is for development/testing only",
-  });
+    const { count = 1 } = validationResult.data;
+
+    // Generate mock requirements
+    const mockRequirements = Array.from({ length: Math.min(count, 10) }, (_, i) => {
+      const templates = [
+        {
+          original:
+            "I need to add user authentication to my Next.js app. Can you help me set up NextAuth.js with Google OAuth?",
+          summary: "Add NextAuth.js authentication with Google OAuth provider",
+          intent: "feature_request",
+        },
+        {
+          original:
+            "There's a bug where the API returns 500 error when the database connection times out. Need to add proper error handling and retry logic.",
+          summary: "Fix database connection timeout error with retry logic",
+          intent: "bug_fix",
+        },
+        {
+          original:
+            "The current dashboard is slow when loading large datasets. Can we implement virtual scrolling or pagination?",
+          summary: "Optimize dashboard performance with virtual scrolling",
+          intent: "improvement",
+        },
+      ];
+
+      const template = templates[i % templates.length];
+      const now = new Date().toISOString();
+
+      return {
+        requirementId: randomUUID(),
+        originalRequirement: template.original,
+        summarizedRequirement: template.summary,
+        context: {
+          conversationId: randomUUID(),
+          workspacePath: "/Users/dev/projects/my-app",
+          timestamp: now,
+        },
+        consent: {
+          consentOptions: {
+            dataCollection: true,
+            contact: i % 3 === 0, // 33% chance of contact consent
+            anonymization: i % 2 === 0, // 50% chance of anonymization
+          },
+          userProvidedEmail: i % 4 === 0 ? `user${i}@example.com` : undefined,
+          consentedAt: now,
+        },
+      };
+    });
+
+    return NextResponse.json({
+      success: true,
+      count: mockRequirements.length,
+      requirements: mockRequirements,
+      endpoint: "POST /api/mock/requirements - Submit a mock requirement (no auth required)",
+      note: "This endpoint is for development/testing only",
+    });
+  } catch (error) {
+    console.error("[Mock] Error generating mock requirements:", error);
+    return NextResponse.json(
+      {
+        error: "Internal server error",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
+  }
 }

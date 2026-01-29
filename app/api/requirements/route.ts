@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";
 import { env } from "@/lib/env";
+import { ValidationError } from "@/lib/validation";
+import {
+  validateRequirementBody,
+  RequirementSubmission,
+  validateQueryParams,
+  requirementQuerySchema,
+} from "@/lib/validation-middleware";
 import { DataCollectionFlow } from "@/services/data-collection-flow";
 import { DatabaseService } from "@/services/database-service";
 import { emailService } from "@/services/email-service";
@@ -70,27 +78,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse request body
-    const body = await request.json().catch(() => null);
-
-    if (!body || typeof body !== "object") {
-      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
-    }
-
-    const { requirementId, originalRequirement, summarizedRequirement, context, consent } = body;
-
-    // Validate required fields
-    if (!requirementId || !originalRequirement || !summarizedRequirement || !context || !consent) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    // Validate request body using validation middleware
+    let validatedData: RequirementSubmission;
+    try {
+      validatedData = await validateRequirementBody(request);
+    } catch (validationError) {
+      if (validationError instanceof ValidationError) {
+        return NextResponse.json(
+          { error: "Validation failed", message: validationError.message },
+          { status: 400 }
+        );
+      }
+      // Handle Zod validation errors
+      if (validationError instanceof z.ZodError) {
+        const errors = validationError.errors.map((err) => ({
+          path: err.path.join("."),
+          message: err.message,
+        }));
+        return NextResponse.json({ error: "Validation failed", details: errors }, { status: 400 });
+      }
+      // Re-throw unexpected errors
+      throw validationError;
     }
 
     // Process consent and collect requirement
     const result = await dataCollectionFlow.handleUserConsent(
-      requirementId,
-      originalRequirement,
-      summarizedRequirement,
-      context,
-      consent
+      validatedData.requirementId,
+      validatedData.originalRequirement,
+      validatedData.summarizedRequirement,
+      validatedData.context,
+      validatedData.consent
     );
 
     if (!result.success) {
@@ -181,9 +198,23 @@ export async function GET(request: NextRequest) {
   try {
     // Get query parameters
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get("status");
-    const limit = parseInt(searchParams.get("limit") || "50");
-    const offset = parseInt(searchParams.get("offset") || "0");
+
+    // Validate query parameters
+    const validationResult = validateQueryParams(searchParams, requirementQuerySchema);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid query parameters",
+          details: validationResult.errors.map((err) => ({
+            path: err.path.join("."),
+            message: err.message,
+          })),
+        },
+        { status: 400 }
+      );
+    }
+
+    const { status, limit = 50, offset = 0 } = validationResult.data;
 
     // Check authentication (optional for GET)
     const session = await getServerSession(authOptions);
@@ -195,7 +226,7 @@ export async function GET(request: NextRequest) {
 
     // Get recent requirements
     const requirements = await databaseService.getRequirementsByStatus(
-      (status as any) || "PROCESSED",
+      status || "PROCESSED",
       Math.min(limit, 100), // Cap at 100 for performance
       userId // Optional user filter
     );
