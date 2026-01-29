@@ -2,74 +2,79 @@
 // Currently uses console logging but can integrate with Resend, SendGrid, etc.
 
 export interface EmailRecipient {
-  email: string
-  name?: string
-  userId?: string
+  email: string;
+  name?: string;
+  userId?: string;
 }
 
 export interface EmailTemplate {
-  subject: string
-  body: string
-  htmlBody?: string
+  subject: string;
+  body: string;
+  htmlBody?: string;
 }
 
 export interface EmailOptions {
-  to: EmailRecipient
-  template: EmailTemplate
+  to: EmailRecipient;
+  template: EmailTemplate;
   metadata?: {
-    requirementId?: string
-    clusterId?: string
-    milestone?: string
-    digest?: string
-  }
+    requirementId?: string;
+    clusterId?: string;
+    milestone?: string;
+    digest?: string;
+  };
 }
 
 export class EmailService {
-  private enabled: boolean
-  private useMock: boolean
+  private enabled: boolean;
+  private useMock: boolean;
 
   constructor(config?: { enabled?: boolean; useMock?: boolean }) {
-    this.enabled = config?.enabled ?? true
-    this.useMock = config?.useMock ?? true
+    this.enabled = config?.enabled ?? true;
+    this.useMock = config?.useMock ?? true;
   }
 
   async sendEmail(options: EmailOptions): Promise<{ success: boolean; messageId?: string }> {
     if (!this.enabled) {
-      console.log('[EmailService] Email service disabled, skipping send:', options.template.subject)
-      return { success: false }
+      console.log(
+        "[EmailService] Email service disabled, skipping send:",
+        options.template.subject
+      );
+      return { success: false };
     }
 
     if (this.useMock) {
-      return this.sendMockEmail(options)
+      return this.sendMockEmail(options);
     }
 
     // In production, integrate with real email provider
     // return this.sendRealEmail(options)
-    console.warn('[EmailService] Real email provider not configured, using mock')
-    return this.sendMockEmail(options)
+    console.warn("[EmailService] Real email provider not configured, using mock");
+    return this.sendMockEmail(options);
   }
 
-  private async sendMockEmail(options: EmailOptions): Promise<{ success: boolean; messageId?: string }> {
-    const messageId = `mock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  private async sendMockEmail(
+    options: EmailOptions
+  ): Promise<{ success: boolean; messageId?: string }> {
+    const messageId = `mock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     console.log(`[EmailService] Mock email sent:
-  To: ${options.to.email}${options.to.name ? ` (${options.to.name})` : ''}
+  To: ${options.to.email}${options.to.name ? ` (${options.to.name})` : ""}
   Subject: ${options.template.subject}
   Body: ${options.template.body.substring(0, 100)}...
   Metadata: ${JSON.stringify(options.metadata || {})}
   Message ID: ${messageId}
-    `)
+    `);
 
     // Simulate async sending
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
-    return { success: true, messageId }
+    return { success: true, messageId };
   }
 
   // Email templates
   static templates = {
     welcome: (name?: string): EmailTemplate => ({
-      subject: `Welcome to DemandPulse${name ? `, ${name}` : ''}!`,
+      subject: `Welcome to DemandPulse${name ? `, ${name}` : ""}!`,
       body: `Welcome to DemandPulse!
 
 Thank you for joining our community of developers tracking emerging trends.
@@ -85,7 +90,7 @@ Get started by exploring the dashboard or installing our Claude Code plugin.
 Best,
 The DemandPulse Team`,
       htmlBody: `<div style="font-family: Arial, sans-serif; max-width: 600px;">
-        <h1 style="color: #2563eb;">Welcome to DemandPulse${name ? `, ${name}` : ''}!</h1>
+        <h1 style="color: #2563eb;">Welcome to DemandPulse${name ? `, ${name}` : ""}!</h1>
         <p>Thank you for joining our community of developers tracking emerging trends.</p>
 
         <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -104,11 +109,11 @@ The DemandPulse Team`,
           Best,<br>
           The DemandPulse Team
         </p>
-      </div>`
+      </div>`,
     }),
 
     requirementSubmitted: (requirementSummary: string): EmailTemplate => ({
-      subject: 'Your requirement has been submitted',
+      subject: "Your requirement has been submitted",
       body: `Thank you for submitting your requirement to DemandPulse!
 
 Requirement: "${requirementSummary}"
@@ -118,21 +123,25 @@ We've received your submission and will process it shortly. You'll be notified w
 View your submissions in your dashboard.
 
 Best,
-The DemandPulse Team`
+The DemandPulse Team`,
     }),
 
-    similarRequirementFound: (requirementSummary: string, count: number, clusterName?: string): EmailTemplate => ({
-      subject: `Similar requirement detected (${count} ${count === 1 ? 'match' : 'matches'})`,
+    similarRequirementFound: (
+      requirementSummary: string,
+      count: number,
+      clusterName?: string
+    ): EmailTemplate => ({
+      subject: `Similar requirement detected (${count} ${count === 1 ? "match" : "matches"})`,
       body: `We found similar requirements to yours!
 
 Your requirement: "${requirementSummary}"
-${clusterName ? `Cluster: ${clusterName}\n` : ''}
+${clusterName ? `Cluster: ${clusterName}\n` : ""}
 Number of similar requirements: ${count}
 
 This suggests other developers are working on similar challenges. You can explore this trend in your dashboard to see details and connect with the community.
 
 Best,
-The DemandPulse Team`
+The DemandPulse Team`,
     }),
 
     milestoneAchieved: (milestone: string, contributionCount: number): EmailTemplate => ({
@@ -144,37 +153,42 @@ You've contributed ${contributionCount} requirements to the community. Thank you
 Keep sharing requirements to unlock more achievements and help build the most comprehensive dataset of developer needs.
 
 Best,
-The DemandPulse Team`
+The DemandPulse Team`,
     }),
 
-    weeklyDigest: (trends: Array<{ name: string; growth: number; requirements: number }>): EmailTemplate => ({
-      subject: 'Your weekly DemandPulse digest',
+    weeklyDigest: (
+      trends: Array<{ name: string; growth: number; requirements: number }>
+    ): EmailTemplate => ({
+      subject: "Your weekly DemandPulse digest",
       body: `Here are the top trends from this week:
 
-${trends.map((t, i) => `${i + 1}. ${t.name}: ${t.requirements} requirements (${t.growth > 0 ? '+' : ''}${t.growth}% growth)`).join('\n')}
+${trends.map((t, i) => `${i + 1}. ${t.name}: ${t.requirements} requirements (${t.growth > 0 ? "+" : ""}${t.growth}% growth)`).join("\n")}
 
 Explore these trends in detail on your dashboard.
 
 Best,
-The DemandPulse Team`
-    })
-  }
+The DemandPulse Team`,
+    }),
+  };
 
   // Convenience methods
   async sendWelcomeEmail(to: EmailRecipient): Promise<{ success: boolean; messageId?: string }> {
     return this.sendEmail({
       to,
       template: EmailService.templates.welcome(to.name),
-      metadata: { milestone: 'welcome' }
-    })
+      metadata: { milestone: "welcome" },
+    });
   }
 
-  async sendRequirementSubmittedEmail(to: EmailRecipient, requirementSummary: string): Promise<{ success: boolean; messageId?: string }> {
+  async sendRequirementSubmittedEmail(
+    to: EmailRecipient,
+    requirementSummary: string
+  ): Promise<{ success: boolean; messageId?: string }> {
     return this.sendEmail({
       to,
       template: EmailService.templates.requirementSubmitted(requirementSummary),
-      metadata: { requirementId: 'submitted' }
-    })
+      metadata: { requirementId: "submitted" },
+    });
   }
 
   async sendSimilarRequirementEmail(
@@ -185,45 +199,56 @@ The DemandPulse Team`
   ): Promise<{ success: boolean; messageId?: string }> {
     return this.sendEmail({
       to,
-      template: EmailService.templates.similarRequirementFound(requirementSummary, count, clusterName),
-      metadata: { clusterId: clusterName }
-    })
+      template: EmailService.templates.similarRequirementFound(
+        requirementSummary,
+        count,
+        clusterName
+      ),
+      metadata: { clusterId: clusterName },
+    });
   }
 
-  async sendMilestoneEmail(to: EmailRecipient, milestone: string, contributionCount: number): Promise<{ success: boolean; messageId?: string }> {
+  async sendMilestoneEmail(
+    to: EmailRecipient,
+    milestone: string,
+    contributionCount: number
+  ): Promise<{ success: boolean; messageId?: string }> {
     return this.sendEmail({
       to,
       template: EmailService.templates.milestoneAchieved(milestone, contributionCount),
-      metadata: { milestone }
-    })
+      metadata: { milestone },
+    });
   }
 
-  async sendWeeklyDigest(to: EmailRecipient, trends: Array<{ name: string; growth: number; requirements: number }>): Promise<{ success: boolean; messageId?: string }> {
+  async sendWeeklyDigest(
+    to: EmailRecipient,
+    trends: Array<{ name: string; growth: number; requirements: number }>
+  ): Promise<{ success: boolean; messageId?: string }> {
     return this.sendEmail({
       to,
       template: EmailService.templates.weeklyDigest(trends),
-      metadata: { digest: 'weekly' }
-    })
+      metadata: { digest: "weekly" },
+    });
   }
 
   // Configuration
   setEnabled(enabled: boolean): void {
-    this.enabled = enabled
-    console.log(`[EmailService] Email service ${enabled ? 'enabled' : 'disabled'}`)
+    this.enabled = enabled;
+    console.log(`[EmailService] Email service ${enabled ? "enabled" : "disabled"}`);
   }
 
   setUseMock(useMock: boolean): void {
-    this.useMock = useMock
-    console.log(`[EmailService] Using ${useMock ? 'mock' : 'real'} email provider`)
+    this.useMock = useMock;
+    console.log(`[EmailService] Using ${useMock ? "mock" : "real"} email provider`);
   }
 
   getStatus(): { enabled: boolean; useMock: boolean } {
     return {
       enabled: this.enabled,
-      useMock: this.useMock
-    }
+      useMock: this.useMock,
+    };
   }
 }
 
 // Singleton instance
-export const emailService = new EmailService()
+export const emailService = new EmailService();

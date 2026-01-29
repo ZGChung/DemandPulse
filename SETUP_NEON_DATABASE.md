@@ -5,16 +5,19 @@ This guide walks you through setting up a Neon PostgreSQL database for the Deman
 ## Option 1: Create a Neon PostgreSQL Database (Recommended)
 
 ### Step 1: Sign up for Neon
+
 1. Go to [neon.tech](https://neon.tech) and sign up for a free account
 2. Neon offers a generous free tier with 3 projects, 10GB storage, and 500MB of RAM
 
 ### Step 2: Create a New Project
+
 1. After signing in, click "Create a project"
 2. Name your project "DemandPulse" or similar
 3. Select PostgreSQL version 16 (recommended)
 4. Choose a region close to your users (e.g., us-east-2 for Ohio)
 
 ### Step 3: Get Your Connection String
+
 1. Once the project is created, go to the "Connection Details" section
 2. Copy the connection string that looks like:
    ```
@@ -23,6 +26,7 @@ This guide walks you through setting up a Neon PostgreSQL database for the Deman
 3. You can also find it under "Connection Details" → "PSQL"
 
 ### Step 4: Update Environment Variables
+
 1. Open `.env.local` in your project root
 2. Uncomment the Neon PostgreSQL line and paste your connection string:
    ```bash
@@ -31,6 +35,7 @@ This guide walks you through setting up a Neon PostgreSQL database for the Deman
 3. Make sure to replace `[password]` and `[instance]` with your actual values
 
 ### Step 5: Test the Connection
+
 Run the following commands to test your database connection:
 
 ```bash
@@ -49,11 +54,13 @@ npx prisma db push
 If you prefer to use a local PostgreSQL database for development:
 
 ### Step 1: Install PostgreSQL
+
 - **macOS**: `brew install postgresql`
 - **Ubuntu/Debian**: `sudo apt install postgresql postgresql-contrib`
 - **Windows**: Download from [postgresql.org](https://www.postgresql.org/download/windows/)
 
 ### Step 2: Start PostgreSQL
+
 ```bash
 # macOS with Homebrew
 brew services start postgresql
@@ -66,7 +73,9 @@ createdb demandpulse
 ```
 
 ### Step 3: Update Environment Variables
+
 In `.env.local`, uncomment the local PostgreSQL line:
+
 ```bash
 DATABASE_URL=postgresql://username:password@localhost:5432/demandpulse
 ```
@@ -76,7 +85,7 @@ DATABASE_URL=postgresql://username:password@localhost:5432/demandpulse
 Create a `docker-compose.yml` file:
 
 ```yaml
-version: '3.8'
+version: "3.8"
 services:
   postgres:
     image: postgres:16-alpine
@@ -94,6 +103,7 @@ volumes:
 ```
 
 Then update `.env.local`:
+
 ```bash
 DATABASE_URL=postgresql://demandpulse:password@localhost:5432/demandpulse
 ```
@@ -101,6 +111,7 @@ DATABASE_URL=postgresql://demandpulse:password@localhost:5432/demandpulse
 ## Database Operations
 
 ### Run Migrations
+
 ```bash
 # Push schema changes
 npx prisma db push
@@ -110,11 +121,13 @@ npx prisma migrate dev --name init
 ```
 
 ### View Database with Prisma Studio
+
 ```bash
 npx prisma studio
 ```
 
 ### Reset Database
+
 ```bash
 npx prisma migrate reset
 ```
@@ -122,16 +135,19 @@ npx prisma migrate reset
 ## Troubleshooting
 
 ### Connection Issues
+
 1. **SSL Mode**: Neon requires SSL. Make sure `?sslmode=require` is in your connection string
 2. **Timeout**: Add `&connect_timeout=30` for longer connection timeout
 3. **Pooler**: Use the pooled connection URL (ends with `.pooler.`) for better performance
 
 ### Prisma Issues
+
 1. **Client not generated**: Run `npx prisma generate`
 2. **Schema out of sync**: Run `npx prisma db push`
 3. **Environment variables**: Make sure `DATABASE_URL` is set in `.env.local`
 
 ### Neon-Specific
+
 1. **Branching**: Neon supports database branching. Create a branch for development/staging
 2. **Autoscaling**: Neon automatically scales compute resources
 3. **Backups**: Automatic backups are included in the free tier

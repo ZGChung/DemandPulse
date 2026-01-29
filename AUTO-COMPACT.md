@@ -1,19 +1,23 @@
 # Auto-Compact Mechanism for Claude Code
 
 ## Overview
+
 This document describes how to implement an auto-compact mechanism for Claude Code to automatically trigger `/compact` when hitting context window limits.
 
 ## The Problem
+
 Claude Code has a context window limit (typically 128K tokens for Claude 3.5 Sonnet). When conversations exceed this limit, performance degrades or the model may fail. The `/compact` command compresses conversation history but must be triggered manually.
 
 ## Solution: Auto-Compact Implementation
 
 ### 1. Basic Principle
+
 Monitor conversation length and automatically trigger `/compact` when approaching context limits.
 
 ### 2. Detection Methods
 
 #### Token Estimation
+
 ```javascript
 // Simple token estimation (approx 4 chars = 1 token)
 function estimateTokens(text) {
@@ -22,25 +26,25 @@ function estimateTokens(text) {
 
 // Monitor conversation
 function monitorConversation(conversation) {
-  const totalTokens = conversation.reduce((sum, msg) => 
-    sum + estimateTokens(msg.content), 0);
-  
+  const totalTokens = conversation.reduce((sum, msg) => sum + estimateTokens(msg.content), 0);
+
   const contextLimit = 128000; // Claude 3.5 Sonnet limit
   const warningThreshold = 0.8; // 80% usage
   const compactThreshold = 0.9; // 90% usage
-  
+
   const usagePercentage = totalTokens / contextLimit;
-  
+
   return {
     totalTokens,
     usagePercentage,
     shouldWarn: usagePercentage >= warningThreshold,
-    shouldCompact: usagePercentage >= compactThreshold
+    shouldCompact: usagePercentage >= compactThreshold,
   };
 }
 ```
 
 #### Message Counting
+
 ```javascript
 // Track by message count
 const MAX_MESSAGES = 50; // Adjust based on average message size
@@ -50,7 +54,7 @@ function checkMessageCount(messages) {
   return {
     count: messages.length,
     shouldWarn: messages.length >= WARNING_MESSAGES,
-    shouldCompact: messages.length >= MAX_MESSAGES
+    shouldCompact: messages.length >= MAX_MESSAGES,
   };
 }
 ```
@@ -58,6 +62,7 @@ function checkMessageCount(messages) {
 ### 3. Implementation Approaches
 
 #### Option A: Hook-Based (If Claude Code supports hooks)
+
 ```typescript
 // Extend Claude Code hook system
 interface CompactHook {
@@ -71,12 +76,12 @@ class AutoCompactHook implements CompactHook {
   async onContextLimitApproaching() {
     console.warn("Context limit approaching. Consider using /compact");
   }
-  
+
   async onContextLimitReached() {
     console.error("Context limit reached! Auto-compacting...");
-    await this.autoCompact('summarize_oldest');
+    await this.autoCompact("summarize_oldest");
   }
-  
+
   async autoCompact(strategy: CompactStrategy) {
     // Implementation depends on Claude Code API
     // This would trigger /compact command
@@ -85,6 +90,7 @@ class AutoCompactHook implements CompactHook {
 ```
 
 #### Option B: Manual Monitoring Script
+
 ```bash
 #!/bin/bash
 # auto-compact-monitor.sh
@@ -100,7 +106,7 @@ while true; do
   # Estimate current context usage (this is a placeholder)
   # You would need to implement actual context monitoring
   CURRENT_USAGE=$(estimate_current_context_usage)
-  
+
   if (( $(echo "$CURRENT_USAGE >= $COMPACT_THRESHOLD" | bc -l) )); then
     echo "Context limit reached! Triggering /compact..."
     # Trigger compact command
@@ -109,12 +115,13 @@ while true; do
   elif (( $(echo "$CURRENT_USAGE >= $WARNING_THRESHOLD" | bc -l) )); then
     echo "Warning: Context usage at ${CURRENT_USAGE}%"
   fi
-  
+
   sleep $CHECK_INTERVAL
 done
 ```
 
 #### Option C: Browser Extension (For Web Interface)
+
 ```javascript
 // Content script for Claude Code web interface
 class ContextMonitor {
@@ -122,30 +129,29 @@ class ContextMonitor {
     this.observer = new MutationObserver(this.checkContext.bind(this));
     this.setupMonitoring();
   }
-  
+
   setupMonitoring() {
     // Monitor conversation container
-    const target = document.querySelector('.conversation-container');
+    const target = document.querySelector(".conversation-container");
     if (target) {
       this.observer.observe(target, { childList: true, subtree: true });
     }
   }
-  
+
   checkContext() {
-    const messages = document.querySelectorAll('.message-content');
-    const totalLength = Array.from(messages).reduce((sum, msg) => 
-      sum + msg.textContent.length, 0);
-    
+    const messages = document.querySelectorAll(".message-content");
+    const totalLength = Array.from(messages).reduce((sum, msg) => sum + msg.textContent.length, 0);
+
     const estimatedTokens = totalLength / 4;
     const usage = estimatedTokens / 128000;
-    
+
     if (usage > 0.9) {
       this.triggerCompact();
     } else if (usage > 0.8) {
       this.showWarning();
     }
   }
-  
+
   triggerCompact() {
     // Find and click compact button or trigger command
     const compactBtn = document.querySelector('[aria-label="Compact"]');
@@ -153,34 +159,35 @@ class ContextMonitor {
       compactBtn.click();
     } else {
       // Fallback: Type /compact in input
-      const input = document.querySelector('textarea');
+      const input = document.querySelector("textarea");
       if (input) {
-        input.value = '/compact';
-        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.value = "/compact";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
         // Trigger submit
         input.form?.submit();
       }
     }
   }
-  
+
   showWarning() {
     // Show warning notification
-    const warning = document.createElement('div');
-    warning.className = 'context-warning';
-    warning.textContent = '⚠️ Context usage high. Consider using /compact';
+    const warning = document.createElement("div");
+    warning.className = "context-warning";
+    warning.textContent = "⚠️ Context usage high. Consider using /compact";
     document.body.appendChild(warning);
-    
+
     setTimeout(() => warning.remove(), 5000);
   }
 }
 
 // Initialize when page loads
-if (window.location.href.includes('claude.ai')) {
+if (window.location.href.includes("claude.ai")) {
   new ContextMonitor();
 }
 ```
 
 ### 4. Configuration File
+
 Create `.claude/auto-compact.json`:
 
 ```json
@@ -193,11 +200,7 @@ Create `.claude/auto-compact.json`:
   },
   "strategies": {
     "default": "summarize_oldest",
-    "options": [
-      "summarize_oldest",
-      "remove_oldest",
-      "compress_all"
-    ]
+    "options": ["summarize_oldest", "remove_oldest", "compress_all"]
   },
   "preservation": {
     "keepImportant": true,
@@ -213,48 +216,49 @@ Create `.claude/auto-compact.json`:
 ```
 
 ### 5. Integration with Existing Claude Code Hooks
+
 If your project has Claude Code hooks (like DemandPulse), extend them:
 
 ```typescript
 // types/claude-code.ts
-export type HookEvent = 
-  | 'conversation_start'
-  | 'message_sent'
-  | 'message_received'
-  | 'conversation_end'
-  | 'code_generated'
-  | 'requirement_detected'
-  | 'context_limit_approaching'  // New
-  | 'context_limit_reached'      // New
-  | 'auto_compact_triggered';    // New
+export type HookEvent =
+  | "conversation_start"
+  | "message_sent"
+  | "message_received"
+  | "conversation_end"
+  | "code_generated"
+  | "requirement_detected"
+  | "context_limit_approaching" // New
+  | "context_limit_reached" // New
+  | "auto_compact_triggered"; // New
 
 // Extend hook handler
 export class ExtendedHookHandler extends HookHandler {
   private contextMonitor: ContextMonitor;
-  
+
   constructor() {
     super();
     this.contextMonitor = new ContextMonitor();
     this.setupContextMonitoring();
   }
-  
+
   private setupContextMonitoring() {
     // Monitor after each message
-    this.on('message_received', () => {
+    this.on("message_received", () => {
       const status = this.contextMonitor.checkStatus();
-      
+
       if (status.shouldCompact) {
-        this.trigger('context_limit_reached');
+        this.trigger("context_limit_reached");
         this.executeCompact();
       } else if (status.shouldWarn) {
-        this.trigger('context_limit_approaching');
+        this.trigger("context_limit_approaching");
       }
     });
   }
-  
+
   private async executeCompact() {
-    this.trigger('auto_compact_triggered');
-    
+    this.trigger("auto_compact_triggered");
+
     // Implementation depends on Claude Code API
     // This might involve:
     // 1. Sending /compact command
@@ -268,7 +272,7 @@ export class ExtendedHookHandler extends HookHandler {
 
 1. **Estimate Your Workload**: Determine typical conversation lengths
 2. **Set Thresholds**: Start with 80% warning, 90% auto-compact
-3. **Choose Strategy**: 
+3. **Choose Strategy**:
    - `summarize_oldest`: Keep summaries of old messages
    - `remove_oldest`: Remove oldest messages first
    - `compress_all`: Apply compression to entire history
@@ -276,6 +280,7 @@ export class ExtendedHookHandler extends HookHandler {
 5. **Monitor Results**: Check if important context is preserved
 
 ### 7. Manual Compact Triggers
+
 Even with auto-compact, provide manual controls:
 
 ```bash
@@ -322,6 +327,7 @@ Even with auto-compact, provide manual controls:
 5. **User Feedback**: Allow users to disable/reconfigure
 
 ## Conclusion
+
 Implementing auto-compact requires careful consideration of context preservation and user experience. Start with conservative thresholds and monitor the results. The exact implementation will depend on Claude Code's available APIs and hooks.
 
 **Note**: As of now, Claude Code may not expose all necessary APIs for full auto-compact implementation. Consider this a framework for when such APIs become available or for manual context management.

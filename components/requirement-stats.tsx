@@ -1,82 +1,83 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { apiClient, Statistics } from '@/lib/api-client'
+import { useEffect, useState } from "react";
 
-type ChangeType = 'positive' | 'neutral' | 'negative'
+import { apiClient, Statistics } from "@/lib/api-client";
+
+type ChangeType = "positive" | "neutral" | "negative";
 
 interface StatItem {
-  name: string
-  value: string
-  change: string
-  changeType: ChangeType
-  description: string
+  name: string;
+  value: string;
+  change: string;
+  changeType: ChangeType;
+  description: string;
 }
 
 export default function RequirementStats() {
-  const [stats, setStats] = useState<Statistics | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [stats, setStats] = useState<Statistics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchStats()
-  }, [])
+    fetchStats();
+  }, []);
 
   const fetchStats = async () => {
     try {
-      setLoading(true)
-      const response = await apiClient.getRequirements({ limit: 1 })
-      setStats(response.data.statistics)
+      setLoading(true);
+      const response = await apiClient.getRequirements({ limit: 1 });
+      setStats(response.data.statistics);
     } catch (err) {
-      console.error('Error fetching statistics, using mock data:', err)
+      console.error("Error fetching statistics, using mock data:", err);
       // Fallback to mock data for development
       setStats({
         totalRequirements: 42,
         byStatus: {
           pending: 5,
           processed: 30,
-          clustered: 7
+          clustered: 7,
         },
         privacyMetrics: {
           withContactConsent: 8,
-          withAnonymization: 34
-        }
-      })
+          withAnonymization: 34,
+        },
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const displayStats: StatItem[] = [
     {
-      name: 'Total Requirements',
-      value: stats?.totalRequirements.toString() || '0',
-      change: '+0%',
-      changeType: 'positive',
-      description: 'Requirements collected',
+      name: "Total Requirements",
+      value: stats?.totalRequirements.toString() || "0",
+      change: "+0%",
+      changeType: "positive",
+      description: "Requirements collected",
     },
     {
-      name: 'Processed',
-      value: stats?.byStatus.processed.toString() || '0',
-      change: '+0',
-      changeType: 'positive',
-      description: 'AI processed requirements',
+      name: "Processed",
+      value: stats?.byStatus.processed.toString() || "0",
+      change: "+0",
+      changeType: "positive",
+      description: "AI processed requirements",
     },
     {
-      name: 'Clustered',
-      value: stats?.byStatus.clustered.toString() || '0',
-      change: '+0',
-      changeType: 'positive',
-      description: 'Grouped into clusters',
+      name: "Clustered",
+      value: stats?.byStatus.clustered.toString() || "0",
+      change: "+0",
+      changeType: "positive",
+      description: "Grouped into clusters",
     },
     {
-      name: 'Privacy Compliance',
-      value: '100%',
-      change: '',
-      changeType: 'neutral',
+      name: "Privacy Compliance",
+      value: "100%",
+      change: "",
+      changeType: "neutral",
       description: `${stats?.privacyMetrics.withAnonymization || 0} anonymized`,
     },
-  ]
+  ];
 
   if (loading) {
     return (
@@ -99,7 +100,7 @@ export default function RequirementStats() {
           </div>
         ))}
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -118,7 +119,7 @@ export default function RequirementStats() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -131,31 +132,29 @@ export default function RequirementStats() {
           <dt>
             <div className="absolute rounded-md bg-gray-50 p-3">
               <div className="h-6 w-6 text-gray-600" aria-hidden="true">
-                {stat.name === 'Total Requirements' && '📊'}
-                {stat.name === 'Processed' && '⚡'}
-                {stat.name === 'Clustered' && '🔍'}
-                {stat.name === 'Privacy Compliance' && '🔒'}
+                {stat.name === "Total Requirements" && "📊"}
+                {stat.name === "Processed" && "⚡"}
+                {stat.name === "Clustered" && "🔍"}
+                {stat.name === "Privacy Compliance" && "🔒"}
               </div>
             </div>
-            <p className="ml-16 truncate text-sm font-medium text-gray-500">
-              {stat.name}
-            </p>
+            <p className="ml-16 truncate text-sm font-medium text-gray-500">{stat.name}</p>
           </dt>
           <dd className="ml-16 flex items-baseline">
             <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
             {stat.change && (
               <p
                 className={`ml-2 flex items-baseline text-sm font-semibold ${
-                  stat.changeType === 'positive'
-                    ? 'text-green-600'
-                    : stat.changeType === 'negative'
-                    ? 'text-red-600'
-                    : 'text-gray-600'
+                  stat.changeType === "positive"
+                    ? "text-green-600"
+                    : stat.changeType === "negative"
+                      ? "text-red-600"
+                      : "text-gray-600"
                 }`}
               >
-                {stat.changeType === 'positive' ? (
+                {stat.changeType === "positive" ? (
                   <span className="mr-1">↑</span>
-                ) : stat.changeType === 'negative' ? (
+                ) : stat.changeType === "negative" ? (
                   <span className="mr-1">↓</span>
                 ) : null}
                 {stat.change}
@@ -168,5 +167,5 @@ export default function RequirementStats() {
         </div>
       ))}
     </div>
-  )
+  );
 }

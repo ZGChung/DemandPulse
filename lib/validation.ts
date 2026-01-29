@@ -3,7 +3,7 @@
 export class ValidationError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'ValidationError';
+    this.name = "ValidationError";
   }
 }
 
@@ -23,11 +23,11 @@ export function validateRequirementText(text: string): { valid: boolean; errors:
   const errors: string[] = [];
 
   if (!text || text.trim().length === 0) {
-    errors.push('Requirement text cannot be empty');
+    errors.push("Requirement text cannot be empty");
   }
 
   if (text.length > 10000) {
-    errors.push('Requirement text too long (max 10000 characters)');
+    errors.push("Requirement text too long (max 10000 characters)");
   }
 
   // Check for potential XSS attempts
@@ -41,14 +41,14 @@ export function validateRequirementText(text: string): { valid: boolean; errors:
 
   for (const pattern of xssPatterns) {
     if (pattern.test(text)) {
-      errors.push('Potential security issue detected in requirement text');
+      errors.push("Potential security issue detected in requirement text");
       break;
     }
   }
 
   return {
     valid: errors.length === 0,
-    errors
+    errors,
   };
 }
 
@@ -69,12 +69,7 @@ export function validateWorkspacePath(path: string | undefined): boolean {
   if (!path) return true; // Optional
 
   // Check for path traversal attempts
-  const traversalPatterns = [
-    /\.\.\//,
-    /\.\.\\/,
-    /\/\/\//,
-    /\\\.\./,
-  ];
+  const traversalPatterns = [/\.\.\//, /\.\.\\/, /\/\/\//, /\\\.\./];
 
   for (const pattern of traversalPatterns) {
     if (pattern.test(path)) {
@@ -89,19 +84,19 @@ export function validateWorkspacePath(path: string | undefined): boolean {
  * Sanitize input text (basic sanitization)
  */
 export function sanitizeText(text: string): string {
-  if (!text) return '';
+  if (!text) return "";
 
   // Remove HTML tags
-  let sanitized = text.replace(/<[^>]*>/g, '');
+  let sanitized = text.replace(/<[^>]*>/g, "");
 
   // Escape special characters
   sanitized = sanitized
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;")
+    .replace(/\//g, "&#x2F;");
 
   return sanitized;
 }
@@ -112,49 +107,49 @@ export function sanitizeText(text: string): string {
 export function validateConsent(consent: any): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
-  if (!consent || typeof consent !== 'object') {
-    errors.push('Consent object is required');
+  if (!consent || typeof consent !== "object") {
+    errors.push("Consent object is required");
     return { valid: false, errors };
   }
 
   const { consentOptions, userProvidedEmail, consentedAt } = consent;
 
-  if (!consentOptions || typeof consentOptions !== 'object') {
-    errors.push('consentOptions is required');
+  if (!consentOptions || typeof consentOptions !== "object") {
+    errors.push("consentOptions is required");
   } else {
     const { dataCollection, contact, anonymization } = consentOptions;
 
-    if (typeof dataCollection !== 'boolean') {
-      errors.push('dataCollection must be a boolean');
+    if (typeof dataCollection !== "boolean") {
+      errors.push("dataCollection must be a boolean");
     }
 
-    if (typeof contact !== 'boolean') {
-      errors.push('contact must be a boolean');
+    if (typeof contact !== "boolean") {
+      errors.push("contact must be a boolean");
     }
 
-    if (typeof anonymization !== 'boolean') {
-      errors.push('anonymization must be a boolean');
+    if (typeof anonymization !== "boolean") {
+      errors.push("anonymization must be a boolean");
     }
 
     // If contact is true, email should be provided and valid
     if (contact === true && userProvidedEmail) {
       if (!validateEmail(userProvidedEmail)) {
-        errors.push('Valid email is required when contact consent is given');
+        errors.push("Valid email is required when contact consent is given");
       }
     }
 
     // If anonymization is true, email should not be provided
     if (anonymization === true && userProvidedEmail) {
-      errors.push('Email cannot be provided when anonymization consent is given');
+      errors.push("Email cannot be provided when anonymization consent is given");
     }
   }
 
   if (!consentedAt || isNaN(Date.parse(consentedAt))) {
-    errors.push('Valid consentedAt timestamp is required');
+    errors.push("Valid consentedAt timestamp is required");
   }
 
   return {
     valid: errors.length === 0,
-    errors
+    errors,
   };
 }

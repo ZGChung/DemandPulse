@@ -1,5 +1,5 @@
-import Link from 'next/link'
-import { FaGithub, FaChartLine, FaEye, FaUsers, FaLock, FaRocket } from 'react-icons/fa'
+import Link from "next/link";
+import { FaGithub, FaChartLine, FaEye, FaUsers, FaLock, FaRocket } from "react-icons/fa";
 
 export default function LandingPage() {
   return (
@@ -15,16 +15,10 @@ export default function LandingPage() {
               </span>
             </div>
             <div className="flex items-center space-x-4">
-              <Link
-                href="/trends"
-                className="text-gray-700 hover:text-blue-600 font-medium"
-              >
+              <Link href="/trends" className="text-gray-700 hover:text-blue-600 font-medium">
                 Trends
               </Link>
-              <Link
-                href="/auth/signin"
-                className="text-gray-700 hover:text-gray-900 font-medium"
-              >
+              <Link href="/auth/signin" className="text-gray-700 hover:text-gray-900 font-medium">
                 Sign in
               </Link>
               <Link
@@ -43,11 +37,11 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-              See what developers are building{' '}
-              <span className="text-blue-600">in real-time</span>
+              See what developers are building <span className="text-blue-600">in real-time</span>
             </h1>
             <p className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto">
-              DemandPulse aggregates developer needs from AI coding workflows, giving you a live signal of unmet market opportunities and emerging trends.
+              DemandPulse aggregates developer needs from AI coding workflows, giving you a live
+              signal of unmet market opportunities and emerging trends.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -97,7 +91,8 @@ export default function LandingPage() {
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">How DemandPulse Works</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Connect your Claude Code workflow and start contributing to the developer intelligence network.
+              Connect your Claude Code workflow and start contributing to the developer intelligence
+              network.
             </p>
           </div>
 
@@ -124,7 +119,8 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Work with Claude</h3>
               <p className="text-gray-600 mb-6">
-                As you use Claude Code for development, our plugin detects requirements and asks for your consent to share.
+                As you use Claude Code for development, our plugin detects requirements and asks for
+                your consent to share.
               </p>
               <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-50 text-green-700 text-sm font-medium">
                 <FaEye className="mr-2" />
@@ -139,7 +135,8 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Discover Insights</h3>
               <p className="text-gray-600 mb-6">
-                View real-time trends, see what others are building, and identify market opportunities.
+                View real-time trends, see what others are building, and identify market
+                opportunities.
               </p>
               <div className="inline-flex items-center px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-sm font-medium">
                 <FaChartLine className="mr-2" />
@@ -234,39 +231,39 @@ export default function LandingPage() {
         </div>
       </footer>
     </div>
-  )
+  );
 }
 
 // Benefits data
 const benefits = [
   {
     icon: <FaChartLine className="text-blue-500" size={20} />,
-    title: 'Real-time Market Intelligence',
-    description: 'See emerging trends and technologies before they hit mainstream.',
+    title: "Real-time Market Intelligence",
+    description: "See emerging trends and technologies before they hit mainstream.",
   },
   {
     icon: <FaEye className="text-green-500" size={20} />,
-    title: 'Anonymous Contribution',
-    description: 'Share your requirements anonymously while still seeing collective insights.',
+    title: "Anonymous Contribution",
+    description: "Share your requirements anonymously while still seeing collective insights.",
   },
   {
     icon: <FaLock className="text-purple-500" size={20} />,
-    title: 'Privacy First',
-    description: 'Full control over what you share. Opt-in consent for every requirement.',
+    title: "Privacy First",
+    description: "Full control over what you share. Opt-in consent for every requirement.",
   },
   {
     icon: <FaUsers className="text-orange-500" size={20} />,
-    title: 'Community Insights',
-    description: 'Learn from thousands of developers about tools, frameworks, and challenges.',
+    title: "Community Insights",
+    description: "Learn from thousands of developers about tools, frameworks, and challenges.",
   },
   {
     icon: <FaRocket className="text-red-500" size={20} />,
-    title: 'Early Adopter Advantage',
-    description: 'Spot opportunities before competitors and build what developers actually need.',
+    title: "Early Adopter Advantage",
+    description: "Spot opportunities before competitors and build what developers actually need.",
   },
   {
     icon: <FaGithub className="text-gray-500" size={20} />,
-    title: 'GitHub Integration',
-    description: 'Seamless setup with your existing GitHub account and Claude Code workflow.',
+    title: "GitHub Integration",
+    description: "Seamless setup with your existing GitHub account and Claude Code workflow.",
   },
-]
+];

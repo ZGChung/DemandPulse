@@ -1,19 +1,18 @@
-import '@testing-library/jest-dom'
-import { TextEncoder, TextDecoder } from 'util'
+import "@testing-library/jest-dom";
+import { TextEncoder, TextDecoder } from "util";
 
 // Polyfill TextEncoder/TextDecoder for environments (like Jest) where they may be missing.
 // Prisma client and other libraries expect these to exist on the global object.
 if (!global.TextEncoder) {
-  global.TextEncoder = TextEncoder
+  global.TextEncoder = TextEncoder;
 }
 
 if (!global.TextDecoder) {
-  // eslint-disable-next-line no-undef
-  global.TextDecoder = TextDecoder
+  global.TextDecoder = TextDecoder;
 }
 
 // Mock Next.js router
-jest.mock('next/navigation', () => ({
+jest.mock("next/navigation", () => ({
   useRouter() {
     return {
       push: jest.fn(),
@@ -22,28 +21,47 @@ jest.mock('next/navigation', () => ({
       back: jest.fn(),
       forward: jest.fn(),
       refresh: jest.fn(),
-    }
+    };
   },
   usePathname() {
-    return ''
+    return "";
   },
   useSearchParams() {
-    return new URLSearchParams()
+    return new URLSearchParams();
   },
-}))
+}));
 
 // Mock NextResponse for API routes
-jest.mock('next/server', () => ({
+jest.mock("next/server", () => ({
   NextResponse: {
     json: jest.fn((data, init) => ({
       json: async () => data,
       status: init?.status || 200,
     })),
   },
-}))
+}));
 
 // Mock environment variables
-process.env.NEXT_PUBLIC_APP_URL = 'http://localhost:3000'
-process.env.DEEPSEEK_API_KEY = 'test-api-key'
-process.env.NEXT_PUBLIC_APP_NAME = 'TestApp'
-process.env.NODE_ENV = 'test'
+process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000";
+process.env.DEEPSEEK_API_KEY = "test-api-key";
+process.env.NEXT_PUBLIC_APP_NAME = "TestApp";
+process.env.NODE_ENV = "test";
+
+// Mock next-auth to avoid ES module issues
+jest.mock("next-auth", () => ({
+  getServerSession: jest.fn(),
+  authOptions: {},
+}));
+
+jest.mock("next-auth/next", () => ({
+  NextAuth: jest.fn(),
+}));
+
+jest.mock("next-auth/react", () => ({
+  SessionProvider: jest.fn(({ children }) => children),
+  useSession: jest.fn(() => ({ data: null, status: "unauthenticated" })),
+}));
+
+jest.mock("@auth/prisma-adapter", () => ({
+  PrismaAdapter: jest.fn(),
+}));

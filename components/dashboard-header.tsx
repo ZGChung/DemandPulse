@@ -8,9 +8,7 @@ export default function DashboardHeader() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">DemandPulse</h1>
-            <p className="mt-2 text-gray-600">
-              Real-time demand radar for AI-native developers
-            </p>
+            <p className="mt-2 text-gray-600">Real-time demand radar for AI-native developers</p>
           </div>
 
           <div className="mt-4 sm:mt-0 flex items-center space-x-4">
@@ -39,33 +37,21 @@ export default function DashboardHeader() {
             >
               Dashboard
             </a>
-            <a
-              href="#"
-              className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium"
-            >
+            <a href="#" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium">
               Requirements
             </a>
-            <a
-              href="#"
-              className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium"
-            >
+            <a href="#" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium">
               Clusters
             </a>
-            <a
-              href="#"
-              className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium"
-            >
+            <a href="#" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium">
               Trends
             </a>
-            <a
-              href="#"
-              className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium"
-            >
+            <a href="#" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium">
               Settings
             </a>
           </nav>
         </div>
       </div>
     </header>
-  )
+  );
 }

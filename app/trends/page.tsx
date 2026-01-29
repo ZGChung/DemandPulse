@@ -1,5 +1,6 @@
-import TrendingClusters from '@/components/trending-clusters'
-import { FaEye, FaChartLine, FaUsers, FaArrowRight } from 'react-icons/fa'
+import { FaEye, FaChartLine, FaUsers, FaArrowRight } from "react-icons/fa";
+
+import TrendingClusters from "@/components/trending-clusters";
 
 export default function PublicTrendsPage() {
   return (
@@ -42,8 +43,8 @@ export default function PublicTrendsPage() {
             Discover What Developers Really Need
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Real-time insights into the most requested features, tools, and improvements from thousands of developer conversations.
-            No login required to explore trends.
+            Real-time insights into the most requested features, tools, and improvements from
+            thousands of developer conversations. No login required to explore trends.
           </p>
           <div className="flex justify-center space-x-4">
             <a
@@ -105,8 +106,8 @@ export default function PublicTrendsPage() {
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-3">Latest Developer Trends</h2>
             <p className="text-gray-600">
-              These clusters show groups of similar requirements submitted by developers using Claude Code.
-              The growth percentage indicates increasing demand over the past 30 days.
+              These clusters show groups of similar requirements submitted by developers using
+              Claude Code. The growth percentage indicates increasing demand over the past 30 days.
             </p>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -123,7 +124,9 @@ export default function PublicTrendsPage() {
                     </div>
                     <div className="ml-3">
                       <p className="text-gray-900 font-medium">Requirements collected</p>
-                      <p className="text-sm text-gray-500">From Claude Code conversations with user consent</p>
+                      <p className="text-sm text-gray-500">
+                        From Claude Code conversations with user consent
+                      </p>
                     </div>
                   </li>
                   <li className="flex items-start">
@@ -132,7 +135,9 @@ export default function PublicTrendsPage() {
                     </div>
                     <div className="ml-3">
                       <p className="text-gray-900 font-medium">AI clustering</p>
-                      <p className="text-sm text-gray-500">Similar requirements grouped using semantic analysis</p>
+                      <p className="text-sm text-gray-500">
+                        Similar requirements grouped using semantic analysis
+                      </p>
                     </div>
                   </li>
                   <li className="flex items-start">
@@ -141,14 +146,18 @@ export default function PublicTrendsPage() {
                     </div>
                     <div className="ml-3">
                       <p className="text-gray-900 font-medium">Trend detection</p>
-                      <p className="text-sm text-gray-500">Growth calculated based on submission frequency</p>
+                      <p className="text-sm text-gray-500">
+                        Growth calculated based on submission frequency
+                      </p>
                     </div>
                   </li>
                 </ul>
               </div>
 
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Want Real-Time Insights?</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  Want Real-Time Insights?
+                </h3>
                 <p className="text-gray-700 mb-4">
                   Sign up to get personalized trend alerts and contribute your own requirements.
                 </p>
@@ -166,24 +175,29 @@ export default function PublicTrendsPage() {
 
         {/* Use cases */}
         <div className="mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Who Uses DemandPulse?</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+            Who Uses DemandPulse?
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-xl shadow border border-gray-200">
               <h3 className="text-xl font-semibold text-gray-900 mb-3">Product Managers</h3>
               <p className="text-gray-600 mb-4">
-                Discover what features developers actually need to build better roadmaps and prioritize development.
+                Discover what features developers actually need to build better roadmaps and
+                prioritize development.
               </p>
             </div>
             <div className="bg-white p-6 rounded-xl shadow border border-gray-200">
               <h3 className="text-xl font-semibold text-gray-900 mb-3">Tool Builders</h3>
               <p className="text-gray-600 mb-4">
-                Identify gaps in the developer tooling ecosystem and build products that solve real problems.
+                Identify gaps in the developer tooling ecosystem and build products that solve real
+                problems.
               </p>
             </div>
             <div className="bg-white p-6 rounded-xl shadow border border-gray-200">
               <h3 className="text-xl font-semibold text-gray-900 mb-3">Developers</h3>
               <p className="text-gray-600 mb-4">
-                See what challenges other developers are facing and find solutions before you encounter them.
+                See what challenges other developers are facing and find solutions before you
+                encounter them.
               </p>
             </div>
           </div>
@@ -193,7 +207,8 @@ export default function PublicTrendsPage() {
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">Ready to See the Full Picture?</h2>
           <p className="text-blue-100 text-xl mb-8 max-w-2xl mx-auto">
-            Join hundreds of developers already contributing to the most comprehensive dataset of developer needs.
+            Join hundreds of developers already contributing to the most comprehensive dataset of
+            developer needs.
           </p>
           <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
             <a
@@ -233,28 +248,76 @@ export default function PublicTrendsPage() {
             <div>
               <h4 className="font-semibold text-lg mb-4">Product</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="/trends" className="hover:text-white">Trends</a></li>
-                <li><a href="#" className="hover:text-white">API</a></li>
-                <li><a href="#" className="hover:text-white">Claude Code Plugin</a></li>
-                <li><a href="#" className="hover:text-white">Pricing</a></li>
+                <li>
+                  <a href="/trends" className="hover:text-white">
+                    Trends
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white">
+                    API
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white">
+                    Claude Code Plugin
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white">
+                    Pricing
+                  </a>
+                </li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold text-lg mb-4">Company</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white">About</a></li>
-                <li><a href="#" className="hover:text-white">Blog</a></li>
-                <li><a href="#" className="hover:text-white">Careers</a></li>
-                <li><a href="#" className="hover:text-white">Contact</a></li>
+                <li>
+                  <a href="#" className="hover:text-white">
+                    About
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white">
+                    Blog
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white">
+                    Careers
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white">
+                    Contact
+                  </a>
+                </li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold text-lg mb-4">Legal</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-white">Cookie Policy</a></li>
-                <li><a href="#" className="hover:text-white">GDPR</a></li>
+                <li>
+                  <a href="#" className="hover:text-white">
+                    Privacy Policy
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white">
+                    Terms of Service
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white">
+                    Cookie Policy
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white">
+                    GDPR
+                  </a>
+                </li>
               </ul>
             </div>
           </div>
@@ -264,5 +327,5 @@ export default function PublicTrendsPage() {
         </div>
       </footer>
     </div>
-  )
+  );
 }

@@ -42,21 +42,23 @@ node mock-claude-code.js --count=5
 ## API Endpoints
 
 ### Production Endpoint (requires auth)
+
 - `POST /api/requirements` - Submit a requirement with authentication
 
 ### Development Mock Endpoint (no auth required)
+
 - `POST /api/mock/requirements` - Submit a mock requirement (development only)
 - `GET /api/mock/requirements?count=N` - Generate mock requirements
 
 ## Configuration Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--count=N` | Number of mock requirements to send | 1 |
-| `--interval=MS` | Interval between requests in milliseconds | 0 (all at once) |
-| `--api-url=URL` | API base URL | http://localhost:3000 |
-| `--verbose` | Show detailed output | false |
-| `--help` | Show help message | - |
+| Option          | Description                               | Default               |
+| --------------- | ----------------------------------------- | --------------------- |
+| `--count=N`     | Number of mock requirements to send       | 1                     |
+| `--interval=MS` | Interval between requests in milliseconds | 0 (all at once)       |
+| `--api-url=URL` | API base URL                              | http://localhost:3000 |
+| `--verbose`     | Show detailed output                      | false                 |
+| `--help`        | Show help message                         | -                     |
 
 ## Example Requirements Generated
 
@@ -97,16 +99,19 @@ Mock requirements follow this structure:
 ## Testing Workflow
 
 1. **Start the development server**:
+
    ```bash
    npm run dev
    ```
 
 2. **Test API connection**:
+
    ```bash
    npm run mock:claude-code -- --count=0
    ```
 
 3. **Send test requirements**:
+
    ```bash
    # Send 3 requirements
    npm run mock:claude-code -- --count=3
@@ -116,6 +121,7 @@ Mock requirements follow this structure:
    ```
 
 4. **Use mock endpoint directly** (no auth):
+
    ```bash
    # Generate mock requirements
    curl "http://localhost:3000/api/mock/requirements?count=2"

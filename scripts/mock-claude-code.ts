@@ -14,7 +14,7 @@
  * - No external dependencies beyond Node.js built-ins
  */
 
-import { randomUUID } from 'crypto';
+import { randomUUID } from "crypto";
 
 // Configuration
 interface Config {
@@ -25,7 +25,7 @@ interface Config {
 }
 
 const DEFAULT_CONFIG: Config = {
-  apiUrl: 'http://localhost:3000',
+  apiUrl: "http://localhost:3000",
   count: 1,
   interval: 0,
   verbose: false,
@@ -34,44 +34,48 @@ const DEFAULT_CONFIG: Config = {
 // Sample requirement templates
 const REQUIREMENT_TEMPLATES = [
   {
-    original: "I need to add user authentication to my Next.js app. Can you help me set up NextAuth.js with Google OAuth?",
+    original:
+      "I need to add user authentication to my Next.js app. Can you help me set up NextAuth.js with Google OAuth?",
     summary: "Add NextAuth.js authentication with Google OAuth provider",
     intent: "feature_request",
-    keywords: ["authentication", "nextauth", "google", "oauth"]
+    keywords: ["authentication", "nextauth", "google", "oauth"],
   },
   {
-    original: "There's a bug where the API returns 500 error when the database connection times out. Need to add proper error handling and retry logic.",
+    original:
+      "There's a bug where the API returns 500 error when the database connection times out. Need to add proper error handling and retry logic.",
     summary: "Fix database connection timeout error with retry logic",
     intent: "bug_fix",
-    keywords: ["bug", "database", "timeout", "error", "retry"]
+    keywords: ["bug", "database", "timeout", "error", "retry"],
   },
   {
-    original: "The current dashboard is slow when loading large datasets. Can we implement virtual scrolling or pagination?",
+    original:
+      "The current dashboard is slow when loading large datasets. Can we implement virtual scrolling or pagination?",
     summary: "Optimize dashboard performance with virtual scrolling",
     intent: "improvement",
-    keywords: ["performance", "dashboard", "virtual", "scrolling", "pagination"]
+    keywords: ["performance", "dashboard", "virtual", "scrolling", "pagination"],
   },
   {
-    original: "I want to create a CLI tool that automatically formats code and runs tests before commits.",
+    original:
+      "I want to create a CLI tool that automatically formats code and runs tests before commits.",
     summary: "Create pre-commit hook CLI tool for code formatting and testing",
     intent: "new_tool",
-    keywords: ["cli", "tool", "pre-commit", "formatting", "testing"]
+    keywords: ["cli", "tool", "pre-commit", "formatting", "testing"],
   },
   {
     original: "How do I implement real-time notifications using WebSockets in a React app?",
     summary: "Implement real-time notifications with WebSockets",
     intent: "feature_request",
-    keywords: ["realtime", "websockets", "notifications", "react"]
-  }
+    keywords: ["realtime", "websockets", "notifications", "react"],
+  },
 ];
 
 // Sample workspace paths
 const WORKSPACE_PATHS = [
-  '/Users/dev/projects/my-app',
-  '/home/dev/workspace/project',
-  '/workspace/frontend',
-  '/code/backend-service',
-  null // Sometimes no workspace path
+  "/Users/dev/projects/my-app",
+  "/home/dev/workspace/project",
+  "/workspace/frontend",
+  "/code/backend-service",
+  null, // Sometimes no workspace path
 ];
 
 /**
@@ -91,31 +95,35 @@ function generateMockRequirement() {
     context: {
       conversationId,
       workspacePath,
-      timestamp: now
+      timestamp: now,
     },
     consent: {
       consentOptions: {
         dataCollection: Math.random() > 0.3, // 70% chance of consent
         contact: Math.random() > 0.7, // 30% chance of contact consent
-        anonymization: Math.random() > 0.5 // 50% chance of anonymization
+        anonymization: Math.random() > 0.5, // 50% chance of anonymization
       },
-      userProvidedEmail: Math.random() > 0.8 ? `user${Math.floor(Math.random() * 1000)}@example.com` : undefined,
-      consentedAt: now
-    }
+      userProvidedEmail:
+        Math.random() > 0.8 ? `user${Math.floor(Math.random() * 1000)}@example.com` : undefined,
+      consentedAt: now,
+    },
   };
 }
 
 /**
  * Send a requirement to the API
  */
-async function sendRequirement(requirement: any, config: Config): Promise<{ success: boolean; error?: string }> {
+async function sendRequirement(
+  requirement: any,
+  config: Config
+): Promise<{ success: boolean; error?: string }> {
   try {
     const response = await fetch(`${config.apiUrl}/api/requirements`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(requirement)
+      body: JSON.stringify(requirement),
     });
 
     if (response.ok) {
@@ -169,23 +177,23 @@ function parseArgs(): Config {
   const config: Config = { ...DEFAULT_CONFIG };
 
   for (const arg of args) {
-    if (arg.startsWith('--')) {
-      const [key, value] = arg.slice(2).split('=');
+    if (arg.startsWith("--")) {
+      const [key, value] = arg.slice(2).split("=");
 
       switch (key) {
-        case 'count':
+        case "count":
           config.count = parseInt(value, 10);
           break;
-        case 'interval':
+        case "interval":
           config.interval = parseInt(value, 10);
           break;
-        case 'api-url':
+        case "api-url":
           config.apiUrl = value;
           break;
-        case 'verbose':
-          config.verbose = value === 'true' || value === '1' || value === undefined;
+        case "verbose":
+          config.verbose = value === "true" || value === "1" || value === undefined;
           break;
-        case 'help':
+        case "help":
           printHelp();
           process.exit(0);
       }
@@ -237,25 +245,25 @@ Examples:
 async function main() {
   const config = parseArgs();
 
-  console.log('🚀 Starting Mock Claude Code Integration');
+  console.log("🚀 Starting Mock Claude Code Integration");
   console.log(`📊 Configuration:`);
   console.log(`   API URL: ${config.apiUrl}`);
   console.log(`   Count: ${config.count}`);
   console.log(`   Interval: ${config.interval}ms`);
   console.log(`   Verbose: ${config.verbose}`);
-  console.log('');
+  console.log("");
 
   // Test API connection first
-  console.log('🔍 Testing API connection...');
+  console.log("🔍 Testing API connection...");
   const isHealthy = await testConnection(config.apiUrl);
 
   if (!isHealthy) {
-    console.error('❌ Cannot proceed: API is not accessible');
+    console.error("❌ Cannot proceed: API is not accessible");
     process.exit(1);
   }
 
   if (config.count === 0) {
-    console.log('✅ API connection test successful');
+    console.log("✅ API connection test successful");
     process.exit(0);
   }
 
@@ -272,7 +280,7 @@ async function main() {
       if (!result.success) errors++;
 
       if (i < config.count - 1) {
-        await new Promise(resolve => setTimeout(resolve, config.interval));
+        await new Promise((resolve) => setTimeout(resolve, config.interval));
       }
     }
   } else {
@@ -285,26 +293,28 @@ async function main() {
     }
 
     const results = await Promise.all(promises);
-    errors = results.filter(r => !r.success).length;
+    errors = results.filter((r) => !r.success).length;
   }
 
-  console.log('');
-  console.log('📈 Summary:');
+  console.log("");
+  console.log("📈 Summary:");
   console.log(`   Requirements sent: ${requirementsSent}`);
   console.log(`   Errors: ${errors}`);
-  console.log(`   Success rate: ${((requirementsSent - errors) / requirementsSent * 100).toFixed(1)}%`);
+  console.log(
+    `   Success rate: ${(((requirementsSent - errors) / requirementsSent) * 100).toFixed(1)}%`
+  );
 }
 
 // Handle unhandled promise rejections
-process.on('unhandledRejection', (error) => {
-  console.error('Unhandled promise rejection:', error);
+process.on("unhandledRejection", (error) => {
+  console.error("Unhandled promise rejection:", error);
   process.exit(1);
 });
 
 // Run if this file is executed directly
 if (require.main === module) {
-  main().catch(error => {
-    console.error('Fatal error:', error);
+  main().catch((error) => {
+    console.error("Fatal error:", error);
     process.exit(1);
   });
 }

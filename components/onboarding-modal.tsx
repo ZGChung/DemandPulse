@@ -1,56 +1,58 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { FaChartLine, FaUpload, FaEye, FaRocket, FaTimes } from 'react-icons/fa'
+import { useState, useEffect } from "react";
+import { FaChartLine, FaUpload, FaEye, FaRocket, FaTimes } from "react-icons/fa";
 
-const ONBOARDING_KEY = 'demandpulse_onboarding_completed'
+const ONBOARDING_KEY = "demandpulse_onboarding_completed";
 
 export default function OnboardingModal() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [currentStep, setCurrentStep] = useState(0)
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
     // Check if onboarding has been completed
-    const hasCompleted = localStorage.getItem(ONBOARDING_KEY) === 'true'
+    const hasCompleted = localStorage.getItem(ONBOARDING_KEY) === "true";
     if (!hasCompleted) {
       // Small delay to ensure page is loaded
-      const timer = setTimeout(() => setIsOpen(true), 1000)
-      return () => clearTimeout(timer)
+      const timer = setTimeout(() => setIsOpen(true), 1000);
+      return () => clearTimeout(timer);
     }
-  }, [])
+  }, []);
 
   const handleComplete = () => {
-    localStorage.setItem(ONBOARDING_KEY, 'true')
-    setIsOpen(false)
-  }
+    localStorage.setItem(ONBOARDING_KEY, "true");
+    setIsOpen(false);
+  };
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1)
+      setCurrentStep(currentStep + 1);
     } else {
-      handleComplete()
+      handleComplete();
     }
-  }
+  };
 
   const handlePrevious = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
+      setCurrentStep(currentStep - 1);
     }
-  }
+  };
 
   const handleSkip = () => {
-    handleComplete()
-  }
+    handleComplete();
+  };
 
   const steps = [
     {
-      title: 'Welcome to DemandPulse!',
+      title: "Welcome to DemandPulse!",
       icon: <FaRocket className="text-blue-500 text-2xl" />,
-      description: 'See what developers are building in real-time by aggregating needs from AI coding workflows.',
+      description:
+        "See what developers are building in real-time by aggregating needs from AI coding workflows.",
       content: (
         <div className="space-y-4">
           <p className="text-gray-600">
-            You're now part of a network of developers sharing insights about what they're building with AI assistants like Claude Code.
+            You're now part of a network of developers sharing insights about what they're building
+            with AI assistants like Claude Code.
           </p>
           <div className="bg-blue-50 p-4 rounded-lg">
             <p className="text-blue-800 text-sm font-medium">Your contributions help:</p>
@@ -64,18 +66,21 @@ export default function OnboardingModal() {
       ),
     },
     {
-      title: 'Discover Trends',
+      title: "Discover Trends",
       icon: <FaChartLine className="text-green-500 text-2xl" />,
-      description: 'See real-time demand signals from the developer community.',
+      description: "See real-time demand signals from the developer community.",
       content: (
         <div className="space-y-4">
           <p className="text-gray-600">
-            The dashboard shows aggregated requirements organized by category, popularity, and recency.
+            The dashboard shows aggregated requirements organized by category, popularity, and
+            recency.
           </p>
           <div className="grid grid-cols-2 gap-3 mt-4">
             <div className="bg-gray-50 p-3 rounded-lg">
               <div className="text-sm font-medium text-gray-900">Recent Requirements</div>
-              <div className="text-xs text-gray-600 mt-1">See what others are building right now</div>
+              <div className="text-xs text-gray-600 mt-1">
+                See what others are building right now
+              </div>
             </div>
             <div className="bg-gray-50 p-3 rounded-lg">
               <div className="text-sm font-medium text-gray-900">Trending Clusters</div>
@@ -86,13 +91,14 @@ export default function OnboardingModal() {
       ),
     },
     {
-      title: 'Contribute Requirements',
+      title: "Contribute Requirements",
       icon: <FaUpload className="text-purple-500 text-2xl" />,
-      description: 'Share your own requirements to help the community.',
+      description: "Share your own requirements to help the community.",
       content: (
         <div className="space-y-4">
           <p className="text-gray-600">
-            Use the <span className="font-semibold">"Submit Requirement"</span> button in the header to share requirements you encounter while using Claude Code or other AI tools.
+            Use the <span className="font-semibold">"Submit Requirement"</span> button in the header
+            to share requirements you encounter while using Claude Code or other AI tools.
           </p>
           <div className="border border-purple-200 bg-purple-50 p-4 rounded-lg">
             <p className="text-purple-800 text-sm font-medium">What to share:</p>
@@ -109,14 +115,12 @@ export default function OnboardingModal() {
       ),
     },
     {
-      title: 'Privacy First',
+      title: "Privacy First",
       icon: <FaEye className="text-orange-500 text-2xl" />,
-      description: 'Full control over your data.',
+      description: "Full control over your data.",
       content: (
         <div className="space-y-4">
-          <p className="text-gray-600">
-            DemandPulse is built with privacy as a core principle:
-          </p>
+          <p className="text-gray-600">DemandPulse is built with privacy as a core principle:</p>
           <div className="space-y-3">
             <div className="flex items-start">
               <div className="flex-shrink-0 h-5 w-5 flex items-center justify-center rounded-full bg-orange-100 text-orange-600">
@@ -149,11 +153,11 @@ export default function OnboardingModal() {
         </div>
       ),
     },
-  ]
+  ];
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
-  const step = steps[currentStep]
+  const step = steps[currentStep];
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -183,9 +187,7 @@ export default function OnboardingModal() {
               </button>
             </div>
 
-            <div className="mb-6">
-              {step.content}
-            </div>
+            <div className="mb-6">{step.content}</div>
 
             {/* Step indicators */}
             <div className="flex justify-center space-x-2 mb-6">
@@ -194,7 +196,7 @@ export default function OnboardingModal() {
                   key={index}
                   onClick={() => setCurrentStep(index)}
                   className={`h-2 w-2 rounded-full transition-colors ${
-                    index === currentStep ? 'bg-blue-600' : 'bg-gray-300'
+                    index === currentStep ? "bg-blue-600" : "bg-gray-300"
                   }`}
                   aria-label={`Go to step ${index + 1}`}
                 />
@@ -208,8 +210,8 @@ export default function OnboardingModal() {
                 disabled={currentStep === 0}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                   currentStep === 0
-                    ? 'text-gray-400 cursor-not-allowed'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? "text-gray-400 cursor-not-allowed"
+                    : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
                 Previous
@@ -232,7 +234,7 @@ export default function OnboardingModal() {
                       Get Started
                     </>
                   ) : (
-                    'Next'
+                    "Next"
                   )}
                 </button>
               </div>
@@ -249,5 +251,5 @@ export default function OnboardingModal() {
         </div>
       </div>
     </div>
-  )
+  );
 }

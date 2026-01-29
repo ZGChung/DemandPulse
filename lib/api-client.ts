@@ -1,133 +1,133 @@
-import { env } from '@/lib/env'
+import { env } from "@/lib/env";
 
 export interface Requirement {
-  id: string
-  originalRequirement: string
-  summarizedRequirement: string
-  conversationId: string
-  workspacePath?: string
-  detectedAt: string
-  status: string
-  createdAt: string
-  updatedAt: string
-  dataCollectionConsent: boolean
-  contactConsent: boolean
-  anonymizationConsent: boolean
-  userProvidedEmail?: string
-  dataRetentionDays: number
-  scheduledDeletionAt?: string
+  id: string;
+  originalRequirement: string;
+  summarizedRequirement: string;
+  conversationId: string;
+  workspacePath?: string;
+  detectedAt: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  dataCollectionConsent: boolean;
+  contactConsent: boolean;
+  anonymizationConsent: boolean;
+  userProvidedEmail?: string;
+  dataRetentionDays: number;
+  scheduledDeletionAt?: string;
 }
 
 export interface Statistics {
-  totalRequirements: number
+  totalRequirements: number;
   byStatus: {
-    pending: number
-    processed: number
-    clustered: number
-  }
+    pending: number;
+    processed: number;
+    clustered: number;
+  };
   privacyMetrics: {
-    withContactConsent: number
-    withAnonymization: number
-  }
+    withContactConsent: number;
+    withAnonymization: number;
+  };
 }
 
 export interface RequirementsResponse {
-  success: boolean
+  success: boolean;
   data: {
-    statistics: Statistics
-    requirements: Requirement[]
+    statistics: Statistics;
+    requirements: Requirement[];
     pagination: {
-      total: number
-      limit: number
-      offset: number
-      hasMore: boolean
-    }
-  }
+      total: number;
+      limit: number;
+      offset: number;
+      hasMore: boolean;
+    };
+  };
 }
 
 class ApiClient {
-  private baseUrl: string
+  private baseUrl: string;
 
   constructor() {
-    this.baseUrl = env.nextPublicAppUrl()
+    this.baseUrl = env.nextPublicAppUrl();
   }
 
   async getRequirements(options?: {
-    status?: string
-    limit?: number
-    offset?: number
+    status?: string;
+    limit?: number;
+    offset?: number;
   }): Promise<RequirementsResponse> {
-    const params = new URLSearchParams()
-    if (options?.status) params.append('status', options.status)
-    if (options?.limit) params.append('limit', options.limit.toString())
-    if (options?.offset) params.append('offset', options.offset.toString())
+    const params = new URLSearchParams();
+    if (options?.status) params.append("status", options.status);
+    if (options?.limit) params.append("limit", options.limit.toString());
+    if (options?.offset) params.append("offset", options.offset.toString());
 
-    const url = `${this.baseUrl}/api/requirements${params.toString() ? `?${params.toString()}` : ''}`
-    
+    const url = `${this.baseUrl}/api/requirements${params.toString() ? `?${params.toString()}` : ""}`;
+
     const response = await fetch(url, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-      cache: 'no-store', // Don't cache for real-time data
-    })
+      cache: "no-store", // Don't cache for real-time data
+    });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch requirements: ${response.statusText}`)
+      throw new Error(`Failed to fetch requirements: ${response.statusText}`);
     }
 
-    return response.json()
+    return response.json();
   }
 
   async submitRequirement(data: {
-    requirementId: string
-    originalRequirement: string
-    summarizedRequirement: string
+    requirementId: string;
+    originalRequirement: string;
+    summarizedRequirement: string;
     context: {
-      conversationId: string
-      workspacePath?: string
-      timestamp: string
-    }
+      conversationId: string;
+      workspacePath?: string;
+      timestamp: string;
+    };
     consent: {
       consentOptions: {
-        dataCollection: boolean
-        contact: boolean
-        anonymization: boolean
-      }
-      userProvidedEmail?: string
-      consentedAt: string
-    }
+        dataCollection: boolean;
+        contact: boolean;
+        anonymization: boolean;
+      };
+      userProvidedEmail?: string;
+      consentedAt: string;
+    };
   }): Promise<{ success: boolean; requirementId: string; message: string }> {
     const response = await fetch(`${this.baseUrl}/api/requirements`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
-    })
+    });
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Failed to submit requirement')
+      const error = await response.json();
+      throw new Error(error.message || "Failed to submit requirement");
     }
 
-    return response.json()
+    return response.json();
   }
 
   async getHealth(): Promise<{ status: string; timestamp: string }> {
     const response = await fetch(`${this.baseUrl}/api/health`, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-    })
+    });
 
     if (!response.ok) {
-      throw new Error(`Health check failed: ${response.statusText}`)
+      throw new Error(`Health check failed: ${response.statusText}`);
     }
 
-    return response.json()
+    return response.json();
   }
 }
 
-export const apiClient = new ApiClient()
+export const apiClient = new ApiClient();

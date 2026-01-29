@@ -1,81 +1,84 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { referralService } from '@/services/referral-service'
-import { FaShareAlt, FaUserFriends, FaTrophy, FaCopy } from 'react-icons/fa'
+import { useState, useEffect } from "react";
+import { FaShareAlt, FaUserFriends, FaTrophy, FaCopy } from "react-icons/fa";
+
+import { referralService } from "@/services/referral-service";
 
 interface ReferralWidgetProps {
-  userId: string
-  userName?: string
-  userEmail?: string
+  userId: string;
+  userName?: string;
+  userEmail?: string;
 }
 
 export default function ReferralWidget({ userId, userName, userEmail }: ReferralWidgetProps) {
-  const [referralCode, setReferralCode] = useState<string>('')
-  const [referralLink, setReferralLink] = useState<string>('')
-  const [stats, setStats] = useState<any>(null)
-  const [copied, setCopied] = useState(false)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    loadReferralData()
-  }, [userId])
+  const [referralCode, setReferralCode] = useState<string>("");
+  const [referralLink, setReferralLink] = useState<string>("");
+  const [stats, setStats] = useState<any>(null);
+  const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const loadReferralData = () => {
-    setLoading(true)
+    setLoading(true);
 
     // Generate or get referral code
-    const userReferrals = referralService.getUserReferrals(userId)
-    let code: string
+    const userReferrals = referralService.getUserReferrals(userId);
+    let code: string;
 
     if (userReferrals.length > 0) {
       // Use most recent pending referral or create new one
-      const pending = userReferrals.find(r => r.status === 'pending')
-      code = pending ? pending.referralCode : referralService.generateReferralCode(userId, userEmail)
+      const pending = userReferrals.find((r) => r.status === "pending");
+      code = pending
+        ? pending.referralCode
+        : referralService.generateReferralCode(userId, userEmail);
     } else {
-      code = referralService.generateReferralCode(userId, userEmail)
+      code = referralService.generateReferralCode(userId, userEmail);
     }
 
-    setReferralCode(code)
-    setReferralLink(referralService.getShareableLink(code, window.location.origin))
+    setReferralCode(code);
+    setReferralLink(referralService.getShareableLink(code, window.location.origin));
 
     // Get stats
-    const referralStats = referralService.getUserReferralStats(userId)
-    setStats(referralStats)
+    const referralStats = referralService.getUserReferralStats(userId);
+    setStats(referralStats);
 
-    setLoading(false)
-  }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadReferralData();
+  }, [userId]);
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(referralLink)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      await navigator.clipboard.writeText(referralLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy:', err)
+      console.error("Failed to copy:", err);
     }
-  }
+  };
 
   const handleShare = async () => {
-    const message = referralService.getShareMessage(referralCode)
+    const message = referralService.getShareMessage(referralCode);
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Join DemandPulse',
+          title: "Join DemandPulse",
           text: message,
           url: referralLink,
-        })
+        });
       } catch (err) {
-        console.log('Share cancelled or failed:', err)
+        console.log("Share cancelled or failed:", err);
       }
     } else {
       // Fallback to clipboard
-      await navigator.clipboard.writeText(message)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-      alert('Referral message copied to clipboard! Share it with your friends.')
+      await navigator.clipboard.writeText(message);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      alert("Referral message copied to clipboard! Share it with your friends.");
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -86,7 +89,7 @@ export default function ReferralWidget({ userId, userName, userEmail }: Referral
           <div className="h-3 bg-gray-200 rounded w-3/4"></div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -115,7 +118,9 @@ export default function ReferralWidget({ userId, userName, userEmail }: Referral
             <FaTrophy className="text-yellow-500 mr-2" />
             <span className="text-sm text-gray-600">Completed</span>
           </div>
-          <div className="text-2xl font-bold text-gray-900 mt-2">{stats?.completedReferrals || 0}</div>
+          <div className="text-2xl font-bold text-gray-900 mt-2">
+            {stats?.completedReferrals || 0}
+          </div>
         </div>
       </div>
 
@@ -144,7 +149,8 @@ export default function ReferralWidget({ userId, userName, userEmail }: Referral
                 />
               </div>
               <p className="text-xs text-blue-700 mt-2">
-                {stats.nextRewardAt} more {stats.nextRewardAt === 1 ? 'referral' : 'referrals'} needed
+                {stats.nextRewardAt} more {stats.nextRewardAt === 1 ? "referral" : "referrals"}{" "}
+                needed
               </p>
             </div>
           </div>
@@ -153,9 +159,7 @@ export default function ReferralWidget({ userId, userName, userEmail }: Referral
 
       {/* Referral link */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Your referral link
-        </label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Your referral link</label>
         <div className="flex">
           <input
             type="text"
@@ -168,7 +172,7 @@ export default function ReferralWidget({ userId, userName, userEmail }: Referral
             className="px-4 py-2 bg-gray-800 text-white rounded-r-lg hover:bg-gray-900 transition-colors flex items-center"
           >
             <FaCopy className="mr-2" />
-            {copied ? 'Copied!' : 'Copy'}
+            {copied ? "Copied!" : "Copy"}
           </button>
         </div>
         <p className="text-xs text-gray-500 mt-2">
@@ -187,9 +191,7 @@ export default function ReferralWidget({ userId, userName, userEmail }: Referral
         </button>
 
         <div className="text-center">
-          <p className="text-sm text-gray-600">
-            Or copy and share this message:
-          </p>
+          <p className="text-sm text-gray-600">Or copy and share this message:</p>
           <p className="text-xs text-gray-500 mt-2 bg-gray-50 p-3 rounded border border-gray-200">
             {referralService.getShareMessage(referralCode)}
           </p>
@@ -221,5 +223,5 @@ export default function ReferralWidget({ userId, userName, userEmail }: Referral
         </ul>
       </div>
     </div>
-  )
+  );
 }

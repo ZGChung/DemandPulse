@@ -1,46 +1,50 @@
-import { env } from '@/lib/env'
+import { env } from "@/lib/env";
 
 export interface AIAnalysisResult {
-  categories: string[]
-  confidence: number
-  embeddings: number[] | null
-  summary: string
-  keywords: string[]
-  processingLog: string[]
+  categories: string[];
+  confidence: number;
+  embeddings: number[] | null;
+  summary: string;
+  keywords: string[];
+  processingLog: string[];
 }
 
 export class AIProcessingService {
-  private apiKey: string
-  private baseUrl = 'https://api.deepseek.com/v1'
+  private apiKey: string;
+  private baseUrl = "https://api.deepseek.com/v1";
 
   constructor() {
-    this.apiKey = env.deepseekApiKey()
+    this.apiKey = env.deepseekApiKey();
     if (!this.apiKey) {
-      throw new Error('DeepSeek API key is not configured')
+      throw new Error("DeepSeek API key is not configured");
     }
   }
 
   async analyzeRequirement(requirementText: string): Promise<AIAnalysisResult> {
-    const processingLog: string[] = []
-    
+    const processingLog: string[] = [];
+
     try {
-      processingLog.push(`Starting AI analysis for requirement: ${requirementText.substring(0, 50)}...`)
+      processingLog.push(
+        `Starting AI analysis for requirement: ${requirementText.substring(0, 50)}...`
+      );
 
       // Step 1: Get embeddings for the requirement
-      const embeddings = await this.getEmbeddings(requirementText)
-      processingLog.push(`Generated embeddings: ${embeddings ? 'Success' : 'Failed'}`)
+      const embeddings = await this.getEmbeddings(requirementText);
+      processingLog.push(`Generated embeddings: ${embeddings ? "Success" : "Failed"}`);
 
       // Step 2: Categorize the requirement
-      const categorization = await this.categorizeRequirement(requirementText)
-      processingLog.push(`Categorized as: ${categorization.categories.join(', ')} with confidence ${categorization.confidence}`)
+      const categorization = await this.categorizeRequirement(requirementText);
+      processingLog.push(
+        `Categorized as: ${categorization.categories.join(", ")} with confidence ${categorization.confidence}`
+      );
 
       // Step 3: Extract keywords
-      const keywords = await this.extractKeywords(requirementText)
-      processingLog.push(`Extracted keywords: ${keywords.join(', ')}`)
+      const keywords = await this.extractKeywords(requirementText);
+      processingLog.push(`Extracted keywords: ${keywords.join(", ")}`);
 
       // Step 4: Generate summary
-      const summary = await this.generateSummary(requirementText)
-      processingLog.push(`Generated summary: ${summary.substring(0, 100)}...`)
+      const summary = await this.generateSummary(requirementText);
+      processingLog.push(`Generated summary: ${summary.substring(0, 100)}...`);
 
       return {
         categories: categorization.categories,
@@ -49,45 +53,47 @@ export class AIProcessingService {
         summary,
         keywords,
         processingLog,
-      }
+      };
     } catch (error) {
-      processingLog.push(`AI processing error: ${error instanceof Error ? error.message : 'Unknown error'}`)
-      
+      processingLog.push(
+        `AI processing error: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
+
       // Return fallback analysis
       return {
-        categories: ['uncategorized'],
+        categories: ["uncategorized"],
         confidence: 0.1,
         embeddings: null,
         summary: requirementText.substring(0, 200),
         keywords: this.extractFallbackKeywords(requirementText),
         processingLog,
-      }
+      };
     }
   }
 
   async getEmbeddings(text: string): Promise<number[] | null> {
     try {
       const response = await fetch(`${this.baseUrl}/embeddings`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
         },
         body: JSON.stringify({
           input: text,
-          model: 'deepseek-embedding',
+          model: "deepseek-embedding",
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error(`Embeddings API error: ${response.status}`)
+        throw new Error(`Embeddings API error: ${response.status}`);
       }
 
-      const data = await response.json()
-      return data.data[0]?.embedding || null
+      const data = await response.json();
+      return data.data[0]?.embedding || null;
     } catch (error) {
-      console.error('Error getting embeddings:', error)
-      return null
+      console.error("Error getting embeddings:", error);
+      return null;
     }
   }
 
@@ -117,50 +123,51 @@ export class AIProcessingService {
         - other
         
         Format: {"categories": ["category1", "category2"], "confidence": 0.95}
-      `
+      `;
 
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
         },
         body: JSON.stringify({
-          model: 'deepseek-chat',
+          model: "deepseek-chat",
           messages: [
             {
-              role: 'system',
-              content: 'You are a requirement categorization assistant. Return ONLY valid JSON.',
+              role: "system",
+              content: "You are a requirement categorization assistant. Return ONLY valid JSON.",
             },
             {
-              role: 'user',
+              role: "user",
               content: prompt,
             },
           ],
           temperature: 0.1,
           max_tokens: 200,
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error(`Categorization API error: ${response.status}`)
+        throw new Error(`Categorization API error: ${response.status}`);
       }
 
-      const data = await response.json()
-      const content = data.choices[0]?.message?.content || '{"categories": ["other"], "confidence": 0.1}'
-      
+      const data = await response.json();
+      const content =
+        data.choices[0]?.message?.content || '{"categories": ["other"], "confidence": 0.1}';
+
       try {
-        const result = JSON.parse(content)
+        const result = JSON.parse(content);
         return {
-          categories: Array.isArray(result.categories) ? result.categories : ['other'],
-          confidence: typeof result.confidence === 'number' ? result.confidence : 0.1,
-        }
+          categories: Array.isArray(result.categories) ? result.categories : ["other"],
+          confidence: typeof result.confidence === "number" ? result.confidence : 0.1,
+        };
       } catch {
-        return { categories: ['other'], confidence: 0.1 }
+        return { categories: ["other"], confidence: 0.1 };
       }
     } catch (error) {
-      console.error('Error categorizing requirement:', error)
-      return { categories: ['other'], confidence: 0.1 }
+      console.error("Error categorizing requirement:", error);
+      return { categories: ["other"], confidence: 0.1 };
     }
   }
 
@@ -173,47 +180,47 @@ export class AIProcessingService {
         Requirement: "${text}"
         
         Format: ["keyword1", "keyword2", "keyword3"]
-      `
+      `;
 
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
         },
         body: JSON.stringify({
-          model: 'deepseek-chat',
+          model: "deepseek-chat",
           messages: [
             {
-              role: 'system',
-              content: 'You are a keyword extraction assistant. Return ONLY valid JSON array.',
+              role: "system",
+              content: "You are a keyword extraction assistant. Return ONLY valid JSON array.",
             },
             {
-              role: 'user',
+              role: "user",
               content: prompt,
             },
           ],
           temperature: 0.1,
           max_tokens: 100,
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error(`Keyword extraction API error: ${response.status}`)
+        throw new Error(`Keyword extraction API error: ${response.status}`);
       }
 
-      const data = await response.json()
-      const content = data.choices[0]?.message?.content || '[]'
-      
+      const data = await response.json();
+      const content = data.choices[0]?.message?.content || "[]";
+
       try {
-        const keywords = JSON.parse(content)
-        return Array.isArray(keywords) ? keywords : []
+        const keywords = JSON.parse(content);
+        return Array.isArray(keywords) ? keywords : [];
       } catch {
-        return []
+        return [];
       }
     } catch (error) {
-      console.error('Error extracting keywords:', error)
-      return this.extractFallbackKeywords(text)
+      console.error("Error extracting keywords:", error);
+      return this.extractFallbackKeywords(text);
     }
   }
 
@@ -226,77 +233,80 @@ export class AIProcessingService {
         Requirement: "${text}"
         
         Return ONLY the summary text.
-      `
+      `;
 
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
         },
         body: JSON.stringify({
-          model: 'deepseek-chat',
+          model: "deepseek-chat",
           messages: [
             {
-              role: 'system',
-              content: 'You are a requirement summarization assistant. Return ONLY the summary text.',
+              role: "system",
+              content:
+                "You are a requirement summarization assistant. Return ONLY the summary text.",
             },
             {
-              role: 'user',
+              role: "user",
               content: prompt,
             },
           ],
           temperature: 0.3,
           max_tokens: 100,
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error(`Summary API error: ${response.status}`)
+        throw new Error(`Summary API error: ${response.status}`);
       }
 
-      const data = await response.json()
-      return data.choices[0]?.message?.content?.trim() || text.substring(0, 200)
+      const data = await response.json();
+      return data.choices[0]?.message?.content?.trim() || text.substring(0, 200);
     } catch (error) {
-      console.error('Error generating summary:', error)
-      return text.substring(0, 200)
+      console.error("Error generating summary:", error);
+      return text.substring(0, 200);
     }
   }
 
   async clusterRequirements(
     requirements: Array<{ id: string; text: string; embeddings?: number[] }>,
     maxClusters = 10
-  ): Promise<Array<{
-    clusterId: string
-    name: string
-    description: string
-    requirementIds: string[]
-    centroid: number[] | null
-  }>> {
+  ): Promise<
+    Array<{
+      clusterId: string;
+      name: string;
+      description: string;
+      requirementIds: string[];
+      centroid: number[] | null;
+    }>
+  > {
     try {
       // In a real implementation, this would use proper clustering algorithms
       // For now, we'll do simple keyword-based clustering
-      
+
       const clusters: Array<{
-        clusterId: string
-        name: string
-        description: string
-        requirementIds: string[]
-        centroid: number[] | null
-      }> = []
+        clusterId: string;
+        name: string;
+        description: string;
+        requirementIds: string[];
+        centroid: number[] | null;
+      }> = [];
 
       // Group by primary category (simplified clustering)
-      const categorizedRequirements: Record<string, Array<{ id: string; text: string }>> = {}
+      const categorizedRequirements: Record<string, Array<{ id: string; text: string }>> = {};
 
       for (const req of requirements) {
-        const analysis = await this.analyzeRequirement(req.text)
-        const primaryCategory = analysis.categories[0] || 'other'
-        
+        const analysis = await this.analyzeRequirement(req.text);
+        const primaryCategory = analysis.categories[0] || "other";
+
         if (!categorizedRequirements[primaryCategory]) {
-          categorizedRequirements[primaryCategory] = []
+          categorizedRequirements[primaryCategory] = [];
         }
-        
-        categorizedRequirements[primaryCategory].push({ id: req.id, text: req.text })
+
+        categorizedRequirements[primaryCategory].push({ id: req.id, text: req.text });
       }
 
       // Create clusters from categories
@@ -306,42 +316,59 @@ export class AIProcessingService {
             clusterId: `cluster_${category}_${Date.now()}`,
             name: this.formatCategoryName(category),
             description: `${reqs.length} requirements about ${category}`,
-            requirementIds: reqs.map(r => r.id),
+            requirementIds: reqs.map((r) => r.id),
             centroid: null, // Would be calculated from embeddings in real implementation
-          })
+          });
         }
       }
 
       // Limit number of clusters
-      return clusters.slice(0, maxClusters)
+      return clusters.slice(0, maxClusters);
     } catch (error) {
-      console.error('Error clustering requirements:', error)
-      return []
+      console.error("Error clustering requirements:", error);
+      return [];
     }
   }
 
   private extractFallbackKeywords(text: string): string[] {
     // Simple keyword extraction as fallback
     const commonKeywords = [
-      'api', 'database', 'ui', 'ux', 'login', 'auth', 'security',
-      'performance', 'mobile', 'web', 'automation', 'tool', 'script',
-      'workflow', 'data', 'analysis', 'report', 'dashboard', 'notification',
-    ]
+      "api",
+      "database",
+      "ui",
+      "ux",
+      "login",
+      "auth",
+      "security",
+      "performance",
+      "mobile",
+      "web",
+      "automation",
+      "tool",
+      "script",
+      "workflow",
+      "data",
+      "analysis",
+      "report",
+      "dashboard",
+      "notification",
+    ];
 
-    const words = text.toLowerCase().split(/\s+/)
-    const keywords = new Set<string>()
+    const words = text.toLowerCase().split(/\s+/);
+    const keywords = new Set<string>();
 
     for (const keyword of commonKeywords) {
       if (text.toLowerCase().includes(keyword)) {
-        keywords.add(keyword)
+        keywords.add(keyword);
       }
     }
 
     // Add some frequent words
-    const wordFrequency = new Map<string, number>()
+    const wordFrequency = new Map<string, number>();
     for (const word of words) {
-      if (word.length > 3) { // Ignore short words
-        wordFrequency.set(word, (wordFrequency.get(word) || 0) + 1)
+      if (word.length > 3) {
+        // Ignore short words
+        wordFrequency.set(word, (wordFrequency.get(word) || 0) + 1);
       }
     }
 
@@ -349,32 +376,32 @@ export class AIProcessingService {
     const sortedWords = Array.from(wordFrequency.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
-      .map(([word]) => word)
+      .map(([word]) => word);
 
-    sortedWords.forEach(word => keywords.add(word))
+    sortedWords.forEach((word) => keywords.add(word));
 
-    return Array.from(keywords)
+    return Array.from(keywords);
   }
 
   private formatCategoryName(category: string): string {
     return category
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ')
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   }
 
   async testConnection(): Promise<boolean> {
     try {
       const response = await fetch(`${this.baseUrl}/models`, {
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
         },
-      })
+      });
 
-      return response.ok
+      return response.ok;
     } catch (error) {
-      console.error('AI service connection test failed:', error)
-      return false
+      console.error("AI service connection test failed:", error);
+      return false;
     }
   }
 }

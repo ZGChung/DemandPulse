@@ -1,18 +1,19 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import DashboardHeader from '@/components/dashboard-header'
-import RequirementStats from '@/components/requirement-stats'
-import RecentRequirements from '@/components/recent-requirements'
-import TrendingClusters from '@/components/trending-clusters'
-import OnboardingModal from '@/components/onboarding-modal'
-import PersonalInsights from '@/components/personal-insights'
-import ReferralWidget from '@/components/referral-widget'
+import { getServerSession } from "next-auth";
+
+import DashboardHeader from "@/components/dashboard-header";
+import OnboardingModal from "@/components/onboarding-modal";
+import PersonalInsights from "@/components/personal-insights";
+import RecentRequirements from "@/components/recent-requirements";
+import ReferralWidget from "@/components/referral-widget";
+import RequirementStats from "@/components/requirement-stats";
+import TrendingClusters from "@/components/trending-clusters";
+import { authOptions } from "@/lib/auth";
 
 export default async function Dashboard() {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession(authOptions);
 
   if (!session) {
-    return null // Should not happen since Dashboard is only shown when authenticated
+    return null; // Should not happen since Dashboard is only shown when authenticated
   }
   return (
     <div className="min-h-screen bg-gray-50">
@@ -30,7 +31,7 @@ export default async function Dashboard() {
             <div className="lg:col-span-1 space-y-8">
               <PersonalInsights />
               <ReferralWidget
-                userId={session.user.id || session.user.email || 'anonymous'}
+                userId={session.user.id || session.user.email || "anonymous"}
                 userName={session.user.name || undefined}
                 userEmail={session.user.email || undefined}
               />
@@ -84,5 +85,5 @@ export default async function Dashboard() {
         </div>
       </footer>
     </div>
-  )
+  );
 }

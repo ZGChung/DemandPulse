@@ -1,7 +1,7 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
 
 export function AuthStatus() {
   const { data: session, status } = useSession();
@@ -41,10 +41,7 @@ export function AuthStatus() {
   }
 
   return (
-    <Link
-      href="/auth/signin"
-      className="text-sm font-medium text-gray-700 hover:text-gray-900"
-    >
+    <Link href="/auth/signin" className="text-sm font-medium text-gray-700 hover:text-gray-900">
       Sign in
     </Link>
   );

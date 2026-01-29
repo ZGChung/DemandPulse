@@ -81,6 +81,7 @@ npm run dev
 ### 3. Vercel Deployment
 
 #### Option A: Vercel CLI
+
 ```bash
 # Install Vercel CLI
 npm i -g vercel
@@ -91,6 +92,7 @@ vercel --prod
 ```
 
 #### Option B: Vercel Dashboard
+
 1. Import GitHub repository in Vercel
 2. Configure environment variables in Vercel project settings
 3. Deploy
@@ -98,14 +100,17 @@ vercel --prod
 ### 4. Database Setup
 
 #### Using Supabase (Recommended)
+
 1. Create Supabase project
 2. Get connection string from Project Settings → Database
 3. Run migrations:
+
 ```bash
 npx prisma db push
 ```
 
 #### Using Neon
+
 1. Create Neon project
 2. Get connection string from Dashboard
 3. Run migrations
@@ -115,20 +120,25 @@ npx prisma db push
 The project uses Prisma 7.3.0 which has different configuration requirements:
 
 #### SQLite Configuration
+
 - Use `DATABASE_URL=file:./dev.db` for development
 - Prisma client will automatically detect SQLite
 
 #### PostgreSQL Configuration
+
 - Regular PostgreSQL: `DATABASE_URL=postgresql://...`
 - Prisma Data Platform: `DATABASE_URL=prisma+postgres://...`
 
 #### Important Changes in Prisma 7.3.0
+
 1. **Engine Types**: Prisma 7.3.0 uses engine type "client" by default
 2. **Adapter/AccelerateUrl**: For Prisma Data Platform URLs, `accelerateUrl` is required
 3. **SQLite Support**: Works out of the box with file URLs
 
 #### Troubleshooting Prisma Configuration
+
 If you see "Using engine type 'client' requires either 'adapter' or 'accelerateUrl'" error:
+
 - For SQLite: Ensure DATABASE_URL starts with `file:`
 - For PostgreSQL: Use regular connection string (not prisma+postgres:// unless using Prisma Data Platform)
 - For Prisma Data Platform: Configuration is handled automatically in `lib/prisma.ts`
@@ -136,6 +146,7 @@ If you see "Using engine type 'client' requires either 'adapter' or 'accelerateU
 ### 5. CI/CD Pipeline
 
 The GitHub Actions workflow (`/.github/workflows/ci.yml`) automatically:
+
 - Runs tests on every push
 - Builds application
 - Deploys to Vercel on main branch
@@ -146,10 +157,12 @@ The GitHub Actions workflow (`/.github/workflows/ci.yml`) automatically:
 For users in China, configure:
 
 ### 1. DNS Configuration
+
 - Use a China-optimized DNS provider
 - Configure CNAME records for your domain
 
 ### 2. CDN Configuration
+
 ```json
 {
   "regions": ["hkg1", "sin1", "syd1"],
@@ -160,6 +173,7 @@ For users in China, configure:
 ```
 
 ### 3. Environment Optimization
+
 ```env
 # Reduce external dependencies
 ENABLE_EXTERNAL_ANALYTICS=false
@@ -169,6 +183,7 @@ USE_CHINA_OPTIMIZED_APIS=true
 ## Testing & Development
 
 ### Mock Claude Code Integration
+
 For development and testing without actual Claude Code installation:
 
 ```bash
@@ -191,16 +206,19 @@ See `MOCK-CLAUDE-CODE.md` for complete documentation.
 ## Monitoring & Maintenance
 
 ### 1. Health Checks
+
 - API: `GET /api/health`
 - Database: Check Prisma connection
 - AI Service: DeepSeek API status
 
 ### 2. Logging
+
 - Vercel Logs for API routes
 - Database query logs (optional)
 - Error tracking with Sentry (recommended)
 
 ### 3. Backup Strategy
+
 - Daily database backups
 - Environment variable backups
 - Code repository backups
@@ -208,18 +226,21 @@ See `MOCK-CLAUDE-CODE.md` for complete documentation.
 ## Security Considerations
 
 ### 1. API Security
+
 - Rate limiting enabled
 - CORS configured
 - Input validation
 - SQL injection prevention
 
 ### 2. Data Privacy
+
 - GDPR compliance built-in
 - Data anonymization
 - Consent management
 - Data retention policies
 
 ### 3. Secrets Management
+
 - Never commit secrets to git
 - Use environment variables
 - Rotate API keys regularly
@@ -245,6 +266,7 @@ See `MOCK-CLAUDE-CODE.md` for complete documentation.
    - Review build logs
 
 ### Support
+
 - GitHub Issues for bug reports
 - Vercel Support for deployment issues
 - Database provider support for data issues
@@ -252,16 +274,19 @@ See `MOCK-CLAUDE-CODE.md` for complete documentation.
 ## Scaling Considerations
 
 ### 1. Database Scaling
+
 - Connection pooling
 - Read replicas for analytics
 - Database indexing optimization
 
 ### 2. API Scaling
+
 - Edge functions for global latency
 - Caching strategy
 - Load balancing
 
 ### 3. Cost Optimization
+
 - Monitor API usage
 - Optimize database queries
 - Use CDN for static assets

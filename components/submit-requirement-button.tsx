@@ -1,53 +1,55 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { apiClient } from '@/lib/api-client'
-import { FaPlus } from 'react-icons/fa'
+import React, { useState } from "react";
+import { FaPlus } from "react-icons/fa";
+
+import { apiClient } from "@/lib/api-client";
 
 export default function SubmitRequirementButton() {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   // Form fields
-  const [originalRequirement, setOriginalRequirement] = useState('')
-  const [summarizedRequirement, setSummarizedRequirement] = useState('')
-  const [dataCollectionConsent, setDataCollectionConsent] = useState(true)
-  const [contactConsent, setContactConsent] = useState(false)
-  const [anonymizationConsent, setAnonymizationConsent] = useState(true)
-  const [userProvidedEmail, setUserProvidedEmail] = useState('')
+  const [originalRequirement, setOriginalRequirement] = useState("");
+  const [summarizedRequirement, setSummarizedRequirement] = useState("");
+  const [dataCollectionConsent, setDataCollectionConsent] = useState(true);
+  const [contactConsent, setContactConsent] = useState(false);
+  const [anonymizationConsent, setAnonymizationConsent] = useState(true);
+  const [userProvidedEmail, setUserProvidedEmail] = useState("");
 
-  const generateRequirementId = () => `req_manual_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+  const generateRequirementId = () =>
+    `req_manual_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    setError(null)
-    setSuccess(false)
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+    setSuccess(false);
 
     try {
       // Validate required fields
       if (!originalRequirement.trim()) {
-        throw new Error('Original requirement is required')
+        throw new Error("Original requirement is required");
       }
       if (!summarizedRequirement.trim()) {
-        throw new Error('Summarized requirement is required')
+        throw new Error("Summarized requirement is required");
       }
       if (!dataCollectionConsent) {
-        throw new Error('Data collection consent is required to submit requirements')
+        throw new Error("Data collection consent is required to submit requirements");
       }
 
-      const requirementId = generateRequirementId()
-      const now = new Date().toISOString()
+      const requirementId = generateRequirementId();
+      const now = new Date().toISOString();
 
       await apiClient.submitRequirement({
         requirementId,
         originalRequirement: originalRequirement.trim(),
         summarizedRequirement: summarizedRequirement.trim(),
         context: {
-          conversationId: 'manual_submission',
-          workspacePath: '',
+          conversationId: "manual_submission",
+          workspacePath: "",
           timestamp: now,
         },
         consent: {
@@ -56,40 +58,40 @@ export default function SubmitRequirementButton() {
             contact: contactConsent,
             anonymization: anonymizationConsent,
           },
-          userProvidedEmail: contactConsent && userProvidedEmail ? userProvidedEmail.trim() : undefined,
+          userProvidedEmail:
+            contactConsent && userProvidedEmail ? userProvidedEmail.trim() : undefined,
           consentedAt: now,
         },
-      })
+      });
 
       // Success
-      setSuccess(true)
+      setSuccess(true);
       // Reset form
-      setOriginalRequirement('')
-      setSummarizedRequirement('')
-      setContactConsent(false)
-      setUserProvidedEmail('')
+      setOriginalRequirement("");
+      setSummarizedRequirement("");
+      setContactConsent(false);
+      setUserProvidedEmail("");
       // Keep dataCollectionConsent and anonymizationConsent as defaults
 
       // Close modal after 2 seconds
       setTimeout(() => {
-        setIsModalOpen(false)
-        setSuccess(false)
-      }, 2000)
-
+        setIsModalOpen(false);
+        setSuccess(false);
+      }, 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit requirement')
+      setError(err instanceof Error ? err.message : "Failed to submit requirement");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleCloseModal = () => {
     if (!isSubmitting) {
-      setIsModalOpen(false)
-      setError(null)
-      setSuccess(false)
+      setIsModalOpen(false);
+      setError(null);
+      setSuccess(false);
     }
-  }
+  };
 
   return (
     <>
@@ -120,19 +122,27 @@ export default function SubmitRequirementButton() {
                       Submit a Requirement
                     </h3>
                     <p className="text-sm text-gray-500 mb-6">
-                      Share a requirement you encountered while developing. This helps build the demand intelligence network.
+                      Share a requirement you encountered while developing. This helps build the
+                      demand intelligence network.
                     </p>
 
                     {success ? (
                       <div className="mb-4 p-4 bg-green-50 rounded-lg">
-                        <p className="text-green-800 font-medium">Requirement submitted successfully!</p>
-                        <p className="text-green-700 text-sm mt-1">Thank you for contributing to the community.</p>
+                        <p className="text-green-800 font-medium">
+                          Requirement submitted successfully!
+                        </p>
+                        <p className="text-green-700 text-sm mt-1">
+                          Thank you for contributing to the community.
+                        </p>
                       </div>
                     ) : (
                       <form onSubmit={handleSubmit} className="space-y-4">
                         {/* Original Requirement */}
                         <div>
-                          <label htmlFor="originalRequirement" className="block text-sm font-medium text-gray-700 mb-1">
+                          <label
+                            htmlFor="originalRequirement"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
                             Original Requirement *
                           </label>
                           <textarea
@@ -152,7 +162,10 @@ export default function SubmitRequirementButton() {
 
                         {/* Summarized Requirement */}
                         <div>
-                          <label htmlFor="summarizedRequirement" className="block text-sm font-medium text-gray-700 mb-1">
+                          <label
+                            htmlFor="summarizedRequirement"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                          >
                             Summarized Requirement *
                           </label>
                           <input
@@ -172,7 +185,9 @@ export default function SubmitRequirementButton() {
 
                         {/* Consent Options */}
                         <div className="space-y-3 pt-4 border-t border-gray-200">
-                          <h4 className="text-sm font-medium text-gray-900">Privacy & Consent Options</h4>
+                          <h4 className="text-sm font-medium text-gray-900">
+                            Privacy & Consent Options
+                          </h4>
 
                           <div className="flex items-start">
                             <div className="flex items-center h-5">
@@ -187,11 +202,15 @@ export default function SubmitRequirementButton() {
                               />
                             </div>
                             <div className="ml-3 text-sm">
-                              <label htmlFor="dataCollectionConsent" className="font-medium text-gray-700">
+                              <label
+                                htmlFor="dataCollectionConsent"
+                                className="font-medium text-gray-700"
+                              >
                                 Data Collection Consent *
                               </label>
                               <p className="text-gray-500">
-                                I consent to having this requirement stored and analyzed as part of the DemandPulse network.
+                                I consent to having this requirement stored and analyzed as part of
+                                the DemandPulse network.
                               </p>
                             </div>
                           </div>
@@ -208,7 +227,10 @@ export default function SubmitRequirementButton() {
                               />
                             </div>
                             <div className="ml-3 text-sm">
-                              <label htmlFor="anonymizationConsent" className="font-medium text-gray-700">
+                              <label
+                                htmlFor="anonymizationConsent"
+                                className="font-medium text-gray-700"
+                              >
                                 Anonymization (Recommended)
                               </label>
                               <p className="text-gray-500">
@@ -233,14 +255,18 @@ export default function SubmitRequirementButton() {
                                 Contact Consent (Optional)
                               </label>
                               <p className="text-gray-500">
-                                Allow DemandPulse to contact me about this requirement or related opportunities.
+                                Allow DemandPulse to contact me about this requirement or related
+                                opportunities.
                               </p>
                             </div>
                           </div>
 
                           {contactConsent && (
                             <div className="ml-7">
-                              <label htmlFor="userProvidedEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                              <label
+                                htmlFor="userProvidedEmail"
+                                className="block text-sm font-medium text-gray-700 mb-1"
+                              >
                                 Email Address
                               </label>
                               <input
@@ -284,7 +310,7 @@ export default function SubmitRequirementButton() {
                                 Submitting...
                               </>
                             ) : (
-                              'Submit Requirement'
+                              "Submit Requirement"
                             )}
                           </button>
                         </div>
@@ -298,5 +324,5 @@ export default function SubmitRequirementButton() {
         </div>
       )}
     </>
-  )
+  );
 }

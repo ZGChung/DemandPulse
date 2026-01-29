@@ -1,10 +1,10 @@
 // Structured logging utility for DemandPulse
 
 export enum LogLevel {
-  DEBUG = 'debug',
-  INFO = 'info',
-  WARN = 'warn',
-  ERROR = 'error',
+  DEBUG = "debug",
+  INFO = "info",
+  WARN = "warn",
+  ERROR = "error",
 }
 
 export interface LogEntry {
@@ -31,7 +31,12 @@ export class Logger {
     return messageLevelIndex >= minLevelIndex;
   }
 
-  private formatLogEntry(level: LogLevel, message: string, context?: Record<string, any>, error?: Error): LogEntry {
+  private formatLogEntry(
+    level: LogLevel,
+    message: string,
+    context?: Record<string, any>,
+    error?: Error
+  ): LogEntry {
     return {
       timestamp: new Date().toISOString(),
       level,
@@ -105,8 +110,14 @@ export class Logger {
   }
 
   // Convenience method for API requests
-  logRequest(method: string, path: string, statusCode: number, duration: number, userId?: string): void {
-    this.info('API Request', {
+  logRequest(
+    method: string,
+    path: string,
+    statusCode: number,
+    duration: number,
+    userId?: string
+  ): void {
+    this.info("API Request", {
       method,
       path,
       statusCode,
@@ -116,26 +127,37 @@ export class Logger {
   }
 
   // Convenience method for database operations
-  logDatabaseOperation(operation: string, model: string, duration: number, success: boolean, error?: Error): void {
+  logDatabaseOperation(
+    operation: string,
+    model: string,
+    duration: number,
+    success: boolean,
+    error?: Error
+  ): void {
     const level = success ? LogLevel.INFO : LogLevel.ERROR;
-    const message = success ? 'Database operation completed' : 'Database operation failed';
+    const message = success ? "Database operation completed" : "Database operation failed";
 
-    const entry = this.formatLogEntry(level, message, {
-      operation,
-      model,
-      durationMs: duration,
-      success,
-    }, error);
+    const entry = this.formatLogEntry(
+      level,
+      message,
+      {
+        operation,
+        model,
+        durationMs: duration,
+        success,
+      },
+      error
+    );
 
     this.output(entry);
   }
 }
 
 // Default logger instances
-export const apiLogger = new Logger('API');
-export const dbLogger = new Logger('Database');
-export const authLogger = new Logger('Auth');
-export const aiLogger = new Logger('AI');
+export const apiLogger = new Logger("API");
+export const dbLogger = new Logger("Database");
+export const authLogger = new Logger("Auth");
+export const aiLogger = new Logger("AI");
 
 // Global logger configuration
 export function setLogLevel(level: LogLevel): void {
@@ -150,19 +172,19 @@ export class ErrorTracker {
   static init(dsn?: string): void {
     if (dsn) {
       this.enabled = true;
-      console.log('Error tracking initialized');
+      console.log("Error tracking initialized");
       // In production, initialize Sentry or similar here
     }
   }
 
   static captureError(error: Error, context?: Record<string, any>): void {
     if (!this.enabled) {
-      console.error('Error (tracking disabled):', error, context);
+      console.error("Error (tracking disabled):", error, context);
       return;
     }
 
     // In production, send to error tracking service
-    console.error('Error captured for tracking:', {
+    console.error("Error captured for tracking:", {
       error: error.message,
       stack: error.stack,
       context,
@@ -173,7 +195,11 @@ export class ErrorTracker {
     // Sentry.captureException(error, { extra: context });
   }
 
-  static captureMessage(message: string, level: 'info' | 'warning' | 'error' = 'error', context?: Record<string, any>): void {
+  static captureMessage(
+    message: string,
+    level: "info" | "warning" | "error" = "error",
+    context?: Record<string, any>
+  ): void {
     if (!this.enabled) {
       console.log(`Message (tracking disabled) [${level}]:`, message, context);
       return;
@@ -192,13 +218,13 @@ export class ErrorTracker {
 }
 
 // Simple request/response logging middleware for Next.js
-export function withLogging(handler: Function) {
+export function withLogging(handler: (req: Request, ...args: any[]) => Promise<any>) {
   return async function (req: Request, ...args: any[]) {
     const startTime = Date.now();
     const url = new URL(req.url);
 
     try {
-      apiLogger.info('Request started', {
+      apiLogger.info("Request started", {
         method: req.method,
         path: url.pathname,
         query: Object.fromEntries(url.searchParams),
@@ -207,7 +233,7 @@ export function withLogging(handler: Function) {
       const response = await handler(req, ...args);
       const duration = Date.now() - startTime;
 
-      apiLogger.info('Request completed', {
+      apiLogger.info("Request completed", {
         method: req.method,
         path: url.pathname,
         statusCode: response.status,
@@ -218,11 +244,15 @@ export function withLogging(handler: Function) {
     } catch (error) {
       const duration = Date.now() - startTime;
 
-      apiLogger.error('Request failed', {
-        method: req.method,
-        path: url.pathname,
-        durationMs: duration,
-      }, error instanceof Error ? error : new Error(String(error)));
+      apiLogger.error(
+        "Request failed",
+        {
+          method: req.method,
+          path: url.pathname,
+          durationMs: duration,
+        },
+        error instanceof Error ? error : new Error(String(error))
+      );
 
       ErrorTracker.captureError(error instanceof Error ? error : new Error(String(error)), {
         method: req.method,

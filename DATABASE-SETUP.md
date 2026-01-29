@@ -18,6 +18,7 @@ SQLite is the easiest option for local development testing.
 ### Setup Steps:
 
 1. **Update schema for SQLite compatibility**:
+
    ```prisma
    # In prisma/schema.prisma, change:
    datasource db {
@@ -32,12 +33,14 @@ SQLite is the easiest option for local development testing.
    - Change `String[]` arrays to `Json` type
 
 3. **Update environment**:
+
    ```bash
    # In .env.local
    DATABASE_URL=file:./dev.db
    ```
 
 4. **Run migrations**:
+
    ```bash
    npx prisma db push
    ```
@@ -65,6 +68,7 @@ createdb demandpulse
 ### Configuration:
 
 1. **Update environment**:
+
    ```bash
    # In .env.local
    DATABASE_URL=postgresql://postgres@localhost:5432/demandpulse
@@ -74,6 +78,7 @@ createdb demandpulse
    ```
 
 2. **Run migrations**:
+
    ```bash
    npx prisma db push
    ```
@@ -96,12 +101,14 @@ Neon provides free PostgreSQL databases in the cloud.
 3. **Get connection string** from Neon dashboard
 
 4. **Update environment**:
+
    ```bash
    # In .env.local
    DATABASE_URL=postgresql://neondb_owner:[password]@ep-[instance].pooler.us-east-2.aws.neon.tech/demandpulse?sslmode=require&connect_timeout=30
    ```
 
 5. **Run migrations**:
+
    ```bash
    npx prisma db push
    ```
@@ -113,29 +120,33 @@ Neon provides free PostgreSQL databases in the cloud.
 
 ## Testing Commands
 
-| Command | Purpose |
-|---------|---------|
+| Command                  | Purpose                                         |
+| ------------------------ | ----------------------------------------------- |
 | `npm run db:simple-test` | Check database configuration without connecting |
-| `npm run db:test` | Full database connection test |
-| `npm run db:push` | Apply database schema migrations |
-| `npm run db:studio` | Open Prisma Studio (database GUI) |
-| `npm run db:generate` | Generate Prisma Client |
+| `npm run db:test`        | Full database connection test                   |
+| `npm run db:push`        | Apply database schema migrations                |
+| `npm run db:studio`      | Open Prisma Studio (database GUI)               |
+| `npm run db:generate`    | Generate Prisma Client                          |
 
 ## Troubleshooting
 
 ### "DATABASE_URL is not set"
+
 - Check that `.env.local` exists and has `DATABASE_URL`
 - Run: `cp .env.example .env.local` and update DATABASE_URL
 
 ### "Prisma CLI not available"
+
 - Run: `npm install` to install dependencies
 
 ### PostgreSQL connection issues:
+
 - Ensure PostgreSQL is running: `brew services list | grep postgres`
 - Check port: PostgreSQL default is 5432
 - Verify database exists: `psql -l`
 
 ### SQLite schema errors:
+
 - Current schema uses PostgreSQL-specific types
 - Simplify schema or use PostgreSQL
 
