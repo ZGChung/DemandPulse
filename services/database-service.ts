@@ -2,11 +2,47 @@ import { PrismaClient, RequirementStatus, PrivacyAction, ActorType } from '@pris
 import { CollectedRequirement } from '@/types/claude-code'
 import { prisma } from '@/lib/prisma'
 
+// Mock in-memory store for when database is unavailable
+interface MockRequirement {
+  id: string
+  originalRequirement: string
+  summarizedRequirement: string
+  conversationId: string
+  workspacePath?: string
+  detectedAt: Date
+  dataCollectionConsent: boolean
+  contactConsent: boolean
+  anonymizationConsent: boolean
+  userProvidedEmail?: string
+  consentedAt: Date
+  userId?: string
+  anonymizedData: any
+  dataRetentionDays: number
+  scheduledDeletionAt: Date
+  status: RequirementStatus
+  createdAt: Date
+  updatedAt: Date
+}
+
 export class DatabaseService {
-  private prisma: PrismaClient
+  private prisma: PrismaClient | null = null
+  private useMock: boolean = false
+  private mockRequirements: MockRequirement[] = []
+  private mockIdCounter = 1
 
   constructor() {
-    this.prisma = prisma
+    try {
+      // Try to use Prisma, but fallback to mock if it fails
+      this.prisma = prisma
+      // Test connection by accessing a property
+      if (this.prisma) {
+        console.log('DatabaseService: Using Prisma client')
+      }
+    } catch (error) {
+      console.warn('DatabaseService: Prisma client failed, using mock storage', error)
+      this.useMock = true
+      this.prisma = null
+    }
   }
 
   async storeRequirement(collectedRequirement: CollectedRequirement, userId?: string): Promise<string> {

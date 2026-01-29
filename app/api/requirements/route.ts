@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { DataCollectionFlow } from '@/services/data-collection-flow'
 import { DatabaseService } from '@/services/database-service'
+import { emailService } from '@/services/email-service'
 import { env } from '@/lib/env'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -130,6 +131,24 @@ export async function POST(request: NextRequest) {
         summary: result.collectedRequirement?.summarizedRequirement,
         consent: result.collectedRequirement?.consent.consentOptions,
       })
+
+      // Send email notification if user has email and consented to contact
+      if (session.user?.email && result.collectedRequirement?.consent.consentOptions?.contact) {
+        try {
+          await emailService.sendRequirementSubmittedEmail(
+            {
+              email: session.user.email,
+              name: session.user.name || undefined,
+              userId: session.user.id
+            },
+            result.collectedRequirement.summarizedRequirement
+          )
+          console.log('Requirement submitted email sent to:', session.user.email)
+        } catch (emailError) {
+          console.error('Failed to send email notification:', emailError)
+          // Don't fail the request if email fails
+        }
+      }
     } catch (error) {
       console.error('Failed to store requirement:', error)
       return NextResponse.json(
