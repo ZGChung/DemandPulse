@@ -50,3 +50,16 @@ ds_api_key.txt
 
 # Claude Code
 .claude/
+
+# Log files
+*.log
+*.backup
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
