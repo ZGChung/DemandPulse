@@ -11,6 +11,7 @@ const optionalEnvVars = [
   "ENABLE_CLAUDE_CODE_PLUGIN",
   "ENABLE_AI_PROCESSING",
   "NEXT_PUBLIC_APP_NAME",
+  "REDIS_URL",
 ] as const;
 
 type RequiredEnvVar = (typeof requiredEnvVars)[number];
@@ -83,6 +84,7 @@ export const env = {
 
   // Optional with defaults
   databaseUrl: () => getEnv("DATABASE_URL", ""),
+  redisUrl: () => getEnv("REDIS_URL", ""),
   nextAuthSecret: () => getEnv("NEXTAUTH_SECRET", ""),
   nextAuthUrl: () => getEnv("NEXTAUTH_URL", ""),
   rateLimitMaxRequests: () => getEnvAsNumber("RATE_LIMIT_MAX_REQUESTS", 100),

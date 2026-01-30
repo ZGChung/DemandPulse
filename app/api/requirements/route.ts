@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";
 import { env } from "@/lib/env";
+import { defaultRateLimiter } from "@/lib/rate-limiter";
 import { ValidationError } from "@/lib/validation";
 import {
   validateRequirementBody,
@@ -18,32 +19,8 @@ import { emailService } from "@/services/email-service";
 // Initialize services
 const dataCollectionFlow = new DataCollectionFlow();
 
-// Rate limiting in memory (in production, use Redis or similar)
-const rateLimit = new Map<string, { count: number; resetTime: number }>();
-
-function checkRateLimit(ip: string): { allowed: boolean; remaining: number; reset: number } {
-  const now = Date.now();
-  const windowMs = env.rateLimitWindowMs();
-  const maxRequests = env.rateLimitMaxRequests();
-
-  const userLimit = rateLimit.get(ip);
-
-  if (!userLimit || now > userLimit.resetTime) {
-    // Reset or create new limit
-    rateLimit.set(ip, { count: 1, resetTime: now + windowMs });
-    return { allowed: true, remaining: maxRequests - 1, reset: now + windowMs };
-  }
-
-  if (userLimit.count >= maxRequests) {
-    return { allowed: false, remaining: 0, reset: userLimit.resetTime };
-  }
-
-  // Increment count
-  userLimit.count++;
-  rateLimit.set(ip, userLimit);
-
-  return { allowed: true, remaining: maxRequests - userLimit.count, reset: userLimit.resetTime };
-}
+// Rate limiting handled by Redis-based rate limiter (lib/rate-limiter.ts)
+// Falls back to in-memory when Redis is not available
 
 export async function POST(request: NextRequest) {
   try {
@@ -59,7 +36,19 @@ export async function POST(request: NextRequest) {
 
     // Check rate limit (per user)
     const rateLimitKey = `${session.user.id}:${ip}`;
-    const rateLimitResult = checkRateLimit(rateLimitKey);
+    let rateLimitResult;
+    try {
+      rateLimitResult = await defaultRateLimiter.checkAndIncrement(rateLimitKey);
+    } catch (rateLimitError) {
+      console.error("Rate limiting error, allowing request:", rateLimitError);
+      // Fail open: if rate limiting fails, allow the request
+      rateLimitResult = {
+        allowed: true,
+        remaining: env.rateLimitMaxRequests() - 1,
+        reset: Date.now() + env.rateLimitWindowMs(),
+      };
+    }
+
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         {
