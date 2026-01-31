@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
+  prisma: PrismaClient | null | undefined;
 };
 
 // Log DATABASE_URL for debugging (remove in production)
@@ -25,11 +25,7 @@ if (databaseUrl.startsWith("file:")) {
   console.log("Using SQLite database");
   // For Prisma 7.3.0 with SQLite, we need to use the library engine
   // The engineType is set in schema.prisma to "library"
-  // Add adapter configuration for SQLite
-  (prismaConfig as any).adapter = {
-    kind: "sqlite" as const,
-    file: databaseUrl.replace("file:", ""),
-  };
+  // No additional configuration needed
 } else if (databaseUrl.includes("prisma+postgres://")) {
   // Prisma Data Platform
   console.log("Using Prisma Data Platform with accelerateUrl");
@@ -41,6 +37,13 @@ if (databaseUrl.startsWith("file:")) {
   // For now, we'll use a mock or throw an error
 }
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient(prismaConfig);
+// During build, skip Prisma client initialization to avoid adapter errors
+const isBuild =
+  process.env.NEXT_PHASE === "phase-production-build" ||
+  (process.env.NODE_ENV === "production" &&
+    typeof window === "undefined" &&
+    process.env.DATABASE_URL?.startsWith("file:") === false);
+
+export const prisma = globalForPrisma.prisma ?? (isBuild ? null : new PrismaClient(prismaConfig));
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
