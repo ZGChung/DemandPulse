@@ -1,5 +1,6 @@
 import { PrismaClient, RequirementStatus, PrivacyAction, ActorType } from "@prisma/client";
 
+import { encryptionService } from "@/lib/encryption";
 import { prisma } from "@/lib/prisma";
 import { CollectedRequirement } from "@/types/claude-code";
 
@@ -47,6 +48,101 @@ export class DatabaseService {
     }
   }
 
+  /**
+   * Encrypt sensitive fields in a requirement before storage
+   */
+  private async encryptRequirementFields(requirement: CollectedRequirement): Promise<{
+    encryptedOriginalRequirement: string;
+    encryptedSummarizedRequirement: string;
+    encryptedUserProvidedEmail?: string;
+    encryptedAnonymizedData?: string;
+  }> {
+    const encryptedOriginalRequirement = await encryptionService.encrypt(
+      requirement.originalRequirement
+    );
+    const encryptedSummarizedRequirement = await encryptionService.encrypt(
+      requirement.summarizedRequirement
+    );
+
+    const encryptedUserProvidedEmail = requirement.consent.userProvidedEmail
+      ? await encryptionService.encrypt(requirement.consent.userProvidedEmail)
+      : undefined;
+
+    let encryptedAnonymizedData = undefined;
+    if (requirement.consent.consentOptions.anonymization) {
+      const anonymizedData = this.anonymizeRequirement(requirement);
+      encryptedAnonymizedData = await encryptionService.encryptJSON(anonymizedData);
+    }
+
+    return {
+      encryptedOriginalRequirement,
+      encryptedSummarizedRequirement,
+      encryptedUserProvidedEmail,
+      encryptedAnonymizedData,
+    };
+  }
+
+  /**
+   * Decrypt encrypted fields when reading from database
+   */
+  private async decryptRequirementFields(
+    encryptedOriginalRequirement: string,
+    encryptedSummarizedRequirement: string,
+    encryptedUserProvidedEmail?: string | null,
+    encryptedAnonymizedData?: string | null
+  ): Promise<{
+    originalRequirement: string;
+    summarizedRequirement: string;
+    userProvidedEmail?: string;
+    anonymizedData?: any;
+  }> {
+    const originalRequirement = await encryptionService.decrypt(encryptedOriginalRequirement);
+    const summarizedRequirement = await encryptionService.decrypt(encryptedSummarizedRequirement);
+
+    const userProvidedEmail = encryptedUserProvidedEmail
+      ? await encryptionService.decrypt(encryptedUserProvidedEmail)
+      : undefined;
+
+    let anonymizedData = undefined;
+    if (encryptedAnonymizedData) {
+      // Check if data is encrypted (contains dot separator) or already decrypted object
+      if (typeof encryptedAnonymizedData === "string" && encryptedAnonymizedData.includes(".")) {
+        anonymizedData = await encryptionService.decryptJSON(encryptedAnonymizedData);
+      } else {
+        // Already decrypted or plain object
+        anonymizedData = encryptedAnonymizedData;
+      }
+    }
+
+    return {
+      originalRequirement,
+      summarizedRequirement,
+      userProvidedEmail,
+      anonymizedData,
+    };
+  }
+
+  /**
+   * Decrypt encrypted fields in a requirement object
+   */
+  private async decryptRequirement(requirement: any): Promise<any> {
+    const { originalRequirement, summarizedRequirement, userProvidedEmail, anonymizedData } =
+      await this.decryptRequirementFields(
+        requirement.originalRequirement,
+        requirement.summarizedRequirement,
+        requirement.userProvidedEmail,
+        requirement.anonymizedData
+      );
+
+    return {
+      ...requirement,
+      originalRequirement,
+      summarizedRequirement,
+      userProvidedEmail,
+      anonymizedData,
+    };
+  }
+
   async storeRequirement(
     collectedRequirement: CollectedRequirement,
     userId?: string
@@ -57,18 +153,21 @@ export class DatabaseService {
       const scheduledDeletionAt = new Date();
       scheduledDeletionAt.setDate(scheduledDeletionAt.getDate() + dataRetentionDays);
 
-      // Create anonymized data if consent allows
-      const anonymizedData = collectedRequirement.consent.consentOptions.anonymization
-        ? this.anonymizeRequirement(collectedRequirement)
-        : null;
+      // Encrypt sensitive fields before storage
+      const {
+        encryptedOriginalRequirement,
+        encryptedSummarizedRequirement,
+        encryptedUserProvidedEmail,
+        encryptedAnonymizedData,
+      } = await this.encryptRequirementFields(collectedRequirement);
 
       // Use Prisma if available, otherwise fallback to mock
       if (this.prisma) {
         // Store the requirement
         const requirement = await this.prisma.requirement.create({
           data: {
-            originalRequirement: collectedRequirement.originalRequirement,
-            summarizedRequirement: collectedRequirement.summarizedRequirement,
+            originalRequirement: encryptedOriginalRequirement,
+            summarizedRequirement: encryptedSummarizedRequirement,
             conversationId: collectedRequirement.context.conversationId,
             workspacePath: collectedRequirement.context.workspacePath,
             detectedAt: collectedRequirement.context.timestamp,
@@ -77,14 +176,14 @@ export class DatabaseService {
             dataCollectionConsent: collectedRequirement.consent.consentOptions.dataCollection,
             contactConsent: collectedRequirement.consent.consentOptions.contact,
             anonymizationConsent: collectedRequirement.consent.consentOptions.anonymization,
-            userProvidedEmail: collectedRequirement.consent.userProvidedEmail,
+            userProvidedEmail: encryptedUserProvidedEmail,
             consentedAt: collectedRequirement.consent.consentedAt,
 
             // User association (if authenticated)
             userId: userId,
 
             // Privacy controls
-            anonymizedData,
+            anonymizedData: encryptedAnonymizedData,
             dataRetentionDays,
             scheduledDeletionAt,
 
@@ -112,18 +211,18 @@ export class DatabaseService {
         const mockId = `mock-${this.mockIdCounter++}`;
         const mockRequirement: MockRequirement = {
           id: mockId,
-          originalRequirement: collectedRequirement.originalRequirement,
-          summarizedRequirement: collectedRequirement.summarizedRequirement,
+          originalRequirement: encryptedOriginalRequirement,
+          summarizedRequirement: encryptedSummarizedRequirement,
           conversationId: collectedRequirement.context.conversationId,
           workspacePath: collectedRequirement.context.workspacePath,
           detectedAt: collectedRequirement.context.timestamp,
           dataCollectionConsent: collectedRequirement.consent.consentOptions.dataCollection,
           contactConsent: collectedRequirement.consent.consentOptions.contact,
           anonymizationConsent: collectedRequirement.consent.consentOptions.anonymization,
-          userProvidedEmail: collectedRequirement.consent.userProvidedEmail,
+          userProvidedEmail: encryptedUserProvidedEmail,
           consentedAt: collectedRequirement.consent.consentedAt,
           userId: userId,
-          anonymizedData,
+          anonymizedData: encryptedAnonymizedData,
           dataRetentionDays,
           scheduledDeletionAt,
           status: "PENDING",
@@ -174,14 +273,14 @@ export class DatabaseService {
         }
 
         // Apply privacy controls
-        return this.applyPrivacyControls(requirement, includeAnonymized);
+        return await this.applyPrivacyControls(requirement, includeAnonymized);
       } else {
         // Mock implementation
         const mockRequirement = this.mockRequirements.find((req) => req.id === id);
         if (!mockRequirement) {
           return null;
         }
-        return this.applyPrivacyControls(mockRequirement, includeAnonymized);
+        return await this.applyPrivacyControls(mockRequirement, includeAnonymized);
       }
     } catch (error) {
       console.error("Error fetching requirement:", error);
@@ -204,7 +303,7 @@ export class DatabaseService {
         });
 
         // Apply privacy controls to all requirements
-        return requirements.map((req: any) => this.applyPrivacyControls(req, false));
+        return Promise.all(requirements.map((req: any) => this.applyPrivacyControls(req, false)));
       } else {
         // Mock implementation
         let mockRequirements = this.mockRequirements.filter((req) => req.status === status);
@@ -213,7 +312,7 @@ export class DatabaseService {
         }
         mockRequirements.sort((a, b) => b.detectedAt.getTime() - a.detectedAt.getTime());
         mockRequirements = mockRequirements.slice(0, limit);
-        return mockRequirements.map((req) => this.applyPrivacyControls(req, false));
+        return Promise.all(mockRequirements.map((req) => this.applyPrivacyControls(req, false)));
       }
     } catch (error) {
       console.error("Error fetching requirements by status:", error);
@@ -439,24 +538,31 @@ export class DatabaseService {
     };
   }
 
-  private applyPrivacyControls(requirement: any, includeAnonymized: boolean) {
+  private async applyPrivacyControls(requirement: any, includeAnonymized: boolean) {
+    // Decrypt encrypted fields before applying privacy controls
+    const decryptedRequirement = await this.decryptRequirement(requirement);
+
     // Apply privacy controls based on consent
-    const result = { ...requirement };
+    const result = { ...decryptedRequirement };
 
     // If anonymization was consented, use anonymized data
-    if (requirement.anonymizationConsent && requirement.anonymizedData && !includeAnonymized) {
+    if (
+      decryptedRequirement.anonymizationConsent &&
+      decryptedRequirement.anonymizedData &&
+      !includeAnonymized
+    ) {
       result.originalRequirement = "[ANONYMIZED]";
       result.conversationId = "[ANONYMIZED]";
       result.workspacePath = "[ANONYMIZED]";
       result.userProvidedEmail = null;
 
       // Merge anonymized data
-      Object.assign(result, requirement.anonymizedData);
+      Object.assign(result, decryptedRequirement.anonymizedData);
     }
 
     // Always hide email unless explicitly requested with proper authorization
     if (!includeAnonymized) {
-      result.userProvidedEmail = requirement.contactConsent ? "[REDACTED]" : null;
+      result.userProvidedEmail = decryptedRequirement.contactConsent ? "[REDACTED]" : null;
     }
 
     return result;
