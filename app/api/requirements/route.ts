@@ -1,3 +1,4 @@
+import { RequirementStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
       }
       // Handle Zod validation errors
       if (validationError instanceof z.ZodError) {
-        const errors = validationError.errors.map((err) => ({
+        const errors = validationError.issues.map((err) => ({
           path: err.path.join("."),
           message: err.message,
         }));
@@ -91,13 +92,21 @@ export async function POST(request: NextRequest) {
       throw validationError;
     }
 
+    // Ensure consent has Date object matching types/claude-code
+    const consent = {
+      requirementId: validatedData.requirementId,
+      consentedAt: new Date(validatedData.consent.consentedAt),
+      consentOptions: validatedData.consent.consentOptions,
+      userProvidedEmail: validatedData.consent.userProvidedEmail,
+    };
+
     // Process consent and collect requirement
     const result = await dataCollectionFlow.handleUserConsent(
       validatedData.requirementId,
       validatedData.originalRequirement,
       validatedData.summarizedRequirement,
       validatedData.context,
-      validatedData.consent
+      consent
     );
 
     if (!result.success) {
@@ -234,8 +243,9 @@ export async function GET(request: NextRequest) {
     const statistics = await databaseService.getStatistics();
 
     // Get recent requirements
+    const mappedStatus = status ? (status.toUpperCase() as RequirementStatus) : "PROCESSED";
     const requirements = await databaseService.getRequirementsByStatus(
-      status || "PROCESSED",
+      mappedStatus,
       Math.min(limit, 100), // Cap at 100 for performance
       userId // Optional user filter
     );

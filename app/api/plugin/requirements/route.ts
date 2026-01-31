@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     let body;
     try {
       body = await request.json();
-    } catch (_error) {
+    } catch (_) {
       return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
     }
 
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       validatedData = requirementSubmissionSchema.parse(validatedBody);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const errors = error.errors.map((err) => ({
+        const errors = error.issues.map((err) => ({
           path: err.path.join("."),
           message: err.message,
         }));
@@ -75,13 +75,21 @@ export async function POST(request: NextRequest) {
     validatedData.originalRequirement = sanitizeText(validatedData.originalRequirement);
     validatedData.summarizedRequirement = sanitizeText(validatedData.summarizedRequirement);
 
+    // Ensure consent has Date object matching types/claude-code
+    const consent = {
+      requirementId: validatedData.requirementId,
+      consentedAt: new Date(validatedData.consent.consentedAt),
+      consentOptions: validatedData.consent.consentOptions,
+      userProvidedEmail: validatedData.consent.userProvidedEmail,
+    };
+
     // Process consent and collect requirement
     const result = await dataCollectionFlow.handleUserConsent(
       validatedData.requirementId,
       validatedData.originalRequirement,
       validatedData.summarizedRequirement,
       validatedData.context,
-      validatedData.consent
+      consent
     );
 
     if (!result.success) {
@@ -221,7 +229,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           error: "Invalid query parameters",
-          details: validationResult.errors.map((err) => ({
+          details: validationResult.errors.map((err: z.ZodIssue) => ({
             path: err.path.join("."),
             message: err.message,
           })),
@@ -233,7 +241,7 @@ export async function GET(request: NextRequest) {
     const { count = 1 } = validationResult.data;
 
     // Generate plugin requirements (similar to mock endpoint)
-    const pluginRequirements = Array.from({ length: Math.min(count, 10) }, (_, i) => {
+    const pluginRequirements = Array.from({ length: Math.min(Number(count), 10) }, (_, i) => {
       const templates = [
         {
           original:

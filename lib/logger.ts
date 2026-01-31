@@ -1,5 +1,7 @@
 // Structured logging utility for DemandPulse
 
+import * as Sentry from "@sentry/nextjs";
+
 export enum LogLevel {
   DEBUG = "debug",
   INFO = "info",
@@ -77,8 +79,20 @@ export class Logger {
         break;
     }
 
-    // In production, you would also send to a logging service
-    // e.g., Sentry, Datadog, CloudWatch, etc.
+    // Send to Sentry for error tracking
+    if (ErrorTracker.enabled) {
+      if (level === LogLevel.ERROR && error) {
+        ErrorTracker.captureError(error, { ...context, message, serviceName: this.serviceName });
+      } else if (level === LogLevel.WARN) {
+        ErrorTracker.captureMessage(message, "warning", {
+          ...context,
+          serviceName: this.serviceName,
+        });
+      } else if (level === LogLevel.INFO) {
+        // Optionally send info messages as breadcrumbs
+        // Sentry.addBreadcrumb({ message, level: "info", data: context });
+      }
+    }
   }
 
   debug(message: string, context?: Record<string, any>): void {
@@ -165,34 +179,32 @@ export function setLogLevel(level: LogLevel): void {
   console.log(`Log level set to: ${level}`);
 }
 
-// Error tracking integration (Sentry-like)
+// Error tracking integration with Sentry
 export class ErrorTracker {
-  private static enabled = false;
+  public static enabled = process.env.SENTRY_DSN !== undefined;
 
   static init(dsn?: string): void {
     if (dsn) {
       this.enabled = true;
-      console.log("Error tracking initialized");
-      // In production, initialize Sentry or similar here
+      console.log("Error tracking initialized with Sentry");
+      // Sentry is already initialized via sentry.client.config.js and sentry.server.config.js
+    } else if (process.env.SENTRY_DSN) {
+      this.enabled = true;
     }
   }
 
   static captureError(error: Error, context?: Record<string, any>): void {
     if (!this.enabled) {
-      console.error("Error (tracking disabled):", error, context);
+      console.error("Error (Sentry disabled):", error, context);
       return;
     }
 
-    // In production, send to error tracking service
-    console.error("Error captured for tracking:", {
-      error: error.message,
-      stack: error.stack,
-      context,
-      timestamp: new Date().toISOString(),
-    });
-
-    // Example Sentry integration:
-    // Sentry.captureException(error, { extra: context });
+    try {
+      Sentry.captureException(error, { extra: context });
+    } catch (sentryError) {
+      console.error("Failed to capture error with Sentry:", sentryError);
+      console.error("Original error:", error, context);
+    }
   }
 
   static captureMessage(
@@ -201,19 +213,16 @@ export class ErrorTracker {
     context?: Record<string, any>
   ): void {
     if (!this.enabled) {
-      console.log(`Message (tracking disabled) [${level}]:`, message, context);
+      console.log(`Message (Sentry disabled) [${level}]:`, message, context);
       return;
     }
 
-    console.log(`Message captured for tracking [${level}]:`, {
-      message,
-      level,
-      context,
-      timestamp: new Date().toISOString(),
-    });
-
-    // Example Sentry integration:
-    // Sentry.captureMessage(message, { level, extra: context });
+    try {
+      Sentry.captureMessage(message, { level, extra: context });
+    } catch (sentryError) {
+      console.error("Failed to capture message with Sentry:", sentryError);
+      console.log(`Message [${level}]:`, message, context);
+    }
   }
 }
 

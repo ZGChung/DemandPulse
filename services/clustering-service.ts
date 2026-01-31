@@ -1,6 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import cosineSimilarity from "compute-cosine-similarity";
-import kmeans from "ml-kmeans";
+import { kmeans } from "ml-kmeans";
 
 import { prisma } from "@/lib/prisma";
 
@@ -139,7 +139,7 @@ export class ClusteringService {
     });
 
     // De-normalize centroids (they are normalized from normalized embeddings)
-    const centroids = result.centroids.map((centroid) => {
+    const centroids = result.centroids.map((centroid: number[]) => {
       // ml-kmeans centroids are already in the normalized space
       // We'll keep them normalized for similarity calculations
       return centroid;
@@ -235,7 +235,7 @@ export class ClusteringService {
     // Get all existing clusters with centroids
     const existingClusters = await this.prisma.requirementCluster.findMany({
       where: {
-        centroidEmbedding: { not: null },
+        centroidEmbedding: { not: Prisma.JsonNull },
       },
       select: {
         id: true,
@@ -339,7 +339,7 @@ export class ClusteringService {
     // Get all requirements with embeddings
     const requirements = await this.prisma.requirement.findMany({
       where: {
-        embedding: { not: null },
+        embedding: { not: Prisma.JsonNull },
       },
       select: {
         id: true,
@@ -377,7 +377,7 @@ export class ClusteringService {
         update: {
           name: cluster.name,
           description: cluster.description,
-          centroidEmbedding: cluster.centroid,
+          centroidEmbedding: cluster.centroid === null ? Prisma.JsonNull : cluster.centroid,
           requirementCount: cluster.requirementCount,
           lastDetectedAt: new Date(),
         },
@@ -385,7 +385,7 @@ export class ClusteringService {
           id: cluster.clusterId,
           name: cluster.name,
           description: cluster.description,
-          centroidEmbedding: cluster.centroid,
+          centroidEmbedding: cluster.centroid === null ? Prisma.JsonNull : cluster.centroid,
           requirementCount: cluster.requirementCount,
           firstDetectedAt: new Date(),
           lastDetectedAt: new Date(),
@@ -491,7 +491,7 @@ export class ClusteringService {
    */
   private cosineSimilarity(vecA: number[], vecB: number[]): number {
     try {
-      return cosineSimilarity(vecA, vecB);
+      return cosineSimilarity(vecA, vecB) ?? 0;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (_error) {
       // Fallback to manual calculation

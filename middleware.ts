@@ -32,7 +32,7 @@ function isPublicRoute(req: NextRequest): boolean {
 }
 
 export default withAuth(
-  function middleware(req) {
+  async function middleware(req) {
     // Handle CORS preflight requests
     if (req.method === "OPTIONS" && req.nextUrl.pathname.startsWith("/api/")) {
       const response = new NextResponse(null, { status: 204 });
@@ -70,7 +70,7 @@ export default withAuth(
       if (!isPublicRoute(req)) {
         if (!isSafeMethod) {
           // Validate CSRF token for unsafe methods
-          const csrfValidation = validateCSRFToken(req);
+          const csrfValidation = await validateCSRFToken(req);
           if (!csrfValidation.valid) {
             return new NextResponse(
               JSON.stringify({ error: "CSRF validation failed", message: csrfValidation.error }),
@@ -87,7 +87,7 @@ export default withAuth(
           // Set CSRF token cookie for GET requests if not present
           const existingToken = getCSRFTokenFromRequest(req);
           if (!existingToken) {
-            setCSRFTokenCookie(response);
+            await setCSRFTokenCookie(response);
           }
         }
       }

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* global process, console */
 
 /**
  * DemandPulse Claude Code Plugin Hook Handler

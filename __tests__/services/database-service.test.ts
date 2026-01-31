@@ -23,13 +23,13 @@ jest.mock("@prisma/client", () => {
   const PrismaClient = jest.fn().mockImplementation((config?: any) => {
     // Store config for verification if needed
     if (config) {
-      PrismaClient.lastConfig = config;
+      (PrismaClient as any).lastConfig = config;
     }
     return mockPrisma;
   });
 
   // Static property to track last config
-  PrismaClient.lastConfig = null;
+  (PrismaClient as any).lastConfig = null;
 
   return {
     PrismaClient,

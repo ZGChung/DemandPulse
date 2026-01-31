@@ -84,19 +84,19 @@ export function withValidation<T extends z.ZodSchema>(
 
       // Sanitize fields if specified
       if (options.sanitizeFields) {
-        const sanitizedData = { ...validatedData };
+        const sanitizedData = Object.assign({}, validatedData) as Record<string, any>;
         for (const field of options.sanitizeFields) {
           if (field in sanitizedData && typeof sanitizedData[field] === "string") {
-            (sanitizedData as any)[field] = sanitizeText(sanitizedData[field]);
+            sanitizedData[field] = sanitizeText(sanitizedData[field]);
           }
         }
-        return next(sanitizedData);
+        return next(sanitizedData as any);
       }
 
       return next(validatedData);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const errors = error.errors.map((err) => ({
+        const errors = error.issues.map((err) => ({
           path: err.path.join("."),
           message: err.message,
         }));
@@ -210,10 +210,10 @@ export async function validateRequirementBody(request: Request): Promise<Require
 /**
  * Utility function to validate query parameters
  */
-export function validateQueryParams<T extends Record<string, string>>(
+export function validateQueryParams<T extends Record<string, unknown>>(
   searchParams: URLSearchParams,
   schema: z.ZodSchema<T>
-): { success: true; data: T } | { success: false; errors: z.ZodError["errors"] } {
+): { success: true; data: T } | { success: false; errors: z.ZodError["issues"] } {
   const params = Object.fromEntries(searchParams.entries());
 
   try {
@@ -221,7 +221,7 @@ export function validateQueryParams<T extends Record<string, string>>(
     return { success: true, data };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, errors: error.errors };
+      return { success: false, errors: error.issues };
     }
     throw error;
   }
