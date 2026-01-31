@@ -1,0 +1,15 @@
+{
+  "name": "demandpulse",
+  "description": "Real-time demand radar for AI-native developers. Detects requirements from Claude Code conversations and sends them to DemandPulse backend for analysis and clustering.",
+  "version": "1.0.0",
+  "author": {
+    "name": "DemandPulse Team"
+  },
+  "homepage": "https://github.com/yourusername/demandpulse",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/demandpulse.git"
+  },
+  "license": "MIT",
+  "keywords": ["product-management", "requirements", "analytics", "claude-code", "developer-tools"]
+}
