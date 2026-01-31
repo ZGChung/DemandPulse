@@ -37,11 +37,21 @@ Use the `/demandpulse:submit` skill to manually submit a requirement from the cu
 
 ## Configuration
 
+### Plugin Configuration
+
 The plugin can be configured through environment variables:
 
 - `DEMANDPULSE_API_URL`: URL of the DemandPulse backend (default: http://localhost:3000)
-- `DEMANDPULSE_API_KEY`: API key for authentication (optional)
+- `DEMANDPULSE_API_KEY`: API key for authentication (optional, but required if the backend has PLUGIN_API_KEY set)
 - `ENABLE_AUTO_DETECTION`: Enable/disable automatic requirement detection (default: true)
+
+### Backend Configuration
+
+The DemandPulse backend must be configured with a plugin API key:
+
+1. Add `PLUGIN_API_KEY=your-secret-key-here` to your `.env` file
+2. Restart the backend server
+3. Set the same key as `DEMANDPULSE_API_KEY` in your Claude Code environment
 
 ## Plugin Structure
 

@@ -12,6 +12,7 @@ import { randomUUID } from 'crypto';
 // Configuration
 const CONFIG = {
   apiUrl: process.env.DEMANDPULSE_API_URL || 'http://localhost:3000',
+  apiKey: process.env.DEMANDPULSE_API_KEY || '',
   enableAutoDetection: process.env.ENABLE_AUTO_DETECTION !== 'false',
   requirementKeywords: [
     'need', 'want', 'should', 'must', 'require', 'requirement',
@@ -169,7 +170,7 @@ async function submitRequirement(messageText, hookInput) {
         contact: false,
         anonymization: true,
       },
-      userProvidedEmail: null,
+      userProvidedEmail: undefined,
       consentedAt: now,
     },
   };
@@ -181,11 +182,15 @@ async function submitRequirement(messageText, hookInput) {
   });
 
   // Send to DemandPulse API
-  const response = await fetch(`${CONFIG.apiUrl}/api/mock/requirements`, {
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+  if (CONFIG.apiKey) {
+    headers['x-api-key'] = CONFIG.apiKey;
+  }
+  const response = await fetch(`${CONFIG.apiUrl}/api/plugin/requirements`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers,
     body: JSON.stringify(submission),
   });
 
