@@ -18,6 +18,7 @@ model Requirement {
   // Requirement content (user-provided)
   originalRequirement    String
   summarizedRequirement  String
+  embedding              Json?      // Vector embedding for clustering
 
   // Context from Claude Code
   conversationId         String
@@ -48,12 +49,36 @@ model Requirement {
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 
+  // Clustering relationships
+  clusters               RequirementCluster[]
+
   // Indexes for performance and privacy compliance
   @@index([conversationId])
   @@index([status])
   @@index([scheduledDeletionAt])
   @@index([userId])
   @@unique([conversationId, detectedAt])
+}
+
+// Clusters of similar requirements for trend analysis
+model RequirementCluster {
+  id                String   @id @default(cuid())
+  name              String
+  description       String
+  centroidEmbedding Json?    // Centroid vector embedding for the cluster
+  requirementCount  Int      @default(0)
+  firstDetectedAt   DateTime
+  lastDetectedAt    DateTime
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relationships
+  requirements      Requirement[]
+
+  // Indexes
+  @@index([requirementCount])
+  @@index([firstDetectedAt])
+  @@index([lastDetectedAt])
 }
 
 // Privacy audit log (GDPR compliance)
