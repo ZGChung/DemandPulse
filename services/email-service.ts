@@ -1,5 +1,7 @@
 // Email notification service for DemandPulse
-// Currently uses console logging but can integrate with Resend, SendGrid, etc.
+// Supports Resend for real emails with mock fallback
+
+import { Resend } from "resend";
 
 export interface EmailRecipient {
   email: string;
@@ -27,10 +29,26 @@ export interface EmailOptions {
 export class EmailService {
   private enabled: boolean;
   private useMock: boolean;
+  private resendClient: Resend | null;
+  private fromEmail: string;
 
-  constructor(config?: { enabled?: boolean; useMock?: boolean }) {
+  constructor(config?: {
+    enabled?: boolean;
+    useMock?: boolean;
+    resendApiKey?: string;
+    fromEmail?: string;
+  }) {
     this.enabled = config?.enabled ?? true;
     this.useMock = config?.useMock ?? true;
+
+    // Initialize Resend client if API key is provided
+    if (config?.resendApiKey) {
+      this.resendClient = new Resend(config.resendApiKey);
+    } else {
+      this.resendClient = null;
+    }
+
+    this.fromEmail = config?.fromEmail ?? "notifications@demandpulse.dev";
   }
 
   async sendEmail(options: EmailOptions): Promise<{ success: boolean; messageId?: string }> {
@@ -46,8 +64,11 @@ export class EmailService {
       return this.sendMockEmail(options);
     }
 
-    // In production, integrate with real email provider
-    // return this.sendRealEmail(options)
+    // Try to send real email if Resend client is available
+    if (this.resendClient) {
+      return this.sendRealEmail(options);
+    }
+
     console.warn("[EmailService] Real email provider not configured, using mock");
     return this.sendMockEmail(options);
   }
@@ -69,6 +90,42 @@ export class EmailService {
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     return { success: true, messageId };
+  }
+
+  private async sendRealEmail(
+    options: EmailOptions
+  ): Promise<{ success: boolean; messageId?: string }> {
+    if (!this.resendClient) {
+      console.error("[EmailService] Resend client not initialized");
+      return { success: false };
+    }
+
+    try {
+      const response = await this.resendClient.emails.send({
+        from: this.fromEmail,
+        to: options.to.email,
+        subject: options.template.subject,
+        text: options.template.body,
+        html: options.template.htmlBody || options.template.body,
+        ...(options.to.name && { reply_to: options.to.name }),
+      });
+
+      if (response.error) {
+        console.error("[EmailService] Resend error:", response.error);
+        return { success: false };
+      }
+
+      console.log(`[EmailService] Real email sent:
+  To: ${options.to.email}${options.to.name ? ` (${options.to.name})` : ""}
+  Subject: ${options.template.subject}
+  Message ID: ${response.data?.id || "unknown"}
+      `);
+
+      return { success: true, messageId: response.data?.id };
+    } catch (error) {
+      console.error("[EmailService] Failed to send email:", error);
+      return { success: false };
+    }
   }
 
   // Email templates
@@ -251,4 +308,9 @@ The DemandPulse Team`,
 }
 
 // Singleton instance
-export const emailService = new EmailService();
+export const emailService = new EmailService({
+  enabled: process.env.EMAIL_ENABLED === "true",
+  useMock: process.env.EMAIL_USE_MOCK === "true",
+  resendApiKey: process.env.RESEND_API_KEY,
+  fromEmail: process.env.RESEND_FROM_EMAIL || "notifications@demandpulse.dev",
+});
