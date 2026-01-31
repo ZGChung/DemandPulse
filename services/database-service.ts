@@ -494,6 +494,119 @@ export class DatabaseService {
     }
   }
 
+  async getClusters(limit?: number, offset?: number) {
+    try {
+      if (this.prisma) {
+        const clusters = await this.prisma.requirementCluster.findMany({
+          take: limit || 10,
+          skip: offset || 0,
+          include: {
+            _count: {
+              select: { requirements: true },
+            },
+            requirements: {
+              take: 5,
+              select: {
+                summarizedRequirement: true,
+                detectedAt: true,
+              },
+            },
+          },
+          orderBy: {
+            requirementCount: "desc",
+          },
+        });
+
+        return clusters.map((cluster) => ({
+          id: cluster.id,
+          name: cluster.name,
+          description: cluster.description,
+          requirementCount: cluster._count.requirements,
+          firstDetectedAt: cluster.firstDetectedAt,
+          lastDetectedAt: cluster.lastDetectedAt,
+          sampleRequirements: cluster.requirements.map((req) => ({
+            summary: req.summarizedRequirement,
+            detectedAt: req.detectedAt,
+          })),
+        }));
+      } else {
+        // Mock implementation
+        return [
+          {
+            id: "mock-cluster-1",
+            name: "Authentication Systems",
+            description: "Login, OAuth, 2FA, and security requirements",
+            requirementCount: 42,
+            firstDetectedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+            lastDetectedAt: new Date(),
+            sampleRequirements: [
+              { summary: "Add NextAuth.js with Google OAuth", detectedAt: new Date() },
+              { summary: "Implement 2-factor authentication", detectedAt: new Date() },
+            ],
+          },
+          {
+            id: "mock-cluster-2",
+            name: "Data Visualization",
+            description: "Dashboards, charts, and analytics tools",
+            requirementCount: 38,
+            firstDetectedAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
+            lastDetectedAt: new Date(),
+            sampleRequirements: [
+              { summary: "Create interactive charts for user data", detectedAt: new Date() },
+              { summary: "Build real-time analytics dashboard", detectedAt: new Date() },
+            ],
+          },
+        ];
+      }
+    } catch (error) {
+      console.error("Error fetching clusters:", error);
+      throw new Error("Failed to fetch clusters");
+    }
+  }
+
+  async getPublicStatistics() {
+    try {
+      if (this.prisma) {
+        const [totalRequirements, totalClusters, totalUsers, recentRequirements] =
+          await Promise.all([
+            this.prisma.requirement.count(),
+            this.prisma.requirementCluster.count(),
+            this.prisma.user.count(),
+            this.prisma.requirement.count({
+              where: {
+                detectedAt: {
+                  gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
+                },
+              },
+            }),
+          ]);
+
+        return {
+          totalRequirements,
+          totalClusters,
+          totalUsers,
+          recentRequirements,
+        };
+      } else {
+        // Mock statistics
+        return {
+          totalRequirements: 2847,
+          totalClusters: 12,
+          totalUsers: 428,
+          recentRequirements: 142,
+        };
+      }
+    } catch (error) {
+      console.error("Error fetching public statistics:", error);
+      return {
+        totalRequirements: 0,
+        totalClusters: 0,
+        totalUsers: 0,
+        recentRequirements: 0,
+      };
+    }
+  }
+
   async disconnect() {
     if (this.prisma) {
       await this.prisma.$disconnect();

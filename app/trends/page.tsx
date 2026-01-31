@@ -2,7 +2,36 @@ import { FaEye, FaChartLine, FaUsers, FaArrowRight } from "react-icons/fa";
 
 import TrendingClusters from "@/components/trending-clusters";
 
-export default function PublicTrendsPage() {
+async function getPublicStatistics() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const response = await fetch(`${baseUrl}/api/clusters?limit=1`, {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch statistics: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    if (data.success && data.data?.statistics) {
+      return data.data.statistics;
+    }
+    throw new Error("Invalid response format");
+  } catch (error) {
+    console.error("Error fetching public statistics:", error);
+    // Return mock statistics as fallback
+    return {
+      totalRequirements: 2847,
+      totalClusters: 12,
+      totalUsers: 428,
+      recentRequirements: 142,
+    };
+  }
+}
+
+export default async function PublicTrendsPage() {
+  const statistics = await getPublicStatistics();
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Header */}
@@ -73,7 +102,9 @@ export default function PublicTrendsPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm text-gray-500">Requirements Tracked</p>
-                <p className="text-2xl font-bold text-gray-900">2,847</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {statistics.totalRequirements.toLocaleString()}
+                </p>
               </div>
             </div>
           </div>
@@ -84,7 +115,9 @@ export default function PublicTrendsPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm text-gray-500">Active Contributors</p>
-                <p className="text-2xl font-bold text-gray-900">428</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {statistics.totalUsers.toLocaleString()}
+                </p>
               </div>
             </div>
           </div>
@@ -95,7 +128,9 @@ export default function PublicTrendsPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm text-gray-500">Trending Clusters</p>
-                <p className="text-2xl font-bold text-gray-900">12</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {statistics.totalClusters.toLocaleString()}
+                </p>
               </div>
             </div>
           </div>
