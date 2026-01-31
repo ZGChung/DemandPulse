@@ -23,6 +23,7 @@ interface MockRequirement {
   status: RequirementStatus;
   createdAt: Date;
   updatedAt: Date;
+  embedding?: number[];
 }
 
 export class DatabaseService {
@@ -136,6 +137,28 @@ export class DatabaseService {
     } catch (error) {
       console.error("Error storing requirement:", error);
       throw new Error("Failed to store requirement");
+    }
+  }
+
+  async updateRequirementEmbedding(id: string, embedding: number[]): Promise<void> {
+    try {
+      if (this.prisma) {
+        await this.prisma.requirement.update({
+          where: { id },
+          data: { embedding },
+        });
+      } else {
+        // Mock implementation
+        const mockRequirement = this.mockRequirements.find((req) => req.id === id);
+        if (mockRequirement) {
+          mockRequirement.embedding = embedding;
+          mockRequirement.updatedAt = new Date();
+          console.log("DatabaseService: Updated embedding for requirement in mock storage", id);
+        }
+      }
+    } catch (error) {
+      console.error("Error updating requirement embedding:", error);
+      throw new Error("Failed to update requirement embedding");
     }
   }
 

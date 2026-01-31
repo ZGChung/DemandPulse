@@ -10,6 +10,22 @@ jest.mock("@/lib/env", () => ({
   },
 }));
 
+// Mock Prisma client to avoid database connection errors
+jest.mock("@/lib/prisma", () => ({
+  prisma: {
+    requirement: {
+      findMany: jest.fn(),
+      update: jest.fn(),
+    },
+    requirementCluster: {
+      findMany: jest.fn(),
+      update: jest.fn(),
+      upsert: jest.fn(),
+      findUnique: jest.fn(),
+    },
+  },
+}));
+
 describe("AIProcessingService", () => {
   let service: AIProcessingService;
 

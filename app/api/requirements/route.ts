@@ -12,6 +12,7 @@ import {
   validateQueryParams,
   requirementQuerySchema,
 } from "@/lib/validation-middleware";
+import { AIProcessingService } from "@/services/ai-processing";
 import { DataCollectionFlow } from "@/services/data-collection-flow";
 import { DatabaseService } from "@/services/database-service";
 import { emailService } from "@/services/email-service";
@@ -111,6 +112,7 @@ export async function POST(request: NextRequest) {
 
     // Store the requirement in the database
     const databaseService = new DatabaseService();
+    const aiProcessingService = new AIProcessingService();
     let storedRequirementId: string;
     try {
       storedRequirementId = await databaseService.storeRequirement(
@@ -124,6 +126,24 @@ export async function POST(request: NextRequest) {
         summary: result.collectedRequirement?.summarizedRequirement,
         consent: result.collectedRequirement?.consent.consentOptions,
       });
+
+      // Generate AI analysis and embeddings for the requirement
+      try {
+        const analysis = await aiProcessingService.analyzeRequirement(
+          result.collectedRequirement!.originalRequirement
+        );
+        if (analysis.embeddings) {
+          // Update requirement with embeddings
+          await databaseService.updateRequirementEmbedding(
+            storedRequirementId,
+            analysis.embeddings
+          );
+          console.log("Embeddings generated and stored for requirement:", storedRequirementId);
+        }
+      } catch (aiError) {
+        console.error("Failed to generate AI analysis or embeddings:", aiError);
+        // Don't fail the request if AI processing fails
+      }
 
       // Send email notification if user has email and consented to contact
       if (session.user?.email && result.collectedRequirement?.consent.consentOptions?.contact) {

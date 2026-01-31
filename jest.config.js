@@ -11,6 +11,8 @@ const customJestConfig = {
     "^@/(.*)$": "<rootDir>/$1",
     "^jose$": "<rootDir>/__mocks__/jose.js",
     "^openid-client$": "<rootDir>/__mocks__/openid-client.js",
+    "^ml-kmeans$": "<rootDir>/__mocks__/ml-kmeans.js",
+    "^compute-cosine-similarity$": "<rootDir>/__mocks__/compute-cosine-similarity.js",
   },
   collectCoverageFrom: [
     "app/**/*.{js,jsx,ts,tsx}",
@@ -20,7 +22,9 @@ const customJestConfig = {
     "!app/**/*.test.{js,jsx,ts,tsx}",
   ],
   testPathIgnorePatterns: ["<rootDir>/node_modules/", "<rootDir>/.next/"],
-  transformIgnorePatterns: ["/node_modules/(?!jose|openid-client|next-auth|@auth/prisma-adapter)"],
+  transformIgnorePatterns: [
+    "/node_modules/(?!jose|openid-client|next-auth|@auth/prisma-adapter|ml-kmeans|compute-cosine-similarity)",
+  ],
 };
 
 export default createJestConfig(customJestConfig);

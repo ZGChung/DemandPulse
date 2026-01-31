@@ -1,4 +1,5 @@
 import { env } from "@/lib/env";
+import { ClusteringService } from "@/services/clustering-service";
 
 export interface AIAnalysisResult {
   categories: string[];
@@ -284,50 +285,108 @@ export class AIProcessingService {
     }>
   > {
     try {
-      // In a real implementation, this would use proper clustering algorithms
-      // For now, we'll do simple keyword-based clustering
+      // Use vector embeddings for clustering via ClusteringService
+      const clusteringService = new ClusteringService();
 
-      const clusters: Array<{
-        clusterId: string;
-        name: string;
-        description: string;
-        requirementIds: string[];
-        centroid: number[] | null;
-      }> = [];
+      // Prepare requirements with embeddings
+      const requirementsWithEmbeddings = requirements
+        .filter((req) => req.embeddings && req.embeddings.length > 0)
+        .map((req) => ({
+          id: req.id,
+          embedding: req.embeddings!,
+        }));
 
-      // Group by primary category (simplified clustering)
-      const categorizedRequirements: Record<string, Array<{ id: string; text: string }>> = {};
-
-      for (const req of requirements) {
-        const analysis = await this.analyzeRequirement(req.text);
-        const primaryCategory = analysis.categories[0] || "other";
-
-        if (!categorizedRequirements[primaryCategory]) {
-          categorizedRequirements[primaryCategory] = [];
-        }
-
-        categorizedRequirements[primaryCategory].push({ id: req.id, text: req.text });
+      if (requirementsWithEmbeddings.length === 0) {
+        console.warn(
+          "No embeddings available for clustering, falling back to keyword-based clustering"
+        );
+        // Fallback to original keyword-based clustering
+        return await this.keywordBasedClustering(requirements, maxClusters);
       }
 
-      // Create clusters from categories
-      for (const [category, reqs] of Object.entries(categorizedRequirements)) {
-        if (reqs.length > 0) {
-          clusters.push({
-            clusterId: `cluster_${category}_${Date.now()}`,
-            name: this.formatCategoryName(category),
-            description: `${reqs.length} requirements about ${category}`,
-            requirementIds: reqs.map((r) => r.id),
-            centroid: null, // Would be calculated from embeddings in real implementation
-          });
+      // Perform vector clustering
+      const clusterResults = await clusteringService.clusterRequirements(
+        requirementsWithEmbeddings,
+        {
+          maxClusters,
+          minClusterSize: 2,
+          similarityThreshold: 0.7,
+          maxIterations: 100,
         }
-      }
+      );
 
-      // Limit number of clusters
-      return clusters.slice(0, maxClusters);
+      // Map to expected return format
+      return clusterResults.map((cluster) => ({
+        clusterId: cluster.clusterId,
+        name: cluster.name,
+        description: cluster.description,
+        requirementIds: cluster.requirementIds,
+        centroid: cluster.centroid,
+      }));
     } catch (error) {
       console.error("Error clustering requirements:", error);
-      return [];
+      // Fallback to keyword-based clustering on error
+      try {
+        return await this.keywordBasedClustering(requirements, maxClusters);
+      } catch (fallbackError) {
+        console.error("Fallback clustering also failed:", fallbackError);
+        return [];
+      }
     }
+  }
+
+  /**
+   * Original keyword-based clustering implementation (fallback)
+   */
+  private async keywordBasedClustering(
+    requirements: Array<{ id: string; text: string; embeddings?: number[] }>,
+    maxClusters: number
+  ): Promise<
+    Array<{
+      clusterId: string;
+      name: string;
+      description: string;
+      requirementIds: string[];
+      centroid: number[] | null;
+    }>
+  > {
+    const clusters: Array<{
+      clusterId: string;
+      name: string;
+      description: string;
+      requirementIds: string[];
+      centroid: number[] | null;
+    }> = [];
+
+    // Group by primary category (simplified clustering)
+    const categorizedRequirements: Record<string, Array<{ id: string; text: string }>> = {};
+
+    for (const req of requirements) {
+      const analysis = await this.analyzeRequirement(req.text);
+      const primaryCategory = analysis.categories[0] || "other";
+
+      if (!categorizedRequirements[primaryCategory]) {
+        categorizedRequirements[primaryCategory] = [];
+      }
+
+      categorizedRequirements[primaryCategory].push({ id: req.id, text: req.text });
+    }
+
+    // Create clusters from categories
+    for (const [category, reqs] of Object.entries(categorizedRequirements)) {
+      if (reqs.length > 0) {
+        clusters.push({
+          clusterId: `cluster_${category}_${Date.now()}`,
+          name: this.formatCategoryName(category),
+          description: `${reqs.length} requirements about ${category}`,
+          requirementIds: reqs.map((r) => r.id),
+          centroid: null,
+        });
+      }
+    }
+
+    // Limit number of clusters
+    return clusters.slice(0, maxClusters);
   }
 
   private extractFallbackKeywords(text: string): string[] {
