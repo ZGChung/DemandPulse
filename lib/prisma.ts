@@ -25,7 +25,11 @@ if (databaseUrl.startsWith("file:")) {
   console.log("Using SQLite database");
   // For Prisma 7.3.0 with SQLite, we need to use the library engine
   // The engineType is set in schema.prisma to "library"
-  // No additional configuration needed
+  // Add adapter configuration for SQLite
+  (prismaConfig as any).adapter = {
+    kind: "sqlite" as const,
+    file: databaseUrl.replace("file:", ""),
+  };
 } else if (databaseUrl.includes("prisma+postgres://")) {
   // Prisma Data Platform
   console.log("Using Prisma Data Platform with accelerateUrl");
