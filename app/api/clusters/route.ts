@@ -3,6 +3,8 @@ import { z } from "zod";
 
 import { DatabaseService } from "@/services/database-service";
 
+export const dynamic = "force-dynamic";
+
 // Schema for query parameters
 const clustersQuerySchema = z.object({
   limit: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().min(1).max(100)).optional(),
