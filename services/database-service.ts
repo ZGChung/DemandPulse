@@ -3,6 +3,7 @@ import { PrismaClient, RequirementStatus, PrivacyAction, ActorType } from "@pris
 import { encryptionService } from "@/lib/encryption";
 import { prisma } from "@/lib/prisma";
 import { CollectedRequirement } from "@/types/claude-code";
+import { maskRequirementsForAdmin, canViewUnmaskedData } from "@/lib/masking";
 
 // Mock in-memory store for when database is unavailable
 interface MockRequirement {
@@ -710,6 +711,71 @@ export class DatabaseService {
         totalUsers: 0,
         recentRequirements: 0,
       };
+    }
+  }
+
+  /**
+   * Get requirements with masking for admin views
+   * @param options Filtering options
+   * @param userRole User role for permission checking
+   * @returns Requirements with appropriate masking applied
+   */
+  async getRequirementsForAdmin(
+    options: {
+      status?: RequirementStatus;
+      limit?: number;
+      offset?: number;
+      userId?: string;
+    } = {},
+    userRole?: string
+  ) {
+    try {
+      const { status, limit = 100, offset = 0, userId } = options;
+
+      let requirements;
+      if (this.prisma) {
+        const whereClause: any = {};
+        if (status) whereClause.status = status;
+        if (userId) whereClause.userId = userId;
+
+        requirements = await this.prisma.requirement.findMany({
+          where: whereClause,
+          take: limit,
+          skip: offset,
+          orderBy: { createdAt: 'desc' },
+        });
+      } else {
+        // Mock implementation
+        requirements = this.mockRequirements.filter(req => {
+          if (status && req.status !== status) return false;
+          if (userId && req.userId !== userId) return false;
+          return true;
+        }).slice(offset, offset + limit);
+      }
+
+      // Apply privacy controls (decryption, anonymization)
+      const processedRequirements = await Promise.all(
+        requirements.map(req => this.applyPrivacyControls(req, false))
+      );
+
+      // Check if user can view unmasked data
+      const canViewUnmasked = canViewUnmaskedData(userRole, 'admin');
+
+      // Apply masking if needed
+      if (!canViewUnmasked) {
+        return maskRequirementsForAdmin(processedRequirements, {
+          maskEmail: true,
+          maskRequirementText: false, // Admins can usually see full text
+          maskWorkspacePath: true,
+          maskConversationId: true,
+          maskUUID: false, // Keep UUIDs for reference
+        });
+      }
+
+      return processedRequirements;
+    } catch (error) {
+      console.error('Error fetching requirements for admin:', error);
+      throw new Error('Failed to fetch requirements for admin view');
     }
   }
 

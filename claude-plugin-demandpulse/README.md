@@ -17,6 +17,29 @@ A Claude Code plugin that detects developer requirements from conversations and 
 claude --plugin-dir ./claude-plugin-demandpulse
 ```
 
+### npm Installation (Recommended)
+
+The plugin is available as an npm package for easy installation:
+
+```bash
+# Install the package globally
+npm install -g claude-plugin-demandpulse
+
+# Run the installer
+demandpulse-install
+
+# Or use npx without global installation
+npx claude-plugin-demandpulse@latest install-plugin
+```
+
+### Manual Installation
+
+1. Clone or download this repository
+2. Copy the `claude-plugin-demandpulse` directory to your Claude Code plugins folder:
+   - `~/.config/claude-code/plugins/demandpulse` (Linux/macOS)
+   - `%APPDATA%/claude-code/plugins/demandpulse` (Windows)
+3. Restart Claude Code
+
 ### Production Installation
 
 Once published to a plugin marketplace:
@@ -43,7 +66,10 @@ The plugin can be configured through environment variables:
 
 - `DEMANDPULSE_API_URL`: URL of the DemandPulse backend (default: http://localhost:3000)
 - `DEMANDPULSE_API_KEY`: API key for authentication (optional, but required if the backend has PLUGIN_API_KEY set)
-- `ENABLE_AUTO_DETECTION`: Enable/disable automatic requirement detection (default: true)
+- `ENABLE_AUTO_DETECTION`: Enable/disable automatic requirement detection (default: false, must be explicitly enabled)
+- `DEFAULT_DATA_COLLECTION_CONSENT`: Enable/disable data collection by default (default: false, respects user privacy by default)
+- `DEFAULT_CONTACT_CONSENT`: Enable/disable contact by default (default: false)
+- `DEFAULT_ANONYMIZATION_CONSENT`: Enable/disable anonymization by default (default: true, anonymizes data by default)
 
 ### Backend Configuration
 
@@ -52,6 +78,17 @@ The DemandPulse backend must be configured with a plugin API key:
 1. Add `PLUGIN_API_KEY=your-secret-key-here` to your `.env` file
 2. Restart the backend server
 3. Set the same key as `DEMANDPULSE_API_KEY` in your Claude Code environment
+
+### Privacy & Consent
+
+The DemandPulse plugin is designed with privacy as a core principle:
+
+- **Data collection is disabled by default**: Users must explicitly enable data collection through environment variables or configuration
+- **Anonymization enabled by default**: All data is anonymized by default to protect user privacy
+- **Consent tracking**: All submissions include consent metadata for GDPR compliance
+- **Transparent operation**: The plugin logs its actions to stderr for debugging and transparency
+
+For production deployments, review and configure the consent settings appropriately for your use case and jurisdiction.
 
 ## Plugin Structure
 

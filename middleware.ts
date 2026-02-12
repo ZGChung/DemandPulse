@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { withAuth } from "next-auth/middleware";
 
 import { validateCSRFToken, setCSRFTokenCookie, getCSRFTokenFromRequest } from "@/lib/csrf";
+import { getTraceIdFromHeaders, setTraceIdOnHeaders } from "@/lib/trace";
 
 // Public routes that don't require authentication
 function isPublicRoute(req: NextRequest): boolean {
@@ -33,9 +34,13 @@ function isPublicRoute(req: NextRequest): boolean {
 
 export default withAuth(
   async function middleware(req) {
+    const startTime = Date.now();
     // Handle CORS preflight requests
     if (req.method === "OPTIONS" && req.nextUrl.pathname.startsWith("/api/")) {
       const response = new NextResponse(null, { status: 204 });
+      // Add trace ID
+      const traceId = getTraceIdFromHeaders(req.headers);
+      setTraceIdOnHeaders(response.headers, traceId);
       response.headers.set(
         "Access-Control-Allow-Origin",
         process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
@@ -49,6 +54,10 @@ export default withAuth(
 
     // Add security headers to all responses
     const response = NextResponse.next();
+
+    // Add trace ID for request correlation
+    const traceId = getTraceIdFromHeaders(req.headers);
+    setTraceIdOnHeaders(response.headers, traceId);
 
     // Add CORS headers for API routes
     if (req.nextUrl.pathname.startsWith("/api/")) {
@@ -72,7 +81,7 @@ export default withAuth(
           // Validate CSRF token for unsafe methods
           const csrfValidation = await validateCSRFToken(req);
           if (!csrfValidation.valid) {
-            return new NextResponse(
+            const errorResponse = new NextResponse(
               JSON.stringify({ error: "CSRF validation failed", message: csrfValidation.error }),
               {
                 status: 403,
@@ -82,6 +91,10 @@ export default withAuth(
                 },
               }
             );
+            // Add trace ID
+            const traceId = getTraceIdFromHeaders(req.headers);
+            setTraceIdOnHeaders(errorResponse.headers, traceId);
+            return errorResponse;
           }
         } else if (method === "GET") {
           // Set CSRF token cookie for GET requests if not present
@@ -102,6 +115,9 @@ export default withAuth(
       "Content-Security-Policy",
       "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self';"
     );
+
+    // Add response time header
+    response.headers.set('x-response-time', `${Date.now() - startTime}ms`);
 
     return response;
   },

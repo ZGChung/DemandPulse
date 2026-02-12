@@ -14,7 +14,12 @@ import { randomUUID } from 'crypto';
 const CONFIG = {
   apiUrl: process.env.DEMANDPULSE_API_URL || 'http://localhost:3000',
   apiKey: process.env.DEMANDPULSE_API_KEY || '',
-  enableAutoDetection: process.env.ENABLE_AUTO_DETECTION !== 'false',
+  enableAutoDetection: process.env.ENABLE_AUTO_DETECTION === 'true', // Default false, must be explicitly enabled
+  defaultConsent: {
+    dataCollection: process.env.DEFAULT_DATA_COLLECTION_CONSENT === 'true', // Default false
+    contact: process.env.DEFAULT_CONTACT_CONSENT === 'true', // Default false
+    anonymization: process.env.DEFAULT_ANONYMIZATION_CONSENT !== 'false', // Default true
+  },
   requirementKeywords: [
     'need', 'want', 'should', 'must', 'require', 'requirement',
     'feature', 'bug', 'fix', 'improve', 'improvement', 'enhance',
@@ -60,6 +65,12 @@ if (!containsRequirementKeywords(messageText)) {
 // Validate message length
 if (messageText.length < CONFIG.minRequirementLength || messageText.length > CONFIG.maxRequirementLength) {
   console.error('[DemandPulse Hook] Message length outside valid range');
+  process.exit(0);
+}
+
+// Check if data collection is consented
+if (!CONFIG.defaultConsent.dataCollection) {
+  console.error('[DemandPulse Hook] Data collection not consented, skipping submission');
   process.exit(0);
 }
 
@@ -167,9 +178,9 @@ async function submitRequirement(messageText, hookInput) {
     },
     consent: {
       consentOptions: {
-        dataCollection: true,
-        contact: false,
-        anonymization: true,
+        dataCollection: CONFIG.defaultConsent.dataCollection,
+        contact: CONFIG.defaultConsent.contact,
+        anonymization: CONFIG.defaultConsent.anonymization,
       },
       userProvidedEmail: undefined,
       consentedAt: now,

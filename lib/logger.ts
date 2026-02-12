@@ -1,6 +1,7 @@
 // Structured logging utility for DemandPulse
 
 import * as Sentry from "@sentry/nextjs";
+import { getCurrentTraceId } from "./trace";
 
 export enum LogLevel {
   DEBUG = "debug",
@@ -39,11 +40,17 @@ export class Logger {
     context?: Record<string, any>,
     error?: Error
   ): LogEntry {
+    const traceId = getCurrentTraceId();
+    const enrichedContext = {
+      ...context,
+      ...(traceId && { traceId }),
+    };
+
     return {
       timestamp: new Date().toISOString(),
       level,
       message,
-      context,
+      context: enrichedContext,
       error,
     };
   }

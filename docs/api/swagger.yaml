@@ -1,0 +1,566 @@
+openapi: 3.0.3
+info:
+  title: DemandPulse API
+  description: Real-time demand radar for AI-native developers. Collect, analyze, and cluster development requirements from conversations.
+  version: 1.0.0
+  contact:
+    name: DemandPulse Team
+    url: https://github.com/yourusername/demandpulse
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+  - url: https://demandpulse.dev
+    description: Production server (example)
+
+tags:
+  - name: Health
+    description: Health check and status endpoints
+  - name: Requirements
+    description: Submit and retrieve development requirements
+  - name: Clusters
+    description: View requirement clusters and trends
+  - name: Plugin
+    description: Claude Code plugin integration endpoints
+  - name: Authentication
+    description: Authentication and user management
+
+paths:
+  /api/health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Check if the API is running and get system information
+      operationId: getHealth
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '500':
+          description: API is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/requirements:
+    get:
+      tags:
+        - Requirements
+      summary: Get requirements
+      description: Retrieve requirements with optional filtering. Public read access.
+      operationId: getRequirements
+      parameters:
+        - name: status
+          in: query
+          description: Filter by requirement status
+          schema:
+            type: string
+            enum: [pending, processed, rejected]
+        - name: limit
+          in: query
+          description: Number of requirements to return (1-100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: offset
+          in: query
+          description: Pagination offset
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: List of requirements
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequirementsResponse'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Requirements
+      summary: Submit a requirement
+      description: Submit a new development requirement with user consent. Requires authentication.
+      operationId: submitRequirement
+      security:
+        - nextAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequirementSubmission'
+      responses:
+        '201':
+          description: Requirement submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionSuccess'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/clusters:
+    get:
+      tags:
+        - Clusters
+      summary: Get requirement clusters
+      description: Retrieve requirement clusters and public statistics for trends analysis
+      operationId: getClusters
+      parameters:
+        - name: limit
+          in: query
+          description: Number of clusters to return (1-100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: offset
+          in: query
+          description: Pagination offset
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Clusters and statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClustersResponse'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/plugin/requirements:
+    get:
+      tags:
+        - Plugin
+      summary: Generate plugin test requirements
+      description: Generate mock requirements for plugin testing. Requires API key authentication.
+      operationId: generatePluginRequirements
+      security:
+        - apiKey: []
+      parameters:
+        - name: count
+          in: query
+          description: Number of requirements to generate (1-100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 1
+      responses:
+        '200':
+          description: Generated requirements
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PluginRequirementsResponse'
+        '401':
+          description: Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Plugin
+      summary: Submit requirement via plugin
+      description: Submit a requirement from Claude Code plugin. Requires API key authentication.
+      operationId: submitPluginRequirement
+      security:
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequirementSubmission'
+      responses:
+        '201':
+          description: Requirement submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionSuccess'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    nextAuth:
+      type: http
+      scheme: bearer
+      description: NextAuth.js JWT token from GitHub OAuth login
+    apiKey:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: API key for plugin authentication
+
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+        timestamp:
+          type: string
+          format: date-time
+        app:
+          type: object
+          properties:
+            name:
+              type: string
+            url:
+              type: string
+        features:
+          type: object
+          properties:
+            claudeCodePlugin:
+              type: boolean
+            aiProcessing:
+              type: boolean
+        environment:
+          type: string
+      example:
+        status: healthy
+        timestamp: "2025-01-15T10:30:00Z"
+        app:
+          name: DemandPulse
+          url: http://localhost:3000
+        features:
+          claudeCodePlugin: true
+          aiProcessing: true
+        environment: development
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+        timestamp:
+          type: string
+          format: date-time
+
+    RequirementSubmission:
+      type: object
+      required:
+        - requirementId
+        - originalRequirement
+        - summarizedRequirement
+        - context
+        - consent
+      properties:
+        requirementId:
+          type: string
+          format: uuid
+          description: Unique identifier for the requirement
+        originalRequirement:
+          type: string
+          description: The original requirement text
+          minLength: 10
+          maxLength: 1000
+        summarizedRequirement:
+          type: string
+          description: Summarized version of the requirement
+          maxLength: 200
+        context:
+          $ref: '#/components/schemas/RequirementContext'
+        consent:
+          $ref: '#/components/schemas/Consent'
+
+    RequirementContext:
+      type: object
+      required:
+        - conversationId
+        - timestamp
+      properties:
+        conversationId:
+          type: string
+          description: ID of the conversation where requirement was detected
+        userId:
+          type: string
+          description: Optional user ID (if available)
+        workspacePath:
+          type: string
+          description: Optional workspace path
+        timestamp:
+          type: string
+          format: date-time
+
+    Consent:
+      type: object
+      required:
+        - consentOptions
+        - consentedAt
+      properties:
+        requirementId:
+          type: string
+          format: uuid
+        consentOptions:
+          $ref: '#/components/schemas/ConsentOptions'
+        userProvidedEmail:
+          type: string
+          format: email
+        consentedAt:
+          type: string
+          format: date-time
+
+    ConsentOptions:
+      type: object
+      required:
+        - dataCollection
+        - contact
+        - anonymization
+      properties:
+        dataCollection:
+          type: boolean
+          description: Consent to collect and store the requirement
+        contact:
+          type: boolean
+          description: Consent to contact about this requirement
+        anonymization:
+          type: boolean
+          description: Consent to anonymize personal data
+
+    SubmissionSuccess:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        requirementId:
+          type: string
+          format: uuid
+        message:
+          type: string
+        retentionDays:
+          type: integer
+        privacyNotice:
+          type: string
+
+    RequirementsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            statistics:
+              $ref: '#/components/schemas/Statistics'
+            requirements:
+              type: array
+              items:
+                $ref: '#/components/schemas/Requirement'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+        endpoints:
+          type: object
+          properties:
+            POST:
+              type: string
+            GET:
+              type: string
+        rateLimit:
+          type: object
+          properties:
+            maxRequests:
+              type: integer
+            windowMs:
+              type: integer
+
+    Requirement:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        originalRequirement:
+          type: string
+        summarizedRequirement:
+          type: string
+        status:
+          type: string
+          enum: [pending, processed, rejected]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        embedding:
+          type: array
+          items:
+            type: number
+          nullable: true
+        clusterId:
+          type: string
+          nullable: true
+
+    Statistics:
+      type: object
+      properties:
+        totalRequirements:
+          type: integer
+        pendingRequirements:
+          type: integer
+        processedRequirements:
+          type: integer
+        totalClusters:
+          type: integer
+        uniqueUsers:
+          type: integer
+        lastUpdated:
+          type: string
+          format: date-time
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        hasMore:
+          type: boolean
+
+    ClustersResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            clusters:
+              type: array
+              items:
+                $ref: '#/components/schemas/Cluster'
+            statistics:
+              $ref: '#/components/schemas/PublicStatistics'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    Cluster:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        keywords:
+          type: array
+          items:
+            type: string
+        requirementCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PublicStatistics:
+      type: object
+      properties:
+        totalRequirements:
+          type: integer
+        totalClusters:
+          type: integer
+        trendingClusters:
+          type: array
+          items:
+            type: string
+        popularKeywords:
+          type: array
+          items:
+            type: string
+
+    PluginRequirementsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        requirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/Requirement'
+        message:
+          type: string
+          example: Generated requirements for plugin testing

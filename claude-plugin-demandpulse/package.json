@@ -1,0 +1,51 @@
+{
+  "name": "claude-plugin-demandpulse",
+  "version": "1.0.0",
+  "description": "Claude Code plugin for DemandPulse - Real-time demand radar for AI-native developers",
+  "main": "bin/hook-handler.mjs",
+  "type": "module",
+  "bin": {
+    "demandpulse-hook-handler": "./bin/hook-handler.mjs",
+    "demandpulse-install": "./install.js"
+  },
+  "scripts": {
+    "test": "echo \"No tests specified\" && exit 0",
+    "lint": "eslint . --ext .js,.mjs",
+    "prepare": "npm run lint",
+    "install-plugin": "node install.js"
+  },
+  "keywords": [
+    "claude-code",
+    "plugin",
+    "demandpulse",
+    "requirements",
+    "product-management",
+    "analytics"
+  ],
+  "author": "DemandPulse Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/demandpulse.git",
+    "directory": "claude-plugin-demandpulse"
+  },
+  "homepage": "https://github.com/yourusername/demandpulse",
+  "bugs": {
+    "url": "https://github.com/yourusername/demandpulse/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    ".claude-plugin/",
+    "hooks/",
+    "skills/",
+    "bin/",
+    "README.md",
+    "LICENSE",
+    "install.js"
+  ]
+}

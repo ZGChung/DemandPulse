@@ -1,0 +1,24 @@
+# Development files
+.git/
+.gitignore
+.npmignore
+node_modules/
+*.log
+*.tmp
+test/
+__tests__/
+coverage/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation drafts
+docs/drafts/
+*.md.bak
