@@ -141,6 +141,7 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  role          UserRole  @default(USER)
 
   // Timestamps
   createdAt     DateTime  @default(now())
@@ -247,4 +248,10 @@ enum DeletionStatus {
   PROCESSING
   COMPLETED
   FAILED
+}
+
+enum UserRole {
+  USER
+  ANALYST
+  ADMIN
 }

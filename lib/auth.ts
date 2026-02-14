@@ -22,6 +22,7 @@ export const authOptions: NextAuthOptions = {
         session.user.name = token.name;
         session.user.email = token.email;
         session.user.image = token.picture;
+        session.user.role = token.role as string | undefined;
       }
       return session;
     },
@@ -29,6 +30,22 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.sub = user.id;
       }
+
+      // Fetch user role from database
+      if (token.sub) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.sub },
+            select: { role: true }
+          });
+          if (dbUser?.role) {
+            token.role = dbUser.role;
+          }
+        } catch (error) {
+          console.error("Failed to fetch user role:", error);
+        }
+      }
+
       return token;
     },
   },

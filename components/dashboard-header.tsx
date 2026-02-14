@@ -1,7 +1,14 @@
+import { Session } from "next-auth";
 import { AuthStatus } from "./AuthStatus";
 import SubmitRequirementButton from "./submit-requirement-button";
 
-export default function DashboardHeader() {
+interface DashboardHeaderProps {
+  session: Session | null;
+}
+
+export default function DashboardHeader({ session }: DashboardHeaderProps) {
+  const isAdmin = session?.user?.role === "ADMIN";
+
   return (
     <header className="bg-white shadow">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -32,21 +39,23 @@ export default function DashboardHeader() {
         <div className="mt-6">
           <nav className="flex space-x-8">
             <a
-              href="#"
+              href="/"
               className="text-gray-900 border-b-2 border-gray-900 px-1 pb-4 text-sm font-medium"
             >
               Dashboard
             </a>
-            <a href="#" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium">
+            <a href="/requirements" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium">
               Requirements
             </a>
-            <a href="#" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium">
-              Clusters
-            </a>
-            <a href="#" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium">
+            <a href="/trends" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium">
               Trends
             </a>
-            <a href="#" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium">
+            {isAdmin && (
+              <a href="/admin" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium">
+                Admin
+              </a>
+            )}
+            <a href="/settings" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium">
               Settings
             </a>
           </nav>
