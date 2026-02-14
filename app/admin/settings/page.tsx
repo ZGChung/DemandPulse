@@ -1,35 +1,77 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { apiLogger } from "@/lib/logger";
 
+interface SystemSettings {
+  // Clustering settings
+  clusteringEnabled: boolean;
+  clusteringThreshold: number;
+  autoClusterFrequency: "hourly" | "daily" | "weekly" | "manual";
+
+  // Email settings
+  emailNotifications: boolean;
+  adminEmail: string;
+  notificationThreshold: number;
+
+  // Privacy settings
+  dataRetentionDays: number;
+  autoAnonymization: boolean;
+  requireConsentForCollection: boolean;
+
+  // System settings
+  maintenanceMode: boolean;
+  apiRateLimit: number;
+  enablePublicApi: boolean;
+}
+
+const DEFAULT_SETTINGS: SystemSettings = {
+  clusteringEnabled: true,
+  clusteringThreshold: 0.7,
+  autoClusterFrequency: "daily",
+  emailNotifications: true,
+  adminEmail: "",
+  notificationThreshold: 10,
+  dataRetentionDays: 365,
+  autoAnonymization: true,
+  requireConsentForCollection: true,
+  maintenanceMode: false,
+  apiRateLimit: 100,
+  enablePublicApi: false,
+};
+
 export default function AdminSettingsPage() {
-  const [settings, setSettings] = useState({
-    // Clustering settings
-    clusteringEnabled: true,
-    clusteringThreshold: 0.7,
-    autoClusterFrequency: "daily",
-
-    // Email settings
-    emailNotifications: true,
-    adminEmail: "",
-    notificationThreshold: 10,
-
-    // Privacy settings
-    dataRetentionDays: 365,
-    autoAnonymization: true,
-    requireConsentForCollection: true,
-
-    // System settings
-    maintenanceMode: false,
-    apiRateLimit: 100,
-    enablePublicApi: false,
-  });
-
+  const [settings, setSettings] = useState<SystemSettings>(DEFAULT_SETTINGS);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(
     null
   );
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/admin/settings");
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch settings: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (data.success && data.data?.settings) {
+        setSettings(data.data.settings);
+      }
+    } catch (error) {
+      apiLogger.error("Failed to fetch admin settings", { error: String(error) });
+      setSaveMessage({ type: "error", text: "Failed to load settings. Using defaults." });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -46,42 +88,89 @@ export default function AdminSettingsPage() {
     setSaveMessage(null);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(settings),
+      });
 
-      // In a real application, you would call an API endpoint here
-      // await fetch("/api/admin/settings", {
-      //   method: "POST",
-      //   body: JSON.stringify(settings),
-      // });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to save settings: ${response.statusText}`);
+      }
 
-      apiLogger.info("Admin settings updated", { settings });
-      setSaveMessage({ type: "success", text: "Settings saved successfully!" });
-    } catch (error) {
-      apiLogger.error("Failed to save admin settings", { error: String(error) });
-      setSaveMessage({ type: "error", text: "Failed to save settings. Please try again." });
+      const data = await response.json();
+
+      apiLogger.info("Admin settings updated via API", { settings });
+      setSaveMessage({ type: "success", text: data.data?.message || "Settings saved successfully!" });
+    } catch (error: any) {
+      apiLogger.error("Failed to save admin settings", { error: error.message });
+      setSaveMessage({ type: "error", text: error.message || "Failed to save settings. Please try again." });
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleReset = () => {
-    setSettings({
-      clusteringEnabled: true,
-      clusteringThreshold: 0.7,
-      autoClusterFrequency: "daily",
-      emailNotifications: true,
-      adminEmail: "",
-      notificationThreshold: 10,
-      dataRetentionDays: 365,
-      autoAnonymization: true,
-      requireConsentForCollection: true,
-      maintenanceMode: false,
-      apiRateLimit: 100,
-      enablePublicApi: false,
-    });
-    setSaveMessage(null);
+  const handleReset = async () => {
+    try {
+      setIsSaving(true);
+      setSaveMessage(null);
+
+      const response = await fetch("/api/admin/settings", {
+        method: "PUT",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to reset settings: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (data.success && data.data?.settings) {
+        setSettings(data.data.settings);
+      }
+
+      apiLogger.info("System settings reset to defaults");
+      setSaveMessage({ type: "success", text: data.data?.message || "Settings reset to defaults!" });
+    } catch (error: any) {
+      apiLogger.error("Failed to reset settings", { error: error.message });
+      setSaveMessage({ type: "error", text: error.message || "Failed to reset settings. Please try again." });
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">System Settings</h2>
+            <p className="mt-1 text-sm text-gray-600">
+              Configure system behavior, clustering, email notifications, and privacy settings.
+            </p>
+          </div>
+          <div className="flex space-x-4">
+            <a
+              href="/admin"
+              className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Back to Dashboard
+            </a>
+          </div>
+        </div>
+        <div className="bg-white shadow rounded-lg p-12 text-center">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mx-auto"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+            <div className="h-64 bg-gray-200 rounded mt-8"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

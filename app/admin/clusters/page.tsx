@@ -23,9 +23,8 @@ export default async function AdminClustersPage({
     // Fetch clusters with pagination
     clusters = await databaseService.getClusters(limit, offset);
 
-    // TODO: Implement total count query
-    // For now, estimate based on returned results
-    totalCount = clusters.length === limit ? page * limit + 1 : page * limit;
+    // Get total count
+    totalCount = await databaseService.getClustersCount();
   } catch (error) {
     apiLogger.error("Failed to fetch clusters for admin", {
       error: String(error),

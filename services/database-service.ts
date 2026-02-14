@@ -671,6 +671,20 @@ export class DatabaseService {
     }
   }
 
+  async getClustersCount(): Promise<number> {
+    try {
+      if (this.prisma) {
+        return await this.prisma.requirementCluster.count();
+      } else {
+        // Mock implementation
+        return 2;
+      }
+    } catch (error) {
+      console.error("Error counting clusters:", error);
+      throw new Error("Failed to count clusters");
+    }
+  }
+
   async getPublicStatistics() {
     try {
       if (this.prisma) {
@@ -776,6 +790,37 @@ export class DatabaseService {
     } catch (error) {
       console.error('Error fetching requirements for admin:', error);
       throw new Error('Failed to fetch requirements for admin view');
+    }
+  }
+
+  async getRequirementsCountForAdmin(
+    options: {
+      status?: RequirementStatus;
+      userId?: string;
+    } = {}
+  ): Promise<number> {
+    try {
+      const { status, userId } = options;
+
+      if (this.prisma) {
+        const whereClause: any = {};
+        if (status) whereClause.status = status;
+        if (userId) whereClause.userId = userId;
+
+        return await this.prisma.requirement.count({
+          where: whereClause,
+        });
+      } else {
+        // Mock implementation
+        return this.mockRequirements.filter(req => {
+          if (status && req.status !== status) return false;
+          if (userId && req.userId !== userId) return false;
+          return true;
+        }).length;
+      }
+    } catch (error) {
+      console.error('Error counting requirements for admin:', error);
+      throw new Error('Failed to count requirements for admin view');
     }
   }
 

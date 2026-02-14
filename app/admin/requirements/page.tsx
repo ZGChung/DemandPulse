@@ -33,9 +33,10 @@ export default async function AdminRequirementsPage({
       "ADMIN" // Assuming current user is admin (checked in layout)
     );
 
-    // TODO: Implement total count query (need to add method to DatabaseService)
-    // For now, use length of returned requirements as indication
-    totalCount = requirements.length === limit ? page * limit + 1 : page * limit;
+    // Get total count
+    totalCount = await databaseService.getRequirementsCountForAdmin({
+      status,
+    });
   } catch (error) {
     apiLogger.error("Failed to fetch requirements for admin", {
       error: String(error),
