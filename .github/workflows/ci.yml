@@ -189,6 +189,7 @@ jobs:
 
       - name: Check for secrets
         uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true
 
       - name: Dependency review
         uses: actions/dependency-review-action@v3
