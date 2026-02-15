@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+
 import { apiLogger } from "@/lib/logger";
 
 export interface SystemSettings {
@@ -94,14 +95,17 @@ export class SettingsService {
     }
   }
 
-  async updateSettings(settings: Partial<SystemSettings>, updatedBy: string): Promise<SystemSettings> {
+  async updateSettings(
+    settings: Partial<SystemSettings>,
+    updatedBy: string
+  ): Promise<SystemSettings> {
     try {
       const currentSettings = await this.getSettings();
       const mergedSettings = {
         ...currentSettings,
         ...settings,
         updatedAt: new Date(),
-        updatedBy
+        updatedBy,
       };
 
       await this.saveSettingsToFile(mergedSettings);

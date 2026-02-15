@@ -1,6 +1,18 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { FaShareAlt } from "react-icons/fa";
 
-async function getClusters() {
+interface ClusterItem {
+  id: string;
+  name: string;
+  requirements: number;
+  growth: number;
+  trending: boolean;
+  description: string;
+}
+
+async function getClusters(): Promise<ClusterItem[]> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const response = await fetch(`${baseUrl}/api/clusters?limit=5`, {
@@ -13,12 +25,18 @@ async function getClusters() {
 
     const data = await response.json();
     if (data.success && data.data?.clusters) {
-      return data.data.clusters;
+      return data.data.clusters.map((cluster: any) => ({
+        id: cluster.id,
+        name: cluster.name,
+        requirements: cluster.requirementCount ?? 0,
+        growth: Math.min(50, Math.floor((cluster.requirementCount ?? 0) / 2)),
+        trending: (cluster.requirementCount ?? 0) / 2 > 15,
+        description: cluster.description ?? "",
+      }));
     }
     throw new Error("Invalid response format");
   } catch (error) {
     console.error("Error fetching clusters:", error);
-    // Return mock data as fallback
     return [
       {
         id: "CLUSTER-001",
@@ -64,26 +82,14 @@ async function getClusters() {
   }
 }
 
-export default async function TrendingClusters() {
-  const fetchedClusters = await getClusters();
+export default function TrendingClusters() {
+  const [clusters, setClusters] = useState<ClusterItem[]>([]);
 
-  // Map to the format expected by the component
-  const clusters = fetchedClusters.map((cluster: any) => {
-    // Calculate mock growth based on requirement count (for demo)
-    const growth = Math.min(50, Math.floor(cluster.requirementCount / 2));
-    const trending = growth > 15;
+  useEffect(() => {
+    getClusters().then(setClusters);
+  }, []);
 
-    return {
-      id: cluster.id,
-      name: cluster.name,
-      requirements: cluster.requirementCount,
-      growth,
-      trending,
-      description: cluster.description,
-    };
-  });
-
-  const handleShare = async (cluster: any) => {
+  const handleShare = async (cluster: ClusterItem) => {
     const text = `Check out this trending developer need: ${cluster.name} - ${cluster.description}. Discover more on DemandPulse!`;
     try {
       await navigator.clipboard.writeText(text);
@@ -98,7 +104,7 @@ export default async function TrendingClusters() {
       <div className="px-6 py-5 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">Trending Clusters</h3>
-          <button className="text-sm font-medium text-blue-600 hover:text-blue-500">
+          <button className="text-sm font-medium text-blue-600 hover:text-blue-500" type="button">
             Analyze trends →
           </button>
         </div>
@@ -107,7 +113,7 @@ export default async function TrendingClusters() {
 
       <div className="flow-root">
         <ul className="divide-y divide-gray-200">
-          {clusters.map((cluster: any) => (
+          {clusters.map((cluster) => (
             <li key={cluster.id} className="px-6 py-4 hover:bg-gray-50">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
@@ -143,10 +149,14 @@ export default async function TrendingClusters() {
                     onClick={() => handleShare(cluster)}
                     className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 transition-colors"
                     title="Share this trend"
+                    type="button"
                   >
                     <FaShareAlt className="w-4 h-4" />
                   </button>
-                  <button className="text-sm font-medium text-blue-600 hover:text-blue-500">
+                  <button
+                    className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                    type="button"
+                  >
                     View
                   </button>
                 </div>
@@ -158,7 +168,10 @@ export default async function TrendingClusters() {
 
       <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
         <div className="text-center">
-          <button className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          <button
+            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            type="button"
+          >
             <svg
               className="mr-2 h-4 w-4 text-gray-400"
               fill="none"

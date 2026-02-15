@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+
 import { apiLogger } from "@/lib/logger";
 
 interface PrivacyRequest {
@@ -62,7 +63,7 @@ export default function AdminPrivacyRequestsPage() {
       const data = await response.json();
       if (data.success) {
         setRequests(data.data.privacyRequests);
-        setPagination(prev => ({
+        setPagination((prev) => ({
           ...prev,
           total: data.data.pagination.total,
           totalPages: data.data.pagination.totalPages,
@@ -85,18 +86,18 @@ export default function AdminPrivacyRequestsPage() {
 
   const handleFilterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setPagination(prev => ({ ...prev, page: 1 }));
+    setPagination((prev) => ({ ...prev, page: 1 }));
     fetchPrivacyRequests();
   };
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+    setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > pagination.totalPages) return;
-    setPagination(prev => ({ ...prev, page: newPage }));
+    setPagination((prev) => ({ ...prev, page: newPage }));
   };
 
   const handleClearFilters = () => {
@@ -106,7 +107,7 @@ export default function AdminPrivacyRequestsPage() {
       startDate: "",
       endDate: "",
     });
-    setPagination(prev => ({ ...prev, page: 1 }));
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   const handleRequestSelection = (requestId: string) => {
@@ -123,11 +124,15 @@ export default function AdminPrivacyRequestsPage() {
     if (selectedRequests.size === requests.length) {
       setSelectedRequests(new Set());
     } else {
-      setSelectedRequests(new Set(requests.map(r => r.id)));
+      setSelectedRequests(new Set(requests.map((r) => r.id)));
     }
   };
 
-  const handleStatusUpdate = async (requestId: string, newStatus: PrivacyRequest["status"], notes?: string) => {
+  const handleStatusUpdate = async (
+    requestId: string,
+    newStatus: PrivacyRequest["status"],
+    notes?: string
+  ) => {
     if (!confirm(`Are you sure you want to update this request to ${newStatus}?`)) {
       return;
     }
@@ -149,7 +154,11 @@ export default function AdminPrivacyRequestsPage() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
       alert(`Failed to update privacy request: ${errorMessage}`);
-      apiLogger.error("Failed to update privacy request", { requestId, newStatus, error: errorMessage });
+      apiLogger.error("Failed to update privacy request", {
+        requestId,
+        newStatus,
+        error: errorMessage,
+      });
     }
   };
 
@@ -164,12 +173,14 @@ export default function AdminPrivacyRequestsPage() {
     }
 
     try {
-      const updates = Array.from(selectedRequests).map(requestId =>
+      const updates = Array.from(selectedRequests).map((requestId) =>
         fetch(`/api/admin/privacy-requests?requestId=${requestId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ status: newStatus }),
-        }).then(res => res.ok ? res.json() : Promise.reject(new Error(`Failed to update request ${requestId}`)))
+        }).then((res) =>
+          res.ok ? res.json() : Promise.reject(new Error(`Failed to update request ${requestId}`))
+        )
       );
 
       await Promise.all(updates);
@@ -225,8 +236,10 @@ export default function AdminPrivacyRequestsPage() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
               >
                 <option value="">All Statuses</option>
-                {statusOptions.map(status => (
-                  <option key={status} value={status}>{status}</option>
+                {statusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
                 ))}
               </select>
             </div>
@@ -290,7 +303,9 @@ export default function AdminPrivacyRequestsPage() {
             <div>
               <select
                 value={pagination.limit}
-                onChange={(e) => setPagination(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
+                onChange={(e) =>
+                  setPagination((prev) => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))
+                }
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
               >
                 <option value="20">20 per page</option>
@@ -365,7 +380,10 @@ export default function AdminPrivacyRequestsPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12"
+                    >
                       <input
                         type="checkbox"
                         checked={selectedRequests.size === requests.length && requests.length > 0}
@@ -373,19 +391,34 @@ export default function AdminPrivacyRequestsPage() {
                         className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Entity
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Requested By
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Status
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Scheduled For
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Actions
                     </th>
                   </tr>
@@ -393,7 +426,10 @@ export default function AdminPrivacyRequestsPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {requests.length > 0 ? (
                     requests.map((request) => (
-                      <tr key={request.id} className={selectedRequests.has(request.id) ? "bg-blue-50" : ""}>
+                      <tr
+                        key={request.id}
+                        className={selectedRequests.has(request.id) ? "bg-blue-50" : ""}
+                      >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <input
                             type="checkbox"
@@ -404,27 +440,42 @@ export default function AdminPrivacyRequestsPage() {
                         </td>
                         <td className="px-6 py-4">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">{request.entityType}</div>
-                            <div className="text-sm text-gray-500">ID: {request.entityId.substring(0, 8)}...</div>
-                            <div className="text-xs text-gray-400 mt-1">{request.deletionReason}</div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {request.entityType}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              ID: {request.entityId.substring(0, 8)}...
+                            </div>
+                            <div className="text-xs text-gray-400 mt-1">
+                              {request.deletionReason}
+                            </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {request.requestedByUser ? (
                             <div>
-                              <div className="font-medium">{request.requestedByUser.name || request.requestedByUser.email}</div>
-                              <div className="text-gray-500 text-xs">User ID: {request.requestedBy.substring(0, 8)}...</div>
+                              <div className="font-medium">
+                                {request.requestedByUser.name || request.requestedByUser.email}
+                              </div>
+                              <div className="text-gray-500 text-xs">
+                                User ID: {request.requestedBy?.substring(0, 8)}...
+                              </div>
                             </div>
                           ) : (
                             <span className="text-gray-400">System</span>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[request.status]}`}>
+                          <span
+                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[request.status]}`}
+                          >
                             {request.status}
                           </span>
                           {request.notes && (
-                            <div className="text-xs text-gray-500 mt-1 truncate max-w-xs" title={request.notes}>
+                            <div
+                              className="text-xs text-gray-500 mt-1 truncate max-w-xs"
+                              title={request.notes}
+                            >
                               {request.notes}
                             </div>
                           )}
@@ -460,7 +511,10 @@ export default function AdminPrivacyRequestsPage() {
                           </button>
                           <button
                             onClick={() => {
-                              const notes = prompt("Add failure notes (optional):", request.notes || "");
+                              const notes = prompt(
+                                "Add failure notes (optional):",
+                                request.notes || ""
+                              );
                               if (notes !== null) {
                                 handleStatusUpdate(request.id, "FAILED", notes);
                               }
@@ -488,7 +542,11 @@ export default function AdminPrivacyRequestsPage() {
               <div className="px-6 py-4 border-t border-gray-200">
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-700">
-                    Showing <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}</span> to{" "}
+                    Showing{" "}
+                    <span className="font-medium">
+                      {(pagination.page - 1) * pagination.limit + 1}
+                    </span>{" "}
+                    to{" "}
                     <span className="font-medium">
                       {Math.min(pagination.page * pagination.limit, pagination.total)}
                     </span>{" "}

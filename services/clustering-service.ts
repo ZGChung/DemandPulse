@@ -30,7 +30,7 @@ export class ClusteringService {
   private prisma: PrismaClient;
 
   constructor() {
-    this.prisma = prisma;
+    this.prisma = prisma!;
   }
 
   /**

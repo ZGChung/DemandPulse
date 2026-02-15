@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+
 import { apiLogger } from "@/lib/logger";
 
 interface AuditLog {
@@ -62,7 +63,7 @@ export default function AdminAuditLogsPage() {
       const data = await response.json();
       if (data.success) {
         setAuditLogs(data.data.auditLogs);
-        setPagination(prev => ({
+        setPagination((prev) => ({
           ...prev,
           total: data.data.pagination.total,
           totalPages: data.data.pagination.totalPages,
@@ -85,18 +86,18 @@ export default function AdminAuditLogsPage() {
 
   const handleFilterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setPagination(prev => ({ ...prev, page: 1 }));
+    setPagination((prev) => ({ ...prev, page: 1 }));
     fetchAuditLogs();
   };
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+    setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > pagination.totalPages) return;
-    setPagination(prev => ({ ...prev, page: newPage }));
+    setPagination((prev) => ({ ...prev, page: newPage }));
   };
 
   const handleClearFilters = () => {
@@ -107,7 +108,7 @@ export default function AdminAuditLogsPage() {
       startDate: "",
       endDate: "",
     });
-    setPagination(prev => ({ ...prev, page: 1 }));
+    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   const actionOptions = ["CREATE", "READ", "UPDATE", "DELETE"];
@@ -148,8 +149,10 @@ export default function AdminAuditLogsPage() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
               >
                 <option value="">All Actions</option>
-                {actionOptions.map(action => (
-                  <option key={action} value={action}>{action}</option>
+                {actionOptions.map((action) => (
+                  <option key={action} value={action}>
+                    {action}
+                  </option>
                 ))}
               </select>
             </div>
@@ -179,8 +182,10 @@ export default function AdminAuditLogsPage() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
               >
                 <option value="">All Actors</option>
-                {actorTypeOptions.map(type => (
-                  <option key={type} value={type}>{type}</option>
+                {actorTypeOptions.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
                 ))}
               </select>
             </div>
@@ -230,7 +235,9 @@ export default function AdminAuditLogsPage() {
             <div>
               <select
                 value={pagination.limit}
-                onChange={(e) => setPagination(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
+                onChange={(e) =>
+                  setPagination((prev) => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))
+                }
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
               >
                 <option value="20">20 per page</option>
@@ -274,22 +281,40 @@ export default function AdminAuditLogsPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Action
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Entity
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Actor
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Changes
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Reason
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Timestamp
                     </th>
                   </tr>
@@ -299,19 +324,26 @@ export default function AdminAuditLogsPage() {
                     auditLogs.map((log) => (
                       <tr key={log.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            log.action === "CREATE" ? "bg-green-100 text-green-800" :
-                            log.action === "UPDATE" ? "bg-blue-100 text-blue-800" :
-                            log.action === "DELETE" ? "bg-red-100 text-red-800" :
-                            "bg-gray-100 text-gray-800"
-                          }`}>
+                          <span
+                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              log.action === "CREATE"
+                                ? "bg-green-100 text-green-800"
+                                : log.action === "UPDATE"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : log.action === "DELETE"
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
                             {log.action}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           <div>
                             <div className="font-medium">{log.entityType}</div>
-                            <div className="text-gray-500 text-xs">ID: {log.entityId.substring(0, 8)}...</div>
+                            <div className="text-gray-500 text-xs">
+                              ID: {log.entityId.substring(0, 8)}...
+                            </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -362,7 +394,11 @@ export default function AdminAuditLogsPage() {
               <div className="px-6 py-4 border-t border-gray-200">
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-700">
-                    Showing <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}</span> to{" "}
+                    Showing{" "}
+                    <span className="font-medium">
+                      {(pagination.page - 1) * pagination.limit + 1}
+                    </span>{" "}
+                    to{" "}
                     <span className="font-medium">
                       {Math.min(pagination.page * pagination.limit, pagination.total)}
                     </span>{" "}

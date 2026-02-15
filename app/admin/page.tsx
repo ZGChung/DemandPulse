@@ -1,5 +1,5 @@
-import { DatabaseService } from "@/services/database-service";
 import { apiLogger } from "@/lib/logger";
+import { DatabaseService } from "@/services/database-service";
 
 export default async function AdminPage() {
   const databaseService = new DatabaseService();
@@ -35,15 +35,27 @@ export default async function AdminPage() {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                  <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="h-6 w-6 text-blue-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">Total Requirements</dt>
-                  <dd className="text-lg font-medium text-gray-900">{statistics.totalRequirements || 0}</dd>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {statistics.totalRequirements || 0}
+                  </dd>
                 </dl>
               </div>
             </div>
@@ -55,15 +67,27 @@ export default async function AdminPage() {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                  <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  <svg
+                    className="h-6 w-6 text-green-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                    />
                   </svg>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">Total Clusters</dt>
-                  <dd className="text-lg font-medium text-gray-900">{statistics.totalClusters || 0}</dd>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {statistics.totalClusters || 0}
+                  </dd>
                 </dl>
               </div>
             </div>
@@ -75,15 +99,27 @@ export default async function AdminPage() {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                  <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm-4 3c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z" />
+                  <svg
+                    className="h-6 w-6 text-yellow-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm-4 3c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"
+                    />
                   </svg>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">Unique Users</dt>
-                  <dd className="text-lg font-medium text-gray-900">{statistics.totalUsers || 0}</dd>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {statistics.totalUsers || 0}
+                  </dd>
                 </dl>
               </div>
             </div>
@@ -95,15 +131,29 @@ export default async function AdminPage() {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
-                  <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="h-6 w-6 text-purple-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </div>
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Recent Requirements</dt>
-                  <dd className="text-lg font-medium text-gray-900">{statistics.recentRequirements || 0}</dd>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Recent Requirements
+                  </dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {statistics.recentRequirements || 0}
+                  </dd>
                 </dl>
               </div>
             </div>
@@ -123,16 +173,28 @@ export default async function AdminPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
                   Summary
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
                   Status
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
                   Submitted
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
                   Actions
                 </th>
               </tr>
@@ -145,13 +207,15 @@ export default async function AdminPage() {
                       {requirement.summarizedRequirement}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        requirement.status === "PROCESSED"
-                          ? "bg-green-100 text-green-800"
-                          : requirement.status === "PENDING"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
-                      }`}>
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          requirement.status === "PROCESSED"
+                            ? "bg-green-100 text-green-800"
+                            : requirement.status === "PENDING"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-red-100 text-red-800"
+                        }`}
+                      >
                         {requirement.status}
                       </span>
                     </td>

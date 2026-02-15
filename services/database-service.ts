@@ -1,9 +1,9 @@
 import { PrismaClient, RequirementStatus, PrivacyAction, ActorType } from "@prisma/client";
 
 import { encryptionService } from "@/lib/encryption";
+import { maskRequirementsForAdmin, canViewUnmaskedData } from "@/lib/masking";
 import { prisma } from "@/lib/prisma";
 import { CollectedRequirement } from "@/types/claude-code";
-import { maskRequirementsForAdmin, canViewUnmaskedData } from "@/lib/masking";
 
 // Mock in-memory store for when database is unavailable
 interface MockRequirement {
@@ -756,24 +756,26 @@ export class DatabaseService {
           where: whereClause,
           take: limit,
           skip: offset,
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
         });
       } else {
         // Mock implementation
-        requirements = this.mockRequirements.filter(req => {
-          if (status && req.status !== status) return false;
-          if (userId && req.userId !== userId) return false;
-          return true;
-        }).slice(offset, offset + limit);
+        requirements = this.mockRequirements
+          .filter((req) => {
+            if (status && req.status !== status) return false;
+            if (userId && req.userId !== userId) return false;
+            return true;
+          })
+          .slice(offset, offset + limit);
       }
 
       // Apply privacy controls (decryption, anonymization)
       const processedRequirements = await Promise.all(
-        requirements.map(req => this.applyPrivacyControls(req, false))
+        requirements.map((req) => this.applyPrivacyControls(req, false))
       );
 
       // Check if user can view unmasked data
-      const canViewUnmasked = canViewUnmaskedData(userRole, 'admin');
+      const canViewUnmasked = canViewUnmaskedData(userRole, "admin");
 
       // Apply masking if needed
       if (!canViewUnmasked) {
@@ -788,8 +790,8 @@ export class DatabaseService {
 
       return processedRequirements;
     } catch (error) {
-      console.error('Error fetching requirements for admin:', error);
-      throw new Error('Failed to fetch requirements for admin view');
+      console.error("Error fetching requirements for admin:", error);
+      throw new Error("Failed to fetch requirements for admin view");
     }
   }
 
@@ -812,15 +814,15 @@ export class DatabaseService {
         });
       } else {
         // Mock implementation
-        return this.mockRequirements.filter(req => {
+        return this.mockRequirements.filter((req) => {
           if (status && req.status !== status) return false;
           if (userId && req.userId !== userId) return false;
           return true;
         }).length;
       }
     } catch (error) {
-      console.error('Error counting requirements for admin:', error);
-      throw new Error('Failed to count requirements for admin view');
+      console.error("Error counting requirements for admin:", error);
+      throw new Error("Failed to count requirements for admin view");
     }
   }
 

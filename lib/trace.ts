@@ -18,10 +18,10 @@ export function generateTraceId(): string {
 export function getTraceIdFromHeaders(headers: Headers): string {
   // Check for common trace headers
   const traceId =
-    headers.get('x-trace-id') ||
-    headers.get('x-request-id') ||
-    headers.get('x-correlation-id') ||
-    headers.get('traceparent')?.split('-')[1]; // W3C Trace Context
+    headers.get("x-trace-id") ||
+    headers.get("x-request-id") ||
+    headers.get("x-correlation-id") ||
+    headers.get("traceparent")?.split("-")[1]; // W3C Trace Context
 
   return traceId || generateTraceId();
 }
@@ -30,8 +30,8 @@ export function getTraceIdFromHeaders(headers: Headers): string {
  * Set trace ID on response headers
  */
 export function setTraceIdOnHeaders(headers: Headers, traceId: string): void {
-  headers.set('x-trace-id', traceId);
-  headers.set('x-request-id', traceId);
+  headers.set("x-trace-id", traceId);
+  headers.set("x-request-id", traceId);
 }
 
 /**
@@ -40,15 +40,9 @@ export function setTraceIdOnHeaders(headers: Headers, traceId: string): void {
 export function createTraceContext(traceId: string, spanId?: string): Record<string, string> {
   return {
     traceId,
-    spanId: spanId || generateTraceId().replace('trace_', 'span_'),
+    spanId: spanId || generateTraceId().replace("trace_", "span_"),
   };
 }
-
-/**
- * AsyncLocalStorage for storing trace context across async operations
- * Note: This requires Node.js 13.10+
- */
-import { AsyncLocalStorage } from 'async_hooks';
 
 export interface TraceStore {
   traceId: string;
@@ -56,7 +50,22 @@ export interface TraceStore {
   parentSpanId?: string;
 }
 
-export const traceStorage = new AsyncLocalStorage<TraceStore>();
+// Stub for client bundle; server uses trace-server.ts for AsyncLocalStorage
+let _traceContext: TraceStore | undefined;
+export const traceStorage = {
+  run<T>(store: TraceStore, callback: () => T): T {
+    const prev = _traceContext;
+    _traceContext = store;
+    try {
+      return callback();
+    } finally {
+      _traceContext = prev;
+    }
+  },
+  getStore(): TraceStore | undefined {
+    return _traceContext;
+  },
+};
 
 /**
  * Run a function with trace context
@@ -64,9 +73,8 @@ export const traceStorage = new AsyncLocalStorage<TraceStore>();
 export function runWithTrace<T>(traceId: string, callback: () => T): T {
   const store: TraceStore = {
     traceId,
-    spanId: generateTraceId().replace('trace_', 'span_'),
+    spanId: generateTraceId().replace("trace_", "span_"),
   };
-
   return traceStorage.run(store, callback);
 }
 
@@ -89,7 +97,7 @@ export function getCurrentTraceId(): string | undefined {
  */
 export function createSpan(name: string): { end: () => void } {
   const parentContext = getTraceContext();
-  const spanId = generateTraceId().replace('trace_', 'span_');
+  const spanId = generateTraceId().replace("trace_", "span_");
 
   // In a real implementation, this would record span start time
   // and send to tracing system (OpenTelemetry, Jaeger, etc.)

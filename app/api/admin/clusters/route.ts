@@ -3,11 +3,11 @@ import { getServerSession } from "next-auth";
 import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";
-import { defaultRateLimiter } from "@/lib/rate-limiter";
 import { env } from "@/lib/env";
-import { DatabaseService } from "@/services/database-service";
 import { apiLogger } from "@/lib/logger";
+import { defaultRateLimiter } from "@/lib/rate-limiter";
 import { ValidationError } from "@/lib/validation";
+import { DatabaseService } from "@/services/database-service";
 
 // Validation schemas
 const updateClusterSchema = z.object({
@@ -24,7 +24,8 @@ async function requireAdminAccess(session: any) {
 
 // Helper for rate limiting
 async function checkRateLimit(session: any, request: NextRequest) {
-  const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+  const ip =
+    request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
   const rateLimitKey = `admin:clusters:${session.user.id}:${ip}`;
 
   try {
@@ -36,7 +37,11 @@ async function checkRateLimit(session: any, request: NextRequest) {
   } catch (rateLimitError) {
     console.error("Rate limiting error:", rateLimitError);
     // Fail open for admin endpoints
-    return { allowed: true, remaining: env.rateLimitMaxRequests() - 1, reset: Date.now() + env.rateLimitWindowMs() };
+    return {
+      allowed: true,
+      remaining: env.rateLimitMaxRequests() - 1,
+      reset: Date.now() + env.rateLimitWindowMs(),
+    };
   }
 }
 
@@ -97,7 +102,7 @@ export async function POST(request: NextRequest) {
     // Validate request body
     const validationResult = updateClusterSchema.safeParse(body);
     if (!validationResult.success) {
-      throw new ValidationError("Invalid request body", validationResult.error.errors);
+      throw new ValidationError("Invalid request body", validationResult.error.issues);
     }
 
     const { name, description } = validationResult.data;
@@ -113,7 +118,7 @@ export async function POST(request: NextRequest) {
     // For now, return success with mock data
 
     apiLogger.info("Cluster creation requested", {
-      adminId: session.user.id,
+      adminId: session!.user.id,
       name,
       description,
     });
@@ -137,7 +142,10 @@ export async function POST(request: NextRequest) {
     apiLogger.error("Admin clusters POST error", { error: error.message });
 
     if (error instanceof ValidationError) {
-      return NextResponse.json({ error: "Validation failed", details: error.details }, { status: 400 });
+      return NextResponse.json(
+        { error: "Validation failed", details: error.details },
+        { status: 400 }
+      );
     }
     if (error.message === "Admin access required") {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });

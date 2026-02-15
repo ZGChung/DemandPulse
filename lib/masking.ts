@@ -13,11 +13,11 @@
 export function maskEmail(email: string | null | undefined): string | null {
   if (!email) return null;
 
-  const [localPart, domain] = email.split('@');
-  if (!localPart || !domain) return '*****@*****';
+  const [localPart, domain] = email.split("@");
+  if (!localPart || !domain) return "*****@*****";
 
   // Keep first character, mask the rest of local part
-  const maskedLocal = localPart.charAt(0) + '*'.repeat(Math.min(localPart.length - 1, 5));
+  const maskedLocal = localPart.charAt(0) + "*".repeat(Math.min(localPart.length - 1, 5));
   return `${maskedLocal}@${domain}`;
 }
 
@@ -28,12 +28,12 @@ export function maskEmail(email: string | null | undefined): string | null {
  * @returns Masked text
  */
 export function maskRequirementText(text: string, visibleChars: number = 20): string {
-  if (!text) return '';
+  if (!text) return "";
   if (text.length <= visibleChars * 2) {
     // For short text, mask all but first and last character
     const firstChar = text.charAt(0);
     const lastChar = text.charAt(text.length - 1);
-    return `${firstChar}${'*'.repeat(text.length - 2)}${lastChar}`;
+    return `${firstChar}${"*".repeat(text.length - 2)}${lastChar}`;
   }
 
   const start = text.substring(0, visibleChars);
@@ -47,9 +47,9 @@ export function maskRequirementText(text: string, visibleChars: number = 20): st
  * @returns Masked UUID (e.g., "550e8400-...-446655440000")
  */
 export function maskUUID(uuid: string): string {
-  if (!uuid) return '********-****-****-****-***********';
-  const parts = uuid.split('-');
-  if (parts.length !== 5) return '********-****-****-****-***********';
+  if (!uuid) return "********-****-****-****-***********";
+  const parts = uuid.split("-");
+  if (parts.length !== 5) return "********-****-****-****-***********";
 
   return `${parts[0]}-****-****-****-${parts[4]}`;
 }
@@ -65,20 +65,20 @@ export function maskWorkspacePath(path: string | null | undefined): string | nul
   // Replace home directory with ~
   const homeDir = process.env.HOME || process.env.USERPROFILE;
   if (homeDir && path.startsWith(homeDir)) {
-    path = '~' + path.substring(homeDir.length);
+    path = "~" + path.substring(homeDir.length);
   }
 
   // Mask intermediate directories
-  const parts = path.split('/');
+  const parts = path.split("/");
   if (parts.length <= 3) return path;
 
   // Show first and last directory, mask middle ones
   const maskedParts = parts.map((part, index) => {
     if (index === 0 || index === parts.length - 1) return part;
-    return '*'.repeat(Math.min(part.length, 3));
+    return "*".repeat(Math.min(part.length, 3));
   });
 
-  return maskedParts.join('/');
+  return maskedParts.join("/");
 }
 
 /**
@@ -87,9 +87,9 @@ export function maskWorkspacePath(path: string | null | undefined): string | nul
  * @returns Masked ID
  */
 export function maskConversationId(conversationId: string): string {
-  if (!conversationId) return '********';
+  if (!conversationId) return "********";
   if (conversationId.length <= 8) {
-    return '*'.repeat(conversationId.length);
+    return "*".repeat(conversationId.length);
   }
 
   const visibleChars = Math.min(4, Math.floor(conversationId.length / 4));
@@ -115,44 +115,55 @@ export function maskRequirementForAdmin<T extends Record<string, any>>(
   } = {}
 ): T {
   const {
-    maskEmail = true,
-    maskRequirementText = false, // Usually want to see full text for admin review
-    maskWorkspacePath = true,
-    maskConversationId = true,
-    maskUUID = true,
+    maskEmail: doMaskEmail = true,
+    maskRequirementText: doMaskRequirementText = false, // Usually want to see full text for admin review
+    maskWorkspacePath: doMaskWorkspacePath = true,
+    maskConversationId: doMaskConversationId = true,
+    maskUUID: doMaskUUID = true,
   } = options;
 
-  const masked = { ...requirement };
+  const masked = { ...requirement } as T;
 
   // Mask userProvidedEmail if present
-  if (maskEmail && masked.consent?.userProvidedEmail) {
-    masked.consent.userProvidedEmail = maskEmail(masked.consent.userProvidedEmail);
+  if (doMaskEmail && (masked as any).consent?.userProvidedEmail) {
+    (masked as any).consent.userProvidedEmail = maskEmail(
+      (masked as any).consent.userProvidedEmail
+    );
   }
 
   // Mask workspace path in context
-  if (maskWorkspacePath && masked.context?.workspacePath) {
-    masked.context.workspacePath = maskWorkspacePath(masked.context.workspacePath);
+  if (doMaskWorkspacePath && (masked as any).context?.workspacePath) {
+    (masked as any).context.workspacePath = maskRequirementText(
+      (masked as any).context.workspacePath,
+      20
+    );
   }
 
   // Mask conversation ID
-  if (maskConversationId && masked.context?.conversationId) {
-    masked.context.conversationId = maskConversationId(masked.context.conversationId);
+  if (doMaskConversationId && (masked as any).context?.conversationId) {
+    (masked as any).context.conversationId = maskUUID((masked as any).context.conversationId);
   }
 
   // Mask requirement IDs
-  if (maskUUID) {
-    if (masked.id) masked.id = maskUUID(masked.id);
-    if (masked.requirementId) masked.requirementId = maskUUID(masked.requirementId);
-    if (masked.clusterId) masked.clusterId = maskUUID(masked.clusterId);
+  if (doMaskUUID) {
+    if ((masked as any).id) (masked as any).id = maskUUID((masked as any).id);
+    if ((masked as any).requirementId)
+      (masked as any).requirementId = maskUUID((masked as any).requirementId);
+    if ((masked as any).clusterId) (masked as any).clusterId = maskUUID((masked as any).clusterId);
   }
 
   // Mask requirement text if requested
-  if (maskRequirementText) {
-    if (masked.originalRequirement) {
-      masked.originalRequirement = maskRequirementText(masked.originalRequirement);
+  if (doMaskRequirementText) {
+    if ((masked as any).originalRequirement) {
+      (masked as any).originalRequirement = maskRequirementText(
+        (masked as any).originalRequirement
+      );
     }
-    if (masked.summarizedRequirement) {
-      masked.summarizedRequirement = maskRequirementText(masked.summarizedRequirement, 10);
+    if ((masked as any).summarizedRequirement) {
+      (masked as any).summarizedRequirement = maskRequirementText(
+        (masked as any).summarizedRequirement,
+        10
+      );
     }
   }
 
@@ -166,22 +177,25 @@ export function maskRequirementsForAdmin<T extends Record<string, any>>(
   requirements: T[],
   options?: Parameters<typeof maskRequirementForAdmin>[1]
 ): T[] {
-  return requirements.map(req => maskRequirementForAdmin(req, options));
+  return requirements.map((req) => maskRequirementForAdmin(req, options));
 }
 
 /**
  * Check if user has permission to view unmasked data
  * Based on user role and context
  */
-export function canViewUnmaskedData(userRole?: string, context?: 'admin' | 'analyst' | 'viewer'): boolean {
+export function canViewUnmaskedData(
+  userRole?: string,
+  context?: "admin" | "analyst" | "viewer"
+): boolean {
   // Admin users can see unmasked data in admin context
-  if (userRole === 'admin' && context === 'admin') return true;
+  if (userRole === "admin" && context === "admin") return true;
 
   // In production, apply stricter rules
-  if (process.env.NODE_ENV === 'production') {
-    return userRole === 'admin' && context === 'admin';
+  if (process.env.NODE_ENV === "production") {
+    return userRole === "admin" && context === "admin";
   }
 
   // In development, be more permissive
-  return userRole === 'admin' || userRole === 'analyst';
+  return userRole === "admin" || userRole === "analyst";
 }

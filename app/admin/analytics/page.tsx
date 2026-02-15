@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+
 import { apiLogger } from "@/lib/logger";
 
 interface AnalyticsData {
@@ -32,8 +33,8 @@ export default function AdminAnalyticsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState({
-    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0],
+    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    endDate: new Date().toISOString().split("T")[0],
   });
 
   const fetchAnalytics = async () => {
@@ -72,7 +73,7 @@ export default function AdminAnalyticsPage() {
 
   const handleTimeRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setTimeRange(prev => ({ ...prev, [name]: value }));
+    setTimeRange((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleTimeRangeSubmit = (e: React.FormEvent) => {
@@ -173,15 +174,27 @@ export default function AdminAnalyticsPage() {
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
                     <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                      <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm-4 3c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z" />
+                      <svg
+                        className="h-6 w-6 text-blue-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm-4 3c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"
+                        />
                       </svg>
                     </div>
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Total Users</dt>
-                      <dd className="text-lg font-medium text-gray-900">{data.summary.totalUsers}</dd>
+                      <dd className="text-lg font-medium text-gray-900">
+                        {data.summary.totalUsers}
+                      </dd>
                     </dl>
                   </div>
                 </div>
@@ -193,15 +206,29 @@ export default function AdminAnalyticsPage() {
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
                     <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                      <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <svg
+                        className="h-6 w-6 text-green-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
                       </svg>
                     </div>
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Total Requirements</dt>
-                      <dd className="text-lg font-medium text-gray-900">{data.summary.totalRequirements}</dd>
+                      <dt className="text-sm font-medium text-gray-500 truncate">
+                        Total Requirements
+                      </dt>
+                      <dd className="text-lg font-medium text-gray-900">
+                        {data.summary.totalRequirements}
+                      </dd>
                     </dl>
                   </div>
                 </div>
@@ -213,15 +240,27 @@ export default function AdminAnalyticsPage() {
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
                     <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                      <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      <svg
+                        className="h-6 w-6 text-yellow-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                        />
                       </svg>
                     </div>
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Total Clusters</dt>
-                      <dd className="text-lg font-medium text-gray-900">{data.summary.totalClusters}</dd>
+                      <dd className="text-lg font-medium text-gray-900">
+                        {data.summary.totalClusters}
+                      </dd>
                     </dl>
                   </div>
                 </div>
@@ -233,8 +272,18 @@ export default function AdminAnalyticsPage() {
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
                     <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
-                      <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      <svg
+                        className="h-6 w-6 text-purple-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                        />
                       </svg>
                     </div>
                   </div>
@@ -242,7 +291,8 @@ export default function AdminAnalyticsPage() {
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">User Growth</dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {data.summary.userGrowthRate > 0 ? '+' : ''}{data.summary.userGrowthRate.toFixed(2)}%
+                        {data.summary.userGrowthRate > 0 ? "+" : ""}
+                        {data.summary.userGrowthRate.toFixed(2)}%
                       </dd>
                     </dl>
                   </div>
@@ -259,15 +309,21 @@ export default function AdminAnalyticsPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Requirements per User</span>
-                  <span className="font-medium">{data.summary.avgRequirementsPerUser.toFixed(2)}</span>
+                  <span className="font-medium">
+                    {data.summary.avgRequirementsPerUser.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Tokens per Requirement</span>
-                  <span className="font-medium">{data.summary.avgTokensPerRequirement.toFixed(2)}</span>
+                  <span className="font-medium">
+                    {data.summary.avgTokensPerRequirement.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Requirements per Cluster</span>
-                  <span className="font-medium">{data.summary.avgRequirementsPerCluster.toFixed(2)}</span>
+                  <span className="font-medium">
+                    {data.summary.avgRequirementsPerCluster.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Active Users</span>
@@ -282,16 +338,25 @@ export default function AdminAnalyticsPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Start Date</span>
-                  <span className="font-medium">{new Date(data.timeRange.startDate).toLocaleDateString()}</span>
+                  <span className="font-medium">
+                    {new Date(data.timeRange.startDate).toLocaleDateString()}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">End Date</span>
-                  <span className="font-medium">{new Date(data.timeRange.endDate).toLocaleDateString()}</span>
+                  <span className="font-medium">
+                    {new Date(data.timeRange.endDate).toLocaleDateString()}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Duration</span>
                   <span className="font-medium">
-                    {Math.ceil((new Date(data.timeRange.endDate).getTime() - new Date(data.timeRange.startDate).getTime()) / (1000 * 60 * 60 * 24))} days
+                    {Math.ceil(
+                      (new Date(data.timeRange.endDate).getTime() -
+                        new Date(data.timeRange.startDate).getTime()) /
+                        (1000 * 60 * 60 * 24)
+                    )}{" "}
+                    days
                   </span>
                 </div>
               </div>
@@ -306,18 +371,32 @@ export default function AdminAnalyticsPage() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead>
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requirements</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Description
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Requirements
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Created
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {data.details.topClusters.map((cluster) => (
                       <tr key={cluster.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{cluster.name}</td>
-                        <td className="px-6 py-4 text-sm text-gray-500 truncate max-w-xs">{cluster.description}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{cluster.requirementCount}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {cluster.name}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500 truncate max-w-xs">
+                          {cluster.description}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {cluster.requirementCount}
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(cluster.createdAt).toLocaleDateString()}
                         </td>
@@ -336,23 +415,31 @@ export default function AdminAnalyticsPage() {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Node Version</span>
-                  <span className="font-mono text-sm">{data.details.systemMetrics.nodeVersion}</span>
+                  <span className="font-mono text-sm">
+                    {data.details.systemMetrics.nodeVersion}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Uptime</span>
-                  <span className="font-mono text-sm">{Math.floor(data.details.systemMetrics.uptime)} seconds</span>
+                  <span className="font-mono text-sm">
+                    {Math.floor(data.details.systemMetrics.uptime)} seconds
+                  </span>
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Memory Usage</span>
                   <span className="font-mono text-sm">
-                    {data.details.systemMetrics.memoryUsage ? `${Math.round(data.details.systemMetrics.memoryUsage.heapUsed / 1024 / 1024)}MB` : 'N/A'}
+                    {data.details.systemMetrics.memoryUsage
+                      ? `${Math.round(data.details.systemMetrics.memoryUsage.heapUsed / 1024 / 1024)}MB`
+                      : "N/A"}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Database Size</span>
-                  <span className="font-mono text-sm">{data.details.systemMetrics.databaseSize}</span>
+                  <span className="font-mono text-sm">
+                    {data.details.systemMetrics.databaseSize}
+                  </span>
                 </div>
               </div>
             </div>

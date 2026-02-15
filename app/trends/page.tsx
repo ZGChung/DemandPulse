@@ -2,6 +2,8 @@ import { FaEye, FaChartLine, FaUsers, FaArrowRight } from "react-icons/fa";
 
 import TrendingClusters from "@/components/trending-clusters";
 
+export const dynamic = "force-dynamic";
+
 async function getPublicStatistics() {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";

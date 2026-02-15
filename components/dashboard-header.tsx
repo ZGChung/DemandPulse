@@ -1,4 +1,5 @@
 import { Session } from "next-auth";
+
 import { AuthStatus } from "./AuthStatus";
 import SubmitRequirementButton from "./submit-requirement-button";
 
@@ -44,18 +45,30 @@ export default function DashboardHeader({ session }: DashboardHeaderProps) {
             >
               Dashboard
             </a>
-            <a href="/requirements" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium">
+            <a
+              href="/requirements"
+              className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium"
+            >
               Requirements
             </a>
-            <a href="/trends" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium">
+            <a
+              href="/trends"
+              className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium"
+            >
               Trends
             </a>
             {isAdmin && (
-              <a href="/admin" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium">
+              <a
+                href="/admin"
+                className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium"
+              >
                 Admin
               </a>
             )}
-            <a href="/settings" className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium">
+            <a
+              href="/settings"
+              className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium"
+            >
               Settings
             </a>
           </nav>

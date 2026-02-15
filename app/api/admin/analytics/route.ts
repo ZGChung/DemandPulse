@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
-import { defaultRateLimiter } from "@/lib/rate-limiter";
 import { env } from "@/lib/env";
-import { prisma } from "@/lib/prisma";
 import { apiLogger } from "@/lib/logger";
+import { prisma } from "@/lib/prisma";
+import { defaultRateLimiter } from "@/lib/rate-limiter";
 
 // Helper to check admin access
 async function requireAdminAccess(session: any) {
@@ -16,7 +16,8 @@ async function requireAdminAccess(session: any) {
 
 // Helper for rate limiting
 async function checkRateLimit(session: any, request: NextRequest) {
-  const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+  const ip =
+    request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
   const rateLimitKey = `admin:analytics:${session.user.id}:${ip}`;
 
   try {
@@ -28,12 +29,17 @@ async function checkRateLimit(session: any, request: NextRequest) {
   } catch (rateLimitError) {
     console.error("Rate limiting error:", rateLimitError);
     // Fail open for admin endpoints
-    return { allowed: true, remaining: env.rateLimitMaxRequests() - 1, reset: Date.now() + env.rateLimitWindowMs() };
+    return {
+      allowed: true,
+      remaining: env.rateLimitMaxRequests() - 1,
+      reset: Date.now() + env.rateLimitWindowMs(),
+    };
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
+    if (!prisma) throw new Error("Database not available");
     const session = await getServerSession(authOptions);
     await requireAdminAccess(session);
     await checkRateLimit(session, request);
@@ -43,90 +49,87 @@ export async function GET(request: NextRequest) {
     const startDateStr = url.searchParams.get("startDate");
     const endDateStr = url.searchParams.get("endDate");
 
-    const startDate = startDateStr ? new Date(startDateStr) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // Default: last 30 days
+    const startDate = startDateStr
+      ? new Date(startDateStr)
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // Default: last 30 days
     const endDate = endDateStr ? new Date(endDateStr) : new Date();
 
     // Fetch analytics data in parallel
-    const [
-      userStats,
-      requirementStats,
-      clusterStats,
-      activeUsers,
-      topClusters,
-      systemMetrics
-    ] = await Promise.all([
-      // User statistics
-      prisma.user.aggregate({
-        _count: { id: true },
-        _avg: { _count: { requirements: true } },
-        where: {
-          createdAt: { gte: startDate, lte: endDate }
-        }
-      }),
-      // Requirement statistics
-      prisma.requirement.aggregate({
-        _count: { id: true },
-        _avg: { tokenCount: true },
-        where: {
-          createdAt: { gte: startDate, lte: endDate }
-        }
-      }),
-      // Cluster statistics
-      prisma.cluster.aggregate({
-        _count: { id: true },
-        _avg: { requirementCount: true },
-        where: {
-          createdAt: { gte: startDate, lte: endDate }
-        }
-      }),
-      // Active users (users with requirements in period)
-      prisma.user.count({
-        where: {
-          requirements: {
-            some: {
-              createdAt: { gte: startDate, lte: endDate }
-            }
-          }
-        }
-      }),
-      // Top clusters by requirement count
-      prisma.cluster.findMany({
-        take: 10,
-        orderBy: { requirementCount: "desc" },
-        where: {
-          createdAt: { gte: startDate, lte: endDate }
-        },
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          requirementCount: true,
-          createdAt: true,
-        }
-      }),
-      // System metrics (database size, etc.)
-      Promise.resolve({
-        // Placeholder for actual system metrics
-        databaseSize: "N/A",
-        uptime: process.uptime(),
-        memoryUsage: process.memoryUsage(),
-        nodeVersion: process.version,
-      })
-    ]);
+    const [userStats, requirementStats, clusterStats, activeUsers, topClusters, systemMetrics] =
+      await Promise.all([
+        // User statistics
+        prisma.user.aggregate({
+          _count: { id: true },
+          where: {
+            createdAt: { gte: startDate, lte: endDate },
+          },
+        }),
+        // Requirement statistics
+        prisma.requirement.aggregate({
+          _count: { id: true },
+          where: {
+            createdAt: { gte: startDate, lte: endDate },
+          },
+        }),
+        // Cluster statistics
+        prisma.requirementCluster.aggregate({
+          _count: { id: true },
+          _avg: { requirementCount: true },
+          where: {
+            createdAt: { gte: startDate, lte: endDate },
+          },
+        }),
+        // Active users (users with requirements in period)
+        prisma.user.count({
+          where: {
+            requirements: {
+              some: {
+                createdAt: { gte: startDate, lte: endDate },
+              },
+            },
+          },
+        }),
+        // Top clusters by requirement count
+        prisma.requirementCluster.findMany({
+          take: 10,
+          orderBy: { requirementCount: "desc" },
+          where: {
+            createdAt: { gte: startDate, lte: endDate },
+          },
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            requirementCount: true,
+            createdAt: true,
+          },
+        }),
+        // System metrics (database size, etc.)
+        Promise.resolve({
+          // Placeholder for actual system metrics
+          databaseSize: "N/A",
+          uptime: process.uptime(),
+          memoryUsage: process.memoryUsage(),
+          nodeVersion: process.version,
+        }),
+      ]);
 
     // Calculate growth rates (simplified)
-    const previousStartDate = new Date(startDate.getTime() - (endDate.getTime() - startDate.getTime()));
+    const previousStartDate = new Date(
+      startDate.getTime() - (endDate.getTime() - startDate.getTime())
+    );
     const previousEndDate = new Date(startDate.getTime() - 1);
 
     const previousUserCount = await prisma.user.count({
       where: {
-        createdAt: { gte: previousStartDate, lte: previousEndDate }
-      }
+        createdAt: { gte: previousStartDate, lte: previousEndDate },
+      },
     });
 
-    const userGrowth = previousUserCount > 0
-      ? ((userStats._count.id - previousUserCount) / previousUserCount) * 100
-      : 100;
+    const userGrowth =
+      previousUserCount > 0
+        ? ((userStats._count.id - previousUserCount) / previousUserCount) * 100
+        : 100;
 
     return NextResponse.json({
       success: true,
@@ -138,8 +141,9 @@ export async function GET(request: NextRequest) {
           totalClusters: clusterStats._count.id,
           activeUsers,
           userGrowthRate: userGrowth,
-          avgRequirementsPerUser: userStats._avg._count?.requirements || 0,
-          avgTokensPerRequirement: requirementStats._avg.tokenCount || 0,
+          avgRequirementsPerUser:
+            userStats._count.id > 0 ? requirementStats._count.id / userStats._count.id : 0,
+          avgTokensPerRequirement: 0,
           avgRequirementsPerCluster: clusterStats._avg.requirementCount || 0,
         },
         details: {

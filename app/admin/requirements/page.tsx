@@ -1,6 +1,7 @@
-import { DatabaseService } from "@/services/database-service";
 import { RequirementStatus } from "@prisma/client";
+
 import { apiLogger } from "@/lib/logger";
+import { DatabaseService } from "@/services/database-service";
 
 interface AdminRequirementsPageProps {
   searchParams?: {
@@ -10,9 +11,7 @@ interface AdminRequirementsPageProps {
   };
 }
 
-export default async function AdminRequirementsPage({
-  searchParams,
-}: AdminRequirementsPageProps) {
+export default async function AdminRequirementsPage({ searchParams }: AdminRequirementsPageProps) {
   const status = searchParams?.status as RequirementStatus | undefined;
   const page = parseInt(searchParams?.page || "1");
   const limit = parseInt(searchParams?.limit || "50");
@@ -169,10 +168,10 @@ export default async function AdminRequirementsPage({
                           requirement.status === "PROCESSED"
                             ? "bg-green-100 text-green-800"
                             : requirement.status === "PENDING"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : requirement.status === "DELETED"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-blue-100 text-blue-800"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : requirement.status === "DELETED"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-blue-100 text-blue-800"
                         }`}
                       >
                         {requirement.status}
@@ -183,7 +182,9 @@ export default async function AdminRequirementsPage({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {requirement.userId ? (
-                        <span className="text-gray-700">User #{requirement.userId.substring(0, 8)}</span>
+                        <span className="text-gray-700">
+                          User #{requirement.userId.substring(0, 8)}
+                        </span>
                       ) : (
                         <span className="text-gray-400">Anonymous</span>
                       )}
@@ -195,12 +196,8 @@ export default async function AdminRequirementsPage({
                       >
                         View
                       </a>
-                      <button className="text-green-600 hover:text-green-900 mr-4">
-                        Process
-                      </button>
-                      <button className="text-red-600 hover:text-red-900">
-                        Delete
-                      </button>
+                      <button className="text-green-600 hover:text-green-900 mr-4">Process</button>
+                      <button className="text-red-600 hover:text-red-900">Delete</button>
                     </td>
                   </tr>
                 ))
@@ -221,10 +218,8 @@ export default async function AdminRequirementsPage({
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-700">
                 Showing <span className="font-medium">{(page - 1) * limit + 1}</span> to{" "}
-                <span className="font-medium">
-                  {Math.min(page * limit, totalCount)}
-                </span>{" "}
-                of <span className="font-medium">{totalCount}</span> results
+                <span className="font-medium">{Math.min(page * limit, totalCount)}</span> of{" "}
+                <span className="font-medium">{totalCount}</span> results
               </div>
               <div className="flex space-x-2">
                 <a

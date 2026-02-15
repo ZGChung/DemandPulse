@@ -24,6 +24,9 @@ export default [
         ...globals.node,
         ...globals.browser,
         NodeJS: "readonly",
+        React: "readonly",
+        JSX: "readonly",
+        BufferSource: "readonly",
       },
     },
     plugins: {
@@ -66,6 +69,7 @@ export default [
           },
         },
       ],
+      "import/no-unresolved": "off",
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
       "react-hooks/set-state-in-effect": "off",
@@ -115,6 +119,7 @@ export default [
       "*.config.js",
       "*.config.ts",
       "prisma/",
+      "claude-plugin-demandpulse/",
     ],
   },
 ];

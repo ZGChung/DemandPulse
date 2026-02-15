@@ -3,10 +3,10 @@ import { getServerSession } from "next-auth";
 import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";
-import { defaultRateLimiter } from "@/lib/rate-limiter";
 import { env } from "@/lib/env";
-import { prisma } from "@/lib/prisma";
 import { apiLogger } from "@/lib/logger";
+import { prisma } from "@/lib/prisma";
+import { defaultRateLimiter } from "@/lib/rate-limiter";
 import { ValidationError } from "@/lib/validation";
 
 // Validation schemas
@@ -33,7 +33,8 @@ async function requireAdminAccess(session: any) {
 
 // Helper for rate limiting
 async function checkRateLimit(session: any, request: NextRequest) {
-  const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+  const ip =
+    request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
   const rateLimitKey = `admin:privacy-requests:${session.user.id}:${ip}`;
 
   try {
@@ -45,12 +46,17 @@ async function checkRateLimit(session: any, request: NextRequest) {
   } catch (rateLimitError) {
     console.error("Rate limiting error:", rateLimitError);
     // Fail open for admin endpoints
-    return { allowed: true, remaining: env.rateLimitMaxRequests() - 1, reset: Date.now() + env.rateLimitWindowMs() };
+    return {
+      allowed: true,
+      remaining: env.rateLimitMaxRequests() - 1,
+      reset: Date.now() + env.rateLimitWindowMs(),
+    };
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
+    if (!prisma) throw new Error("Database not available");
     const session = await getServerSession(authOptions);
     await requireAdminAccess(session);
     await checkRateLimit(session, request);
@@ -61,7 +67,7 @@ export async function GET(request: NextRequest) {
     const validationResult = privacyRequestQuerySchema.safeParse(queryParams);
 
     if (!validationResult.success) {
-      throw new ValidationError("Invalid query parameters", validationResult.error.errors);
+      throw new ValidationError("Invalid query parameters", validationResult.error.issues);
     }
 
     const {
@@ -94,33 +100,11 @@ export async function GET(request: NextRequest) {
         take: limit,
         skip: offset,
         orderBy: { scheduledAt: "desc" },
-        include: {
-          requestedByUser: {
-            select: {
-              id: true,
-              email: true,
-              name: true,
-            },
-          },
-        },
       }),
       prisma.dataDeletionQueue.count({ where: whereClause }),
     ]);
 
-    // Mask sensitive data
-    const sanitizedRequests = privacyRequests.map(request => {
-      const sanitizedRequest: any = { ...request };
-
-      // Mask user email if present
-      if (sanitizedRequest.requestedByUser?.email) {
-        sanitizedRequest.requestedByUser = {
-          ...sanitizedRequest.requestedByUser,
-          email: "***masked***",
-        };
-      }
-
-      return sanitizedRequest;
-    });
+    const sanitizedRequests = privacyRequests.map((request) => ({ ...request }));
 
     return NextResponse.json({
       success: true,
@@ -138,7 +122,10 @@ export async function GET(request: NextRequest) {
     apiLogger.error("Admin privacy-requests GET error", { error: error.message });
 
     if (error instanceof ValidationError) {
-      return NextResponse.json({ error: "Validation failed", details: error.details }, { status: 400 });
+      return NextResponse.json(
+        { error: "Validation failed", details: error.details },
+        { status: 400 }
+      );
     }
     if (error.message === "Admin access required") {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });
@@ -153,6 +140,7 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    if (!prisma) throw new Error("Database not available");
     const session = await getServerSession(authOptions);
     await requireAdminAccess(session);
     await checkRateLimit(session, request);
@@ -161,7 +149,7 @@ export async function PATCH(request: NextRequest) {
     const validationResult = updatePrivacyRequestSchema.safeParse(body);
 
     if (!validationResult.success) {
-      throw new ValidationError("Invalid request body", validationResult.error.errors);
+      throw new ValidationError("Invalid request body", validationResult.error.issues);
     }
 
     const { status, notes } = validationResult.data;
@@ -179,7 +167,6 @@ export async function PATCH(request: NextRequest) {
         status,
         ...(notes && { notes }),
         processedAt: status === "COMPLETED" || status === "FAILED" ? new Date() : undefined,
-        processedBy: session.user.id,
       },
     });
 
@@ -190,14 +177,14 @@ export async function PATCH(request: NextRequest) {
         entityType: "DataDeletionQueue",
         entityId: requestId,
         actorType: "ADMIN",
-        actorId: session.user.id,
+        actorId: session!.user.id,
         changes: { status, notes },
-        reason: `Privacy request ${requestId} status updated to ${status} by admin ${session.user.email}`,
+        reason: `Privacy request ${requestId} status updated to ${status} by admin ${session!.user.email}`,
       },
     });
 
     apiLogger.info("Privacy request updated", {
-      adminId: session.user.id,
+      adminId: session!.user.id,
       requestId,
       newStatus: status,
     });
@@ -212,7 +199,10 @@ export async function PATCH(request: NextRequest) {
     apiLogger.error("Admin privacy-requests PATCH error", { error: error.message });
 
     if (error instanceof ValidationError) {
-      return NextResponse.json({ error: "Validation failed", details: error.details }, { status: 400 });
+      return NextResponse.json(
+        { error: "Validation failed", details: error.details },
+        { status: 400 }
+      );
     }
     if (error.message === "Admin access required") {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });

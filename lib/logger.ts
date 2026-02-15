@@ -1,6 +1,7 @@
 // Structured logging utility for DemandPulse
 
 import * as Sentry from "@sentry/nextjs";
+
 import { getCurrentTraceId } from "./trace";
 
 export enum LogLevel {

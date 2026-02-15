@@ -115,7 +115,7 @@ export class EncryptionService {
       const ciphertext = await crypto.subtle.encrypt(
         {
           name: "AES-GCM",
-          iv,
+          iv: iv as unknown as BufferSource,
         },
         key,
         data

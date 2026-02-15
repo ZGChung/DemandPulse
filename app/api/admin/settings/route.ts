@@ -3,33 +3,35 @@ import { getServerSession } from "next-auth";
 import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";
-import { defaultRateLimiter } from "@/lib/rate-limiter";
 import { env } from "@/lib/env";
 import { apiLogger } from "@/lib/logger";
+import { defaultRateLimiter } from "@/lib/rate-limiter";
 import { settingsService, SystemSettings, DEFAULT_SETTINGS } from "@/services/settings-service";
 
 // Validation schema for settings update
-const settingsUpdateSchema = z.object({
-  // Clustering settings
-  clusteringEnabled: z.boolean().optional(),
-  clusteringThreshold: z.number().min(0.1).max(1.0).optional(),
-  autoClusterFrequency: z.enum(["hourly", "daily", "weekly", "manual"]).optional(),
+const settingsUpdateSchema = z
+  .object({
+    // Clustering settings
+    clusteringEnabled: z.boolean().optional(),
+    clusteringThreshold: z.number().min(0.1).max(1.0).optional(),
+    autoClusterFrequency: z.enum(["hourly", "daily", "weekly", "manual"]).optional(),
 
-  // Email settings
-  emailNotifications: z.boolean().optional(),
-  adminEmail: z.string().email().optional(),
-  notificationThreshold: z.number().min(1).max(1000).optional(),
+    // Email settings
+    emailNotifications: z.boolean().optional(),
+    adminEmail: z.string().email().optional(),
+    notificationThreshold: z.number().min(1).max(1000).optional(),
 
-  // Privacy settings
-  dataRetentionDays: z.number().min(1).max(3650).optional(), // Max 10 years
-  autoAnonymization: z.boolean().optional(),
-  requireConsentForCollection: z.boolean().optional(),
+    // Privacy settings
+    dataRetentionDays: z.number().min(1).max(3650).optional(), // Max 10 years
+    autoAnonymization: z.boolean().optional(),
+    requireConsentForCollection: z.boolean().optional(),
 
-  // System settings
-  maintenanceMode: z.boolean().optional(),
-  apiRateLimit: z.number().min(1).max(10000).optional(),
-  enablePublicApi: z.boolean().optional(),
-}).partial();
+    // System settings
+    maintenanceMode: z.boolean().optional(),
+    apiRateLimit: z.number().min(1).max(10000).optional(),
+    enablePublicApi: z.boolean().optional(),
+  })
+  .partial();
 
 // Helper to check admin access
 async function requireAdminAccess(session: any) {
@@ -40,7 +42,8 @@ async function requireAdminAccess(session: any) {
 
 // Helper for rate limiting
 async function checkRateLimit(session: any, request: NextRequest) {
-  const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+  const ip =
+    request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
   const rateLimitKey = `admin:settings:${session.user.id}:${ip}`;
 
   try {
@@ -52,7 +55,11 @@ async function checkRateLimit(session: any, request: NextRequest) {
   } catch (rateLimitError) {
     console.error("Rate limiting error:", rateLimitError);
     // Fail open for admin endpoints
-    return { allowed: true, remaining: env.rateLimitMaxRequests() - 1, reset: Date.now() + env.rateLimitWindowMs() };
+    return {
+      allowed: true,
+      remaining: env.rateLimitMaxRequests() - 1,
+      reset: Date.now() + env.rateLimitWindowMs(),
+    };
   }
 }
 
@@ -100,7 +107,7 @@ export async function POST(request: NextRequest) {
     const validationResult = settingsUpdateSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Invalid settings data", details: validationResult.error.errors },
+        { error: "Invalid settings data", details: validationResult.error.issues },
         { status: 400 }
       );
     }
@@ -112,24 +119,21 @@ export async function POST(request: NextRequest) {
       const emailSchema = z.string().email();
       const emailResult = emailSchema.safeParse(settingsUpdate.adminEmail);
       if (!emailResult.success) {
-        return NextResponse.json(
-          { error: "Invalid admin email address" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "Invalid admin email address" }, { status: 400 });
       }
     }
 
     // Update settings
     const updatedSettings = await settingsService.updateSettings(
       settingsUpdate,
-      session.user.email || session.user.id
+      session!.user.email || session!.user.id
     );
 
     // Don't include timestamps in response for security
     const { updatedAt, updatedBy, ...safeSettings } = updatedSettings;
 
     apiLogger.info("System settings updated via API", {
-      adminId: session.user.id,
+      adminId: session!.user.id,
       changes: Object.keys(settingsUpdate),
     });
 
@@ -163,14 +167,14 @@ export async function PUT(request: NextRequest) {
     // Reset to defaults
     const updatedSettings = await settingsService.updateSettings(
       DEFAULT_SETTINGS,
-      session.user.email || session.user.id
+      session!.user.email || session!.user.id
     );
 
     // Don't include timestamps in response for security
     const { updatedAt, updatedBy, ...safeSettings } = updatedSettings;
 
     apiLogger.info("System settings reset to defaults", {
-      adminId: session.user.id,
+      adminId: session!.user.id,
     });
 
     return NextResponse.json({

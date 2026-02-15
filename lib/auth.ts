@@ -5,7 +5,7 @@ import GitHubProvider from "next-auth/providers/github";
 import { prisma } from "@/lib/prisma";
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter: prisma ? PrismaAdapter(prisma) : undefined,
   providers: [
     GitHubProvider({
       clientId: process.env.GITHUB_ID!,
@@ -32,11 +32,11 @@ export const authOptions: NextAuthOptions = {
       }
 
       // Fetch user role from database
-      if (token.sub) {
+      if (token.sub && prisma) {
         try {
           const dbUser = await prisma.user.findUnique({
             where: { id: token.sub },
-            select: { role: true }
+            select: { role: true },
           });
           if (dbUser?.role) {
             token.role = dbUser.role;

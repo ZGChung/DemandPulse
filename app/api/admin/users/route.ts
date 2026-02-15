@@ -1,15 +1,15 @@
+import { UserRole } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
-import { UserRole } from "@prisma/client";
 
 import { authOptions } from "@/lib/auth";
-import { defaultRateLimiter } from "@/lib/rate-limiter";
 import { env } from "@/lib/env";
-import { prisma } from "@/lib/prisma";
-import { ValidationError } from "@/lib/validation";
 import { apiLogger } from "@/lib/logger";
 import { maskEmail } from "@/lib/masking";
+import { prisma } from "@/lib/prisma";
+import { defaultRateLimiter } from "@/lib/rate-limiter";
+import { ValidationError } from "@/lib/validation";
 
 // Validation schemas
 const updateUserRoleSchema = z.object({
@@ -29,7 +29,8 @@ async function requireAdminAccess(session: any) {
 
 // Helper for rate limiting
 async function checkRateLimit(session: any, request: NextRequest) {
-  const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+  const ip =
+    request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
   const rateLimitKey = `admin:${session.user.id}:${ip}`;
 
   try {
@@ -41,12 +42,17 @@ async function checkRateLimit(session: any, request: NextRequest) {
   } catch (rateLimitError) {
     console.error("Rate limiting error:", rateLimitError);
     // Fail open for admin endpoints
-    return { allowed: true, remaining: env.rateLimitMaxRequests() - 1, reset: Date.now() + env.rateLimitWindowMs() };
+    return {
+      allowed: true,
+      remaining: env.rateLimitMaxRequests() - 1,
+      reset: Date.now() + env.rateLimitWindowMs(),
+    };
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
+    if (!prisma) throw new Error("Database not available");
     const session = await getServerSession(authOptions);
     await requireAdminAccess(session);
     await checkRateLimit(session, request);
@@ -86,7 +92,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Apply email masking for privacy
-    const maskedUsers = users.map(user => ({
+    const maskedUsers = users.map((user) => ({
       ...user,
       email: user.email ? maskEmail(user.email) : null,
     }));
@@ -119,6 +125,7 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    if (!prisma) throw new Error("Database not available");
     const session = await getServerSession(authOptions);
     await requireAdminAccess(session);
     await checkRateLimit(session, request);
@@ -128,7 +135,7 @@ export async function PATCH(request: NextRequest) {
     // Validate request body
     const validationResult = updateUserRoleSchema.safeParse(body);
     if (!validationResult.success) {
-      throw new ValidationError("Invalid request body", validationResult.error.errors);
+      throw new ValidationError("Invalid request body", validationResult.error.issues);
     }
 
     const { role } = validationResult.data;
@@ -140,7 +147,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Check if trying to modify self (admins shouldn't be able to change their own role)
-    if (userId === session.user.id) {
+    if (userId === session!.user.id) {
       return NextResponse.json({ error: "Cannot modify your own role" }, { status: 400 });
     }
 
@@ -157,14 +164,14 @@ export async function PATCH(request: NextRequest) {
         entityType: "User",
         entityId: userId,
         actorType: "ADMIN",
-        actorId: session.user.id,
+        actorId: session!.user.id,
         changes: { role },
-        reason: `User role changed to ${role} by admin ${session.user.email}`,
+        reason: `User role changed to ${role} by admin ${session!.user.email}`,
       },
     });
 
     apiLogger.info("User role updated", {
-      adminId: session.user.id,
+      adminId: session!.user.id,
       userId,
       newRole: role,
     });
@@ -182,7 +189,10 @@ export async function PATCH(request: NextRequest) {
     apiLogger.error("Admin users PATCH error", { error: error.message });
 
     if (error instanceof ValidationError) {
-      return NextResponse.json({ error: "Validation failed", details: error.details }, { status: 400 });
+      return NextResponse.json(
+        { error: "Validation failed", details: error.details },
+        { status: 400 }
+      );
     }
     if (error.message === "Admin access required") {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });
@@ -200,6 +210,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    if (!prisma) throw new Error("Database not available");
     const session = await getServerSession(authOptions);
     await requireAdminAccess(session);
     await checkRateLimit(session, request);
@@ -212,7 +223,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Check if trying to delete self
-    if (userId === session.user.id) {
+    if (userId === session!.user.id) {
       return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 });
     }
 
@@ -234,7 +245,7 @@ export async function DELETE(request: NextRequest) {
         entityId: userId,
         deletionReason: "USER_REQUEST",
         scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Schedule for 24 hours from now
-        requestedBy: session.user.id,
+        requestedBy: session!.user.id,
         status: "PENDING",
       },
     });
@@ -246,13 +257,13 @@ export async function DELETE(request: NextRequest) {
         entityType: "User",
         entityId: userId,
         actorType: "ADMIN",
-        actorId: session.user.id,
-        reason: `User account marked for deletion by admin ${session.user.email}`,
+        actorId: session!.user.id,
+        reason: `User account marked for deletion by admin ${session!.user.email}`,
       },
     });
 
     apiLogger.info("User marked for deletion", {
-      adminId: session.user.id,
+      adminId: session!.user.id,
       userId,
       userEmail: user.email,
     });

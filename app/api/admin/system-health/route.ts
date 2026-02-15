@@ -1,15 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next/auth";
-import os from "os";
-import fs from "fs/promises";
 import { existsSync } from "fs";
+import fs from "fs/promises";
+import os from "os";
 import path from "path";
 
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+
 import { authOptions } from "@/lib/auth";
-import { defaultRateLimiter } from "@/lib/rate-limiter";
 import { env } from "@/lib/env";
-import { prisma } from "@/lib/prisma";
 import { apiLogger } from "@/lib/logger";
+import { prisma } from "@/lib/prisma";
+import { defaultRateLimiter } from "@/lib/rate-limiter";
 
 // Helper to check admin access
 async function requireAdminAccess(session: any) {
@@ -20,7 +21,8 @@ async function requireAdminAccess(session: any) {
 
 // Helper for rate limiting
 async function checkRateLimit(session: any, request: NextRequest) {
-  const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+  const ip =
+    request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
   const rateLimitKey = `admin:system-health:${session.user.id}:${ip}`;
 
   try {
@@ -32,22 +34,26 @@ async function checkRateLimit(session: any, request: NextRequest) {
   } catch (rateLimitError) {
     console.error("Rate limiting error:", rateLimitError);
     // Fail open for admin endpoints
-    return { allowed: true, remaining: env.rateLimitMaxRequests() - 1, reset: Date.now() + env.rateLimitWindowMs() };
+    return {
+      allowed: true,
+      remaining: env.rateLimitMaxRequests() - 1,
+      reset: Date.now() + env.rateLimitWindowMs(),
+    };
   }
 }
 
 // Check database connectivity
-async function checkDatabase() {
+async function checkDatabase(db: NonNullable<typeof prisma>) {
   try {
     const startTime = Date.now();
-    await prisma.$queryRaw`SELECT 1`;
+    await db.$queryRaw`SELECT 1`;
     const responseTime = Date.now() - startTime;
 
     // Get some basic stats
     const [userCount, requirementCount, clusterCount] = await Promise.all([
-      prisma.user.count(),
-      prisma.requirement.count(),
-      prisma.cluster.count(),
+      db.user.count(),
+      db.requirement.count(),
+      db.requirementCluster.count(),
     ]);
 
     return {
@@ -118,12 +124,7 @@ function checkMemory() {
 
 // Check critical files exist
 async function checkCriticalFiles() {
-  const criticalFiles = [
-    ".env",
-    "prisma/schema.prisma",
-    "prisma/dev.db",
-    "lib/prisma.ts",
-  ];
+  const criticalFiles = [".env", "prisma/schema.prisma", "prisma/dev.db", "lib/prisma.ts"];
 
   const results = [];
   for (const file of criticalFiles) {
@@ -136,7 +137,7 @@ async function checkCriticalFiles() {
     });
   }
 
-  const allExist = results.every(r => r.exists);
+  const allExist = results.every((r) => r.exists);
   return {
     status: allExist ? "healthy" : "critical",
     files: results,
@@ -175,24 +176,20 @@ async function checkExternalServices() {
 
 export async function GET(request: NextRequest) {
   try {
+    if (!prisma) throw new Error("Database not available");
     const session = await getServerSession(authOptions);
     await requireAdminAccess(session);
     await checkRateLimit(session, request);
 
     // Run all health checks in parallel
-    const [
-      databaseHealth,
-      diskHealth,
-      memoryHealth,
-      filesHealth,
-      servicesHealth,
-    ] = await Promise.all([
-      checkDatabase(),
-      checkDiskSpace(),
-      checkMemory(),
-      checkCriticalFiles(),
-      checkExternalServices(),
-    ]);
+    const [databaseHealth, diskHealth, memoryHealth, filesHealth, servicesHealth] =
+      await Promise.all([
+        checkDatabase(prisma),
+        checkDiskSpace(),
+        checkMemory(),
+        checkCriticalFiles(),
+        checkExternalServices(),
+      ]);
 
     // Determine overall system status
     const allStatuses = [
@@ -218,7 +215,7 @@ export async function GET(request: NextRequest) {
       platform: process.platform,
       arch: process.arch,
       uptime: process.uptime(),
-      environment: env.nodeEnv(),
+      environment: process.env.NODE_ENV ?? "development",
       appVersion: "1.0.0", // Could be read from package.json
       timestamp: new Date().toISOString(),
     };

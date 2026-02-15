@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next/auth";
+import { getServerSession } from "next-auth";
 import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";
-import { defaultRateLimiter } from "@/lib/rate-limiter";
 import { env } from "@/lib/env";
-import { prisma } from "@/lib/prisma";
 import { apiLogger } from "@/lib/logger";
+import { prisma } from "@/lib/prisma";
+import { defaultRateLimiter } from "@/lib/rate-limiter";
 import { ValidationError } from "@/lib/validation";
 
 // Validation schemas
@@ -29,7 +29,8 @@ async function requireAdminAccess(session: any) {
 
 // Helper for rate limiting
 async function checkRateLimit(session: any, request: NextRequest) {
-  const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+  const ip =
+    request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
   const rateLimitKey = `admin:audit-logs:${session.user.id}:${ip}`;
 
   try {
@@ -41,12 +42,17 @@ async function checkRateLimit(session: any, request: NextRequest) {
   } catch (rateLimitError) {
     console.error("Rate limiting error:", rateLimitError);
     // Fail open for admin endpoints
-    return { allowed: true, remaining: env.rateLimitMaxRequests() - 1, reset: Date.now() + env.rateLimitWindowMs() };
+    return {
+      allowed: true,
+      remaining: env.rateLimitMaxRequests() - 1,
+      reset: Date.now() + env.rateLimitWindowMs(),
+    };
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
+    if (!prisma) throw new Error("Database not available");
     const session = await getServerSession(authOptions);
     await requireAdminAccess(session);
     await checkRateLimit(session, request);
@@ -57,7 +63,7 @@ export async function GET(request: NextRequest) {
     const validationResult = auditLogQuerySchema.safeParse(queryParams);
 
     if (!validationResult.success) {
-      throw new ValidationError("Invalid query parameters", validationResult.error.errors);
+      throw new ValidationError("Invalid query parameters", validationResult.error.issues);
     }
 
     const {
@@ -91,40 +97,22 @@ export async function GET(request: NextRequest) {
         where: whereClause,
         take: limit,
         skip: offset,
-        orderBy: { createdAt: "desc" },
-        include: {
-          actor: {
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              role: true,
-            },
-          },
-        },
+        orderBy: { performedAt: "desc" },
       }),
       prisma.privacyAuditLog.count({ where: whereClause }),
     ]);
 
     // Mask sensitive data in logs
-    const sanitizedLogs = auditLogs.map(log => {
+    const sanitizedLogs = auditLogs.map((log) => {
       const sanitizedLog: any = { ...log };
 
       // Mask email in changes if present
-      if (sanitizedLog.changes && typeof sanitizedLog.changes === 'object') {
+      if (sanitizedLog.changes && typeof sanitizedLog.changes === "object") {
         const changes = { ...sanitizedLog.changes };
         if (changes.email) {
           changes.email = "***masked***";
         }
         sanitizedLog.changes = changes;
-      }
-
-      // Mask actor email if present
-      if (sanitizedLog.actor?.email) {
-        sanitizedLog.actor = {
-          ...sanitizedLog.actor,
-          email: "***masked***",
-        };
       }
 
       return sanitizedLog;
@@ -146,7 +134,10 @@ export async function GET(request: NextRequest) {
     apiLogger.error("Admin audit-logs GET error", { error: error.message });
 
     if (error instanceof ValidationError) {
-      return NextResponse.json({ error: "Validation failed", details: error.details }, { status: 400 });
+      return NextResponse.json(
+        { error: "Validation failed", details: error.details },
+        { status: 400 }
+      );
     }
     if (error.message === "Admin access required") {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });

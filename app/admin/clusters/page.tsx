@@ -1,5 +1,5 @@
-import { DatabaseService } from "@/services/database-service";
 import { apiLogger } from "@/lib/logger";
+import { DatabaseService } from "@/services/database-service";
 
 interface AdminClustersPageProps {
   searchParams?: {
@@ -8,9 +8,7 @@ interface AdminClustersPageProps {
   };
 }
 
-export default async function AdminClustersPage({
-  searchParams,
-}: AdminClustersPageProps) {
+export default async function AdminClustersPage({ searchParams }: AdminClustersPageProps) {
   const page = parseInt(searchParams?.page || "1");
   const limit = parseInt(searchParams?.limit || "20");
   const offset = (page - 1) * limit;
@@ -93,12 +91,8 @@ export default async function AdminClustersPage({
               <div className="p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {cluster.name}
-                    </h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {cluster.description}
-                    </p>
+                    <h3 className="text-lg font-semibold text-gray-900">{cluster.name}</h3>
+                    <p className="text-sm text-gray-500 mt-1">{cluster.description}</p>
                   </div>
                   <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
                     {cluster.requirementCount} reqs
@@ -108,22 +102,16 @@ export default async function AdminClustersPage({
                 <div className="mb-4">
                   <div className="flex justify-between text-sm text-gray-500 mb-2">
                     <span>First detected:</span>
-                    <span>
-                      {new Date(cluster.firstDetectedAt).toLocaleDateString()}
-                    </span>
+                    <span>{new Date(cluster.firstDetectedAt).toLocaleDateString()}</span>
                   </div>
                   <div className="flex justify-between text-sm text-gray-500">
                     <span>Last detected:</span>
-                    <span>
-                      {new Date(cluster.lastDetectedAt).toLocaleDateString()}
-                    </span>
+                    <span>{new Date(cluster.lastDetectedAt).toLocaleDateString()}</span>
                   </div>
                 </div>
 
                 <div className="mb-6">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">
-                    Sample Requirements
-                  </h4>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Sample Requirements</h4>
                   <ul className="space-y-2">
                     {cluster.sampleRequirements?.slice(0, 3).map((req: any, index: number) => (
                       <li key={index} className="text-sm text-gray-600">
@@ -169,12 +157,8 @@ export default async function AdminClustersPage({
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No clusters found
-            </h3>
-            <p className="text-gray-500">
-              No requirement clusters have been created yet.
-            </p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No clusters found</h3>
+            <p className="text-gray-500">No requirement clusters have been created yet.</p>
           </div>
         )}
       </div>
@@ -185,18 +169,14 @@ export default async function AdminClustersPage({
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-700">
               Showing <span className="font-medium">{(page - 1) * limit + 1}</span> to{" "}
-              <span className="font-medium">
-                {Math.min(page * limit, totalCount)}
-              </span>{" "}
-              of <span className="font-medium">{totalCount}</span> clusters
+              <span className="font-medium">{Math.min(page * limit, totalCount)}</span> of{" "}
+              <span className="font-medium">{totalCount}</span> clusters
             </div>
             <div className="flex space-x-2">
               <a
                 href={`/admin/clusters?page=${Math.max(1, page - 1)}&limit=${limit}`}
                 className={`px-3 py-2 border border-gray-300 text-sm font-medium rounded-lg ${
-                  page <= 1
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-gray-700 hover:bg-gray-50"
+                  page <= 1 ? "text-gray-400 cursor-not-allowed" : "text-gray-700 hover:bg-gray-50"
                 }`}
               >
                 Previous

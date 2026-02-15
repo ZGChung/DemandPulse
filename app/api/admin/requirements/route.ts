@@ -1,14 +1,14 @@
+import { RequirementStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
-import { RequirementStatus } from "@prisma/client";
 
 import { authOptions } from "@/lib/auth";
-import { defaultRateLimiter } from "@/lib/rate-limiter";
 import { env } from "@/lib/env";
-import { DatabaseService } from "@/services/database-service";
 import { apiLogger } from "@/lib/logger";
+import { defaultRateLimiter } from "@/lib/rate-limiter";
 import { ValidationError } from "@/lib/validation";
+import { DatabaseService } from "@/services/database-service";
 
 // Validation schemas
 const updateRequirementStatusSchema = z.object({
@@ -24,7 +24,8 @@ async function requireAdminAccess(session: any) {
 
 // Helper for rate limiting
 async function checkRateLimit(session: any, request: NextRequest) {
-  const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+  const ip =
+    request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
   const rateLimitKey = `admin:requirements:${session.user.id}:${ip}`;
 
   try {
@@ -36,7 +37,11 @@ async function checkRateLimit(session: any, request: NextRequest) {
   } catch (rateLimitError) {
     console.error("Rate limiting error:", rateLimitError);
     // Fail open for admin endpoints
-    return { allowed: true, remaining: env.rateLimitMaxRequests() - 1, reset: Date.now() + env.rateLimitWindowMs() };
+    return {
+      allowed: true,
+      remaining: env.rateLimitMaxRequests() - 1,
+      reset: Date.now() + env.rateLimitWindowMs(),
+    };
   }
 }
 
@@ -102,7 +107,7 @@ export async function PATCH(request: NextRequest) {
     // Validate request body
     const validationResult = updateRequirementStatusSchema.safeParse(body);
     if (!validationResult.success) {
-      throw new ValidationError("Invalid request body", validationResult.error.errors);
+      throw new ValidationError("Invalid request body", validationResult.error.issues);
     }
 
     const { status } = validationResult.data;
@@ -110,7 +115,10 @@ export async function PATCH(request: NextRequest) {
     const requirementId = url.searchParams.get("requirementId");
 
     if (!requirementId) {
-      return NextResponse.json({ error: "requirementId query parameter is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "requirementId query parameter is required" },
+        { status: 400 }
+      );
     }
 
     const databaseService = new DatabaseService();
@@ -120,7 +128,7 @@ export async function PATCH(request: NextRequest) {
     // TODO: Implement actual requirement status update in DatabaseService
 
     apiLogger.info("Requirement status update requested", {
-      adminId: session.user.id,
+      adminId: session!.user.id,
       requirementId,
       newStatus: status,
     });
@@ -137,7 +145,10 @@ export async function PATCH(request: NextRequest) {
     apiLogger.error("Admin requirements PATCH error", { error: error.message });
 
     if (error instanceof ValidationError) {
-      return NextResponse.json({ error: "Validation failed", details: error.details }, { status: 400 });
+      return NextResponse.json(
+        { error: "Validation failed", details: error.details },
+        { status: 400 }
+      );
     }
     if (error.message === "Admin access required") {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });

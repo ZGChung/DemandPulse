@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+
 import { apiLogger } from "@/lib/logger";
 
 interface SystemSettings {
@@ -44,9 +45,10 @@ export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<SystemSettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(
-    null
-  );
+  const [saveMessage, setSaveMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
     fetchSettings();
@@ -78,7 +80,11 @@ export default function AdminSettingsPage() {
     setSettings((prev) => ({
       ...prev,
       [name]:
-        type === "checkbox" ? (e.target as HTMLInputElement).checked : type === "number" ? Number(value) : value,
+        type === "checkbox"
+          ? (e.target as HTMLInputElement).checked
+          : type === "number"
+            ? Number(value)
+            : value,
     }));
   };
 
@@ -104,10 +110,16 @@ export default function AdminSettingsPage() {
       const data = await response.json();
 
       apiLogger.info("Admin settings updated via API", { settings });
-      setSaveMessage({ type: "success", text: data.data?.message || "Settings saved successfully!" });
+      setSaveMessage({
+        type: "success",
+        text: data.data?.message || "Settings saved successfully!",
+      });
     } catch (error: any) {
       apiLogger.error("Failed to save admin settings", { error: error.message });
-      setSaveMessage({ type: "error", text: error.message || "Failed to save settings. Please try again." });
+      setSaveMessage({
+        type: "error",
+        text: error.message || "Failed to save settings. Please try again.",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -133,10 +145,16 @@ export default function AdminSettingsPage() {
       }
 
       apiLogger.info("System settings reset to defaults");
-      setSaveMessage({ type: "success", text: data.data?.message || "Settings reset to defaults!" });
+      setSaveMessage({
+        type: "success",
+        text: data.data?.message || "Settings reset to defaults!",
+      });
     } catch (error: any) {
       apiLogger.error("Failed to reset settings", { error: error.message });
-      setSaveMessage({ type: "error", text: error.message || "Failed to reset settings. Please try again." });
+      setSaveMessage({
+        type: "error",
+        text: error.message || "Failed to reset settings. Please try again.",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -202,11 +220,7 @@ export default function AdminSettingsPage() {
           <div className="flex">
             <div className="flex-shrink-0">
               {saveMessage.type === "success" ? (
-                <svg
-                  className="h-5 w-5 text-green-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
+                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
                   <path
                     fillRule="evenodd"
                     d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -214,11 +228,7 @@ export default function AdminSettingsPage() {
                   />
                 </svg>
               ) : (
-                <svg
-                  className="h-5 w-5 text-red-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                   <path
                     fillRule="evenodd"
                     d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -265,7 +275,10 @@ export default function AdminSettingsPage() {
             </div>
 
             <div>
-              <label htmlFor="clusteringThreshold" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="clusteringThreshold"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Similarity Threshold
               </label>
               <input
@@ -287,7 +300,10 @@ export default function AdminSettingsPage() {
             </div>
 
             <div>
-              <label htmlFor="autoClusterFrequency" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="autoClusterFrequency"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Auto-cluster Frequency
               </label>
               <select
@@ -315,7 +331,9 @@ export default function AdminSettingsPage() {
                 <label htmlFor="emailNotifications" className="text-sm font-medium text-gray-700">
                   Enable Email Notifications
                 </label>
-                <p className="text-sm text-gray-500">Send alerts for new trends and system events</p>
+                <p className="text-sm text-gray-500">
+                  Send alerts for new trends and system events
+                </p>
               </div>
               <div className="flex items-center">
                 <input
@@ -345,7 +363,10 @@ export default function AdminSettingsPage() {
             </div>
 
             <div>
-              <label htmlFor="notificationThreshold" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="notificationThreshold"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Notification Threshold
               </label>
               <input
@@ -390,10 +411,15 @@ export default function AdminSettingsPage() {
 
             <div className="flex items-center justify-between">
               <div>
-                <label htmlFor="requireConsentForCollection" className="text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="requireConsentForCollection"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Require Consent for Collection
                 </label>
-                <p className="text-sm text-gray-500">Users must explicitly consent to data collection</p>
+                <p className="text-sm text-gray-500">
+                  Users must explicitly consent to data collection
+                </p>
               </div>
               <div className="flex items-center">
                 <input
@@ -408,7 +434,10 @@ export default function AdminSettingsPage() {
             </div>
 
             <div>
-              <label htmlFor="dataRetentionDays" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="dataRetentionDays"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Data Retention (Days)
               </label>
               <input
@@ -450,7 +479,10 @@ export default function AdminSettingsPage() {
             </div>
 
             <div>
-              <label htmlFor="apiRateLimit" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="apiRateLimit"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 API Rate Limit (reqs/hour)
               </label>
               <input

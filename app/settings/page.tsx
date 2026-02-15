@@ -1,5 +1,6 @@
-import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+
 import DashboardHeader from "@/components/dashboard-header";
 import { authOptions } from "@/lib/auth";
 
@@ -28,9 +29,7 @@ export default async function SettingsPage() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Profile Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Name
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
                   <input
                     type="text"
                     defaultValue={session.user.name || ""}
@@ -39,9 +38,7 @@ export default async function SettingsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
                   <input
                     type="email"
                     defaultValue={session.user.email || ""}
@@ -62,7 +59,8 @@ export default async function SettingsPage() {
                   <div>
                     <p className="text-sm font-medium text-gray-700">Data Collection Consent</p>
                     <p className="text-sm text-gray-500">
-                      Allow DemandPulse to collect anonymized requirement data from your Claude Code conversations
+                      Allow DemandPulse to collect anonymized requirement data from your Claude Code
+                      conversations
                     </p>
                   </div>
                   <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
