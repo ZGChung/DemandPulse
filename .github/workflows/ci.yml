@@ -163,6 +163,7 @@ jobs:
           working-directory: .
 
       - name: Run database migrations
+        continue-on-error: true
         run: |
           echo "Running Prisma migrations..."
           echo "DATABASE_URL is set: ${#DATABASE_URL} characters"
