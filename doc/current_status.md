@@ -156,14 +156,15 @@ _None._
 
 ### Recently Completed
 
-1. **Admin System Health Page** - UI for monitoring system status (overall status, system info, database/disk/memory/files/external services)
-2. **Admin Navigation Sidebar** - Unified sidebar navigation for Dashboard, Requirements, Clusters, Users, Analytics, Audit Logs, Privacy Requests, System Health, Settings
-3. **Admin Analytics Page** - Created with time range filtering and metrics display
-4. **Admin Users Page API Integration** - Converted from server to client component with real API integration
-5. **Missing Admin API Endpoints** - Created analytics, audit-logs, privacy-requests, system-health APIs
-6. **Settings Service** - File-based persistence for system settings with caching
-7. **Admin Audit Logs Page** - UI for viewing privacy audit logs with filtering and pagination
-8. **Admin Privacy Requests Page** - UI for managing data deletion requests with bulk actions
+1. **P1 Growth** – User “My Requirements” page (real API, filter, CSV export, live stats); Onboarding last-step CTA “View Trends”; Dashboard nav “Invite” + #referral scroll
+2. **Admin System Health Page** - UI for monitoring system status (overall status, system info, database/disk/memory/files/external services)
+3. **Admin Navigation Sidebar** - Unified sidebar navigation for Dashboard, Requirements, Clusters, Users, Analytics, Audit Logs, Privacy Requests, System Health, Settings
+4. **Admin Analytics Page** - Created with time range filtering and metrics display
+5. **Admin Users Page API Integration** - Converted from server to client component with real API integration
+6. **Missing Admin API Endpoints** - Created analytics, audit-logs, privacy-requests, system-health APIs
+7. **Settings Service** - File-based persistence for system settings with caching
+8. **Admin Audit Logs Page** - UI for viewing privacy audit logs with filtering and pagination
+9. **Admin Privacy Requests Page** - UI for managing data deletion requests with bulk actions
 
 ## Known Issues & Technical Debt
 

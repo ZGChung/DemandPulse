@@ -28,7 +28,7 @@ export default async function Dashboard() {
             <div className="lg:col-span-3">
               <RequirementStats />
             </div>
-            <div className="lg:col-span-1 space-y-8">
+            <div id="referral" className="lg:col-span-1 space-y-8 scroll-mt-6">
               <PersonalInsights />
               <ReferralWidget
                 userId={session.user.id || session.user.email || "anonymous"}

@@ -1,11 +1,14 @@
 "use client";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { FaChartLine, FaUpload, FaEye, FaRocket, FaTimes } from "react-icons/fa";
 
 const ONBOARDING_KEY = "demandpulse_onboarding_completed";
 
 export default function OnboardingModal() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -19,16 +22,17 @@ export default function OnboardingModal() {
     }
   }, []);
 
-  const handleComplete = () => {
+  const handleComplete = (goToTrends = false) => {
     localStorage.setItem(ONBOARDING_KEY, "true");
     setIsOpen(false);
+    if (goToTrends) router.push("/trends");
   };
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      handleComplete();
+      handleComplete(true);
     }
   };
 
@@ -39,7 +43,7 @@ export default function OnboardingModal() {
   };
 
   const handleSkip = () => {
-    handleComplete();
+    handleComplete(false);
   };
 
   const steps = [
@@ -224,19 +228,23 @@ export default function OnboardingModal() {
                 >
                   Skip Tour
                 </button>
-                <button
-                  onClick={handleNext}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-2"
-                >
-                  {currentStep === steps.length - 1 ? (
-                    <>
-                      <FaRocket className="text-sm" />
-                      Get Started
-                    </>
-                  ) : (
-                    "Next"
-                  )}
-                </button>
+                {currentStep === steps.length - 1 ? (
+                  <Link
+                    href="/trends"
+                    onClick={() => handleComplete(false)}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors inline-flex items-center gap-2"
+                  >
+                    <FaRocket className="text-sm" />
+                    View Trends
+                  </Link>
+                ) : (
+                  <button
+                    onClick={handleNext}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    Next
+                  </button>
+                )}
               </div>
             </div>
           </div>
