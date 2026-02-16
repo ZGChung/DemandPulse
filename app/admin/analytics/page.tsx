@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { apiLogger } from "@/lib/logger";
 
@@ -300,6 +301,64 @@ export default function AdminAnalyticsPage() {
               </div>
             </div>
           </div>
+
+          {/* Overview bar chart */}
+          <div className="bg-white shadow rounded-lg p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Overview</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={[
+                    { name: "Users", value: data.summary.totalUsers, fill: "#3b82f6" },
+                    {
+                      name: "Requirements",
+                      value: data.summary.totalRequirements,
+                      fill: "#22c55e",
+                    },
+                    { name: "Clusters", value: data.summary.totalClusters, fill: "#eab308" },
+                  ]}
+                  margin={{ top: 8, right: 24, left: 0, bottom: 8 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="value" name="Count" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Top Clusters bar chart */}
+          {data.details.topClusters && data.details.topClusters.length > 0 && (
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Top Clusters by Requirement Count
+              </h3>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={data.details.topClusters.map((c) => ({
+                      name: c.name.length > 20 ? c.name.slice(0, 20) + "…" : c.name,
+                      fullName: c.name,
+                      count: c.requirementCount,
+                    }))}
+                    layout="vertical"
+                    margin={{ top: 8, right: 24, left: 120, bottom: 8 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis type="number" tick={{ fontSize: 12 }} allowDecimals={false} />
+                    <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={115} />
+                    <Tooltip
+                      formatter={(value: number | undefined) => [value ?? 0, "Requirements"]}
+                      labelFormatter={(_, payload) => payload[0]?.payload?.fullName ?? ""}
+                    />
+                    <Bar dataKey="count" name="Requirements" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
 
           {/* Detailed Metrics */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

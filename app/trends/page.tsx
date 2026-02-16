@@ -4,6 +4,16 @@ import TrendingClusters from "@/components/trending-clusters";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "Trends | DemandPulse – Developer demand in real time",
+  description:
+    "See what developers are building. Live trends and clusters from AI coding workflows.",
+  openGraph: {
+    title: "DemandPulse Trends – Developer demand in real time",
+    description: "Live trends and clusters from developer requirements.",
+  },
+};
+
 async function getPublicStatistics() {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -22,12 +32,11 @@ async function getPublicStatistics() {
     throw new Error("Invalid response format");
   } catch (error) {
     console.error("Error fetching public statistics:", error);
-    // Return mock statistics as fallback
     return {
-      totalRequirements: 2847,
-      totalClusters: 12,
-      totalUsers: 428,
-      recentRequirements: 142,
+      totalRequirements: 0,
+      totalClusters: 0,
+      totalUsers: 0,
+      recentRequirements: 0,
     };
   }
 }

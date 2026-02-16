@@ -1,7 +1,36 @@
 import Link from "next/link";
 import { FaGithub, FaChartLine, FaEye, FaUsers, FaLock, FaRocket } from "react-icons/fa";
 
-export default function LandingPage() {
+export interface LandingStats {
+  totalUsers: number;
+  totalRequirements: number;
+  totalClusters: number;
+  recentRequirements: number;
+}
+
+function formatStat(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k+`;
+  if (n >= 100) return "100+";
+  if (n >= 10) return "10+";
+  return n > 0 ? String(n) : "";
+}
+
+export default function LandingPage({ stats }: { stats?: LandingStats | null }) {
+  const usersText = stats
+    ? formatStat(stats.totalUsers)
+      ? `${formatStat(stats.totalUsers)} developers tracking trends`
+      : "Join developers tracking trends"
+    : "Join developers worldwide";
+  const requirementsText = stats
+    ? formatStat(stats.totalRequirements)
+      ? `${formatStat(stats.totalRequirements)} requirements analyzed`
+      : "Requirements analyzed in real-time"
+    : "Real-time requirement insights";
+  const ctaCopy =
+    stats && stats.totalUsers > 0
+      ? `Join ${stats.totalUsers} developer${stats.totalUsers === 1 ? "" : "s"} already contributing.`
+      : "Join the demand intelligence network.";
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Navigation */}
@@ -67,15 +96,15 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Social Proof */}
+          {/* Social Proof - real stats when available */}
           <div className="mt-20 flex flex-wrap justify-center items-center gap-8 text-gray-600">
             <div className="flex items-center">
               <FaUsers className="text-blue-500 mr-2" />
-              <span className="font-medium">500+ developers tracking trends</span>
+              <span className="font-medium">{usersText}</span>
             </div>
             <div className="flex items-center">
               <FaChartLine className="text-green-500 mr-2" />
-              <span className="font-medium">10,000+ requirements analyzed</span>
+              <span className="font-medium">{requirementsText}</span>
             </div>
             <div className="flex items-center">
               <FaLock className="text-purple-500 mr-2" />
@@ -177,9 +206,7 @@ export default function LandingPage() {
           <h2 className="text-3xl font-bold text-white mb-6">
             Ready to see what developers are building?
           </h2>
-          <p className="text-gray-300 mb-10 text-lg">
-            Join hundreds of developers already contributing to the demand intelligence network.
-          </p>
+          <p className="text-gray-300 mb-10 text-lg">{ctaCopy}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/auth/signin"
@@ -187,12 +214,12 @@ export default function LandingPage() {
             >
               Get Started Free
             </Link>
-            <a
-              href="#"
+            <Link
+              href="/#how-it-works"
               className="px-8 py-4 bg-transparent text-white font-semibold rounded-lg border border-gray-600 hover:bg-gray-800 transition-colors text-lg"
             >
               Learn More
-            </a>
+            </Link>
           </div>
           <p className="mt-8 text-gray-400 text-sm">
             No credit card required • Privacy-first • Open to all developers
