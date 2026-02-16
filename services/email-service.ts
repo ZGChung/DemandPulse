@@ -3,6 +3,14 @@
 
 import { Resend } from "resend";
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 export interface EmailRecipient {
   email: string;
   name?: string;
@@ -215,17 +223,32 @@ The DemandPulse Team`,
 
     weeklyDigest: (
       trends: Array<{ name: string; growth: number; requirements: number }>
-    ): EmailTemplate => ({
-      subject: "Your weekly DemandPulse digest",
-      body: `Here are the top trends from this week:
-
-${trends.map((t, i) => `${i + 1}. ${t.name}: ${t.requirements} requirements (${t.growth > 0 ? "+" : ""}${t.growth}% growth)`).join("\n")}
-
-Explore these trends in detail on your dashboard.
-
-Best,
-The DemandPulse Team`,
-    }),
+    ): EmailTemplate => {
+      const lines = trends.map(
+        (t, i) =>
+          `${i + 1}. ${t.name}: ${t.requirements} requirements${t.growth !== 0 ? ` (${t.growth > 0 ? "+" : ""}${t.growth}% growth)` : ""}`
+      );
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://demandpulse.app";
+      return {
+        subject: "Your weekly DemandPulse digest",
+        body: `Here are the top trends from this week:\n\n${lines.join("\n")}\n\nExplore these trends in detail on your dashboard.\n\nBest,\nThe DemandPulse Team`,
+        htmlBody: `<!DOCTYPE html>
+<html><body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h1 style="color: #2563eb;">Your weekly DemandPulse digest</h1>
+  <p>Here are the top trends from the community this week.</p>
+  <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+    ${trends
+      .map(
+        (t, i) =>
+          `<tr style="border-bottom: 1px solid #e5e7eb;"><td style="padding: 10px 0;">${i + 1}. <strong>${escapeHtml(t.name)}</strong></td><td style="text-align: right; padding: 10px 0;">${t.requirements} requirements${t.growth !== 0 ? ` <span style="color: ${t.growth > 0 ? "#059669" : "#dc2626"};">(${t.growth > 0 ? "+" : ""}${t.growth}%)</span>` : ""}</td></tr>`
+      )
+      .join("")}
+  </table>
+  <p><a href="${appUrl}/trends" style="display: inline-block; padding: 10px 20px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px;">View trends</a></p>
+  <p style="color: #6b7280; font-size: 14px; border-top: 1px solid #e5e7eb; padding-top: 20px;">Best,<br>The DemandPulse Team</p>
+</body></html>`,
+      };
+    },
   };
 
   // Convenience methods

@@ -165,6 +165,7 @@ _None._
 7. **Settings Service** - File-based persistence for system settings with caching
 8. **Admin Audit Logs Page** - UI for viewing privacy audit logs with filtering and pagination
 9. **Admin Privacy Requests Page** - UI for managing data deletion requests with bulk actions
+10. **P1-6 邮件摘要** - Weekly digest: /api/cron/weekly-digest (CRON_SECRET); HTML+text template; sends to users with email; Vercel cron Mon 9am
 
 ## Known Issues & Technical Debt
 
