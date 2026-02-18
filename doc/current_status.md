@@ -166,6 +166,8 @@ _None._
 8. **Admin Audit Logs Page** - UI for viewing privacy audit logs with filtering and pagination
 9. **Admin Privacy Requests Page** - UI for managing data deletion requests with bulk actions
 10. **P1-6 邮件摘要** - Weekly digest: /api/cron/weekly-digest (CRON_SECRET); HTML+text template; sends to users with email; Vercel cron Mon 9am
+11. **P2-10 公开 API/文档** - /api-docs page with Swagger UI, GET /api/openapi serves OpenAPI YAML, landing nav API link
+12. **P2-11 性能与缓存** - lib/cache TTL cache; /api/clusters and /api/health cached (60s/10s), Cache-Control headers
 
 ## Known Issues & Technical Debt
 

@@ -47,6 +47,9 @@ export default function LandingPage({ stats }: { stats?: LandingStats | null }) 
               <Link href="/trends" className="text-gray-700 hover:text-blue-600 font-medium">
                 Trends
               </Link>
+              <Link href="/api-docs" className="text-gray-700 hover:text-blue-600 font-medium">
+                API
+              </Link>
               <Link href="/auth/signin" className="text-gray-700 hover:text-gray-900 font-medium">
                 Sign in
               </Link>
