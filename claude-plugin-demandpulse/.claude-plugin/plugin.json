@@ -5,10 +5,10 @@
   "author": {
     "name": "DemandPulse Team"
   },
-  "homepage": "https://github.com/yourusername/demandpulse",
+  "homepage": "https://github.com/ZGChung/DemandPulse",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/demandpulse.git"
+    "url": "https://github.com/ZGChung/DemandPulse.git"
   },
   "license": "MIT",
   "keywords": ["product-management", "requirements", "analytics", "claude-code", "developer-tools"]

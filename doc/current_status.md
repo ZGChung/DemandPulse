@@ -36,6 +36,7 @@ Transform unstructured developer requirements from Claude Code conversations int
 
 - ✅ Requirement submission API (`/api/requirements`)
 - ✅ Mock Claude Code integration for testing
+- ✅ Real plugin API (`/api/plugin/requirements`, x-api-key); E2E script `npm run e2e:plugin` (see doc/PLUGIN-INTEGRATION.md)
 - ✅ Requirement summarization and processing
 - ✅ Consent management and privacy compliance
 - ✅ Database models for requirements, users, clusters
@@ -98,7 +99,7 @@ Transform unstructured developer requirements from Claude Code conversations int
 - ❌ **Missing**: Real Claude Code API client
 - ❌ **Missing**: WebSocket connection for real-time events
 - ❌ **Missing**: OAuth authentication with Claude Code
-- ❌ **Missing**: Plugin packaging and distribution
+- ✅ Plugin package (claude-plugin-demandpulse); optional: publish to npm/marketplace
 
 #### 2. **AI-Powered Clustering**
 

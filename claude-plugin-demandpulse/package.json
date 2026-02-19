@@ -26,12 +26,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/demandpulse.git",
+    "url": "https://github.com/ZGChung/DemandPulse.git",
     "directory": "claude-plugin-demandpulse"
   },
-  "homepage": "https://github.com/yourusername/demandpulse",
+  "homepage": "https://github.com/ZGChung/DemandPulse",
   "bugs": {
-    "url": "https://github.com/yourusername/demandpulse/issues"
+    "url": "https://github.com/ZGChung/DemandPulse/issues"
   },
   "engines": {
     "node": ">=18.0.0"

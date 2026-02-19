@@ -25,7 +25,8 @@
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write .",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
-    "prepare": "husky"
+    "prepare": "husky",
+    "e2e:plugin": "./scripts/e2e-plugin-api.sh"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
