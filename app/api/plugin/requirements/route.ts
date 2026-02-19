@@ -144,10 +144,18 @@ export async function POST(request: NextRequest) {
                 storedRequirementId,
                 analysis.embeddings
               );
-              console.log(
-                "[Plugin] Embeddings generated and stored for requirement:",
-                storedRequirementId
-              );
+              try {
+                const { prisma } = await import("@/lib/prisma");
+                if (prisma) {
+                  const { ClusteringService } = await import("@/services/clustering-service");
+                  await new ClusteringService().assignToCluster({
+                    id: storedRequirementId,
+                    embedding: analysis.embeddings,
+                  });
+                }
+              } catch (clusterErr) {
+                console.error("[Plugin] Assign to cluster failed (non-fatal):", clusterErr);
+              }
             }
           } catch (aiError) {
             console.error("[Plugin] Failed to generate AI analysis or embeddings:", aiError);

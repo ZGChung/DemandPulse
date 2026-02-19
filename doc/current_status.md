@@ -168,6 +168,7 @@ _None._
 10. **P1-6 邮件摘要** - Weekly digest: /api/cron/weekly-digest (CRON_SECRET); HTML+text template; sends to users with email; Vercel cron Mon 9am
 11. **P2-10 公开 API/文档** - /api-docs page with Swagger UI, GET /api/openapi serves OpenAPI YAML, landing nav API link
 12. **P2-11 性能与缓存** - lib/cache TTL cache; /api/clusters and /api/health cached (60s/10s), Cache-Control headers
+13. **P2-9 向量聚类** - assignToCluster after embedding (POST /api/requirements + plugin); GET/POST /api/cron/run-clustering (CRON_SECRET) for batch K-means
 
 ## Known Issues & Technical Debt
 

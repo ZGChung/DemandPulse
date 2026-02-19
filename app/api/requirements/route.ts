@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";
 import { env } from "@/lib/env";
+import { prisma } from "@/lib/prisma";
 import { defaultRateLimiter } from "@/lib/rate-limiter";
 import { ValidationError } from "@/lib/validation";
 import {
@@ -14,6 +15,7 @@ import {
   requirementQuerySchema,
 } from "@/lib/validation-middleware";
 import { AIProcessingService } from "@/services/ai-processing";
+import { ClusteringService } from "@/services/clustering-service";
 import { DataCollectionFlow } from "@/services/data-collection-flow";
 import { DatabaseService } from "@/services/database-service";
 import { emailService } from "@/services/email-service";
@@ -142,12 +144,21 @@ export async function POST(request: NextRequest) {
           result.collectedRequirement!.originalRequirement
         );
         if (analysis.embeddings) {
-          // Update requirement with embeddings
           await databaseService.updateRequirementEmbedding(
             storedRequirementId,
             analysis.embeddings
           );
-          console.log("Embeddings generated and stored for requirement:", storedRequirementId);
+          if (prisma) {
+            try {
+              const clusteringService = new ClusteringService();
+              await clusteringService.assignToCluster({
+                id: storedRequirementId,
+                embedding: analysis.embeddings,
+              });
+            } catch (clusterErr) {
+              console.error("Assign to cluster failed (non-fatal):", clusterErr);
+            }
+          }
         }
       } catch (aiError) {
         console.error("Failed to generate AI analysis or embeddings:", aiError);
