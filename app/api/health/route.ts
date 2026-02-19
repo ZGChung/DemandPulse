@@ -1,11 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { cacheGet, cacheKey, cacheSet } from "@/lib/cache";
 import { validateEnv, env } from "@/lib/env";
+import { withRequestLogging } from "@/lib/with-request-logging";
 
 const HEALTH_CACHE_TTL_MS = 10_000; // 10s
 
-export async function GET() {
+async function getHealth(_request: NextRequest) {
   try {
     const cached = cacheGet<Record<string, unknown>>(cacheKey("health"));
     if (cached) {
@@ -42,3 +43,5 @@ export async function GET() {
     );
   }
 }
+
+export const GET = withRequestLogging(getHealth);

@@ -125,6 +125,7 @@ Transform unstructured developer requirements from Claude Code conversations int
 - ✅ System health page UI created
 - ✅ Navigation sidebar in admin layout
 - ✅ Mobile/responsive: landing hamburger nav, trends/dashboard responsive headers, admin mobile drawer, viewport meta
+- ✅ P3-13 监控与可观测: instrumentation.ts, global-error.tsx, withRequestLogging (trace id + duration), doc/MONITORING.md
 
 ### ❌ Not Yet Implemented
 
@@ -139,7 +140,7 @@ Transform unstructured developer requirements from Claude Code conversations int
 
 - Docker containerization
 - Production environment configuration
-- Monitoring integration (Sentry, Datadog)
+- ✅ Monitoring: Sentry (client/server), structured logging, instrumentation, global-error, request logging + trace ids (see doc/MONITORING.md)
 - Performance optimization and caching
 
 #### 3. **Advanced Features**
