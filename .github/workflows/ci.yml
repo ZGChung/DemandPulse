@@ -124,6 +124,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'file:./prisma/dev.db' }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'build-secret' }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'http://localhost:3000' }}
 
       - name: Verify build output
         run: ls -la .next/ || echo "No .next directory found"
