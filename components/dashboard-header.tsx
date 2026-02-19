@@ -19,7 +19,7 @@ export default function DashboardHeader({ session }: DashboardHeaderProps) {
             <p className="mt-2 text-gray-600">Real-time demand radar for AI-native developers</p>
           </div>
 
-          <div className="mt-4 sm:mt-0 flex items-center space-x-4">
+          <div className="mt-4 sm:mt-0 flex flex-wrap items-center gap-2 sm:gap-4">
             <div className="hidden sm:block">
               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                 <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
@@ -37,43 +37,43 @@ export default function DashboardHeader({ session }: DashboardHeaderProps) {
           </div>
         </div>
 
-        <div className="mt-6">
-          <nav className="flex space-x-8">
+        <div className="mt-4 sm:mt-6 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <nav className="flex gap-4 sm:gap-8 min-w-0">
             <a
               href="/"
-              className="text-gray-900 border-b-2 border-gray-900 px-1 pb-4 text-sm font-medium"
+              className="text-gray-900 border-b-2 border-gray-900 px-1 pb-3 sm:pb-4 text-sm font-medium whitespace-nowrap flex-shrink-0"
             >
               Dashboard
             </a>
             <a
               href="/requirements"
-              className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium"
+              className="text-gray-500 hover:text-gray-700 px-1 pb-3 sm:pb-4 text-sm font-medium whitespace-nowrap flex-shrink-0"
             >
               Requirements
             </a>
             <a
               href="/trends"
-              className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium"
+              className="text-gray-500 hover:text-gray-700 px-1 pb-3 sm:pb-4 text-sm font-medium whitespace-nowrap flex-shrink-0"
             >
               Trends
             </a>
             <a
               href="/#referral"
-              className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium"
+              className="text-gray-500 hover:text-gray-700 px-1 pb-3 sm:pb-4 text-sm font-medium whitespace-nowrap flex-shrink-0"
             >
               Invite
             </a>
             {isAdmin && (
               <a
                 href="/admin"
-                className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium"
+                className="text-gray-500 hover:text-gray-700 px-1 pb-3 sm:pb-4 text-sm font-medium whitespace-nowrap flex-shrink-0"
               >
                 Admin
               </a>
             )}
             <a
               href="/settings"
-              className="text-gray-500 hover:text-gray-700 px-1 pb-4 text-sm font-medium"
+              className="text-gray-500 hover:text-gray-700 px-1 pb-3 sm:pb-4 text-sm font-medium whitespace-nowrap flex-shrink-0"
             >
               Settings
             </a>

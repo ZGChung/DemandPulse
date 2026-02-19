@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { FaGithub, FaChartLine, FaEye, FaUsers, FaLock, FaRocket } from "react-icons/fa";
 
+import LandingNav from "./landing-nav";
+
 export interface LandingStats {
   totalUsers: number;
   totalRequirements: number;
@@ -33,45 +35,16 @@ export default function LandingPage({ stats }: { stats?: LandingStats | null }) 
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <span className="text-2xl font-bold text-gray-900">DemandPulse</span>
-              <span className="ml-2 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                Beta
-              </span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link href="/trends" className="text-gray-700 hover:text-blue-600 font-medium">
-                Trends
-              </Link>
-              <Link href="/api-docs" className="text-gray-700 hover:text-blue-600 font-medium">
-                API
-              </Link>
-              <Link href="/auth/signin" className="text-gray-700 hover:text-gray-900 font-medium">
-                Sign in
-              </Link>
-              <Link
-                href="/auth/signin"
-                className="px-4 py-2 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
-              >
-                Get Started
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <LandingNav />
 
       {/* Hero Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6">
               See what developers are building <span className="text-blue-600">in real-time</span>
             </h1>
-            <p className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto">
+            <p className="text-base sm:text-xl text-gray-600 mb-10 max-w-3xl mx-auto px-1">
               DemandPulse aggregates developer needs from AI coding workflows, giving you a live
               signal of unmet market opportunities and emerging trends.
             </p>

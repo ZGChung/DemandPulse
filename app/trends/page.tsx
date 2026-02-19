@@ -47,27 +47,36 @@ export default async function PublicTrendsPage() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="flex flex-wrap justify-between items-center gap-4">
             <div className="flex items-center">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
                 <FaChartLine className="text-white" />
               </div>
-              <h1 className="ml-3 text-2xl font-bold text-gray-900">DemandPulse</h1>
+              <h1 className="ml-3 text-xl sm:text-2xl font-bold text-gray-900">DemandPulse</h1>
             </div>
-            <nav className="flex space-x-8">
-              <a href="/" className="text-gray-700 hover:text-blue-600 font-medium">
+            <nav className="flex flex-wrap items-center gap-3 sm:gap-6">
+              <a
+                href="/"
+                className="text-gray-700 hover:text-blue-600 font-medium text-sm sm:text-base"
+              >
                 Home
               </a>
-              <a href="/trends" className="text-blue-600 font-medium border-b-2 border-blue-600">
+              <a
+                href="/trends"
+                className="text-blue-600 font-medium border-b-2 border-blue-600 text-sm sm:text-base"
+              >
                 Trends
               </a>
-              <a href="/auth/signin" className="text-gray-700 hover:text-blue-600 font-medium">
+              <a
+                href="/auth/signin"
+                className="text-gray-700 hover:text-blue-600 font-medium text-sm sm:text-base"
+              >
                 Sign In
               </a>
               <a
                 href="/auth/signin"
-                className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-3 py-2 sm:px-4 sm:py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
               >
                 Get Started
               </a>
@@ -79,27 +88,27 @@ export default async function PublicTrendsPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero section */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
             Discover What Developers Really Need
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+          <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto mb-8 px-1">
             Real-time insights into the most requested features, tools, and improvements from
             thousands of developer conversations. No login required to explore trends.
           </p>
-          <div className="flex justify-center space-x-4">
+          <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
             <a
               href="#trends"
-              className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center"
+              className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center justify-center"
             >
-              <FaEye className="mr-2" />
+              <FaEye className="mr-2 flex-shrink-0" />
               Explore Trends
             </a>
             <a
               href="/auth/signin"
-              className="px-6 py-3 bg-white text-blue-600 font-medium rounded-lg border border-blue-600 hover:bg-blue-50 transition-colors inline-flex items-center"
+              className="px-6 py-3 bg-white text-blue-600 font-medium rounded-lg border border-blue-600 hover:bg-blue-50 transition-colors inline-flex items-center justify-center"
             >
               Contribute Your Requirements
-              <FaArrowRight className="ml-2" />
+              <FaArrowRight className="ml-2 flex-shrink-0" />
             </a>
           </div>
         </div>
