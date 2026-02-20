@@ -16,7 +16,7 @@ None. P3-14 i18n completed.
 
 ## Next
 
-Finish P3-14; then P3-12 team/org. See doc/roadmap_growth.md.
+P3-12 team/org done. See doc/roadmap_growth.md for remaining items.
 
 ## Commands
 

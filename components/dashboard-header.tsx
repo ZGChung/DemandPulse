@@ -58,6 +58,12 @@ export default function DashboardHeader({ session }: DashboardHeaderProps) {
               Trends
             </a>
             <a
+              href="/teams"
+              className="text-gray-500 hover:text-gray-700 px-1 pb-3 sm:pb-4 text-sm font-medium whitespace-nowrap flex-shrink-0"
+            >
+              Teams
+            </a>
+            <a
               href="/#referral"
               className="text-gray-500 hover:text-gray-700 px-1 pb-3 sm:pb-4 text-sm font-medium whitespace-nowrap flex-shrink-0"
             >

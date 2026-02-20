@@ -1,7 +1,5 @@
 # DemandPulse Development Status
 
-**Handoff**: Another agent can continue from here. See **In Progress** and doc/HANDOFF.md for current work. Update this file when you complete tasks.
-
 ## Project Overview
 
 **DemandPulse** is a Next.js 14 application that detects and analyzes developer requirements from Claude Code conversations. The platform captures real-time requirements from developers using Claude Code, processes them using AI, clusters similar requirements to identify trends, and provides analytics for product teams.
@@ -157,27 +155,23 @@ Transform unstructured developer requirements from Claude Code conversations int
 
 ### Active Tasks
 
-None.
+_None._
 
 ### Recently Completed
 
-1. **P3-12 团队/组织能力** – Organization + OrganizationMember schema, GET/POST /api/organizations, GET /api/organizations/[id] and [id]/requirements, Teams page and team detail (org board), dashboard nav “Teams”
-2. **P1 Growth** – User “My Requirements” page (real API, filter, CSV export, live stats); Onboarding last-step CTA “View Trends”; Dashboard nav “Invite” + #referral scroll
-3. **Admin System Health Page** - UI for monitoring system status (overall status, system info, database/disk/memory/files/external services)
-4. **Admin Navigation Sidebar** - Unified sidebar navigation for Dashboard, Requirements, Clusters, Users, Analytics, Audit Logs, Privacy Requests, System Health, Settings
-5. **Admin Analytics Page** - Created with time range filtering and metrics display
-6. **Admin Users Page API Integration** - Converted from server to client component with real API integration
-7. **Missing Admin API Endpoints** - Created analytics, audit-logs, privacy-requests, system-health APIs
-8. **Settings Service** - File-based persistence for system settings with caching
-9. **Admin Audit Logs Page** - UI for viewing privacy audit logs with filtering and pagination
-10. **Admin Privacy Requests Page** - UI for managing data deletion requests with bulk actions
-11. **P1-6 邮件摘要** - Weekly digest: /api/cron/weekly-digest (CRON_SECRET); HTML+text template; sends to users with email; Vercel cron Mon 9am
-12. **P2-10 公开 API/文档** - /api-docs page with Swagger UI, GET /api/openapi serves OpenAPI YAML, landing nav API link
-13. **P2-11 性能与缓存** - lib/cache TTL cache; /api/clusters and /api/health cached (60s/10s), Cache-Control headers
-14. **P2-9 向量聚类** - assignToCluster after embedding (POST /api/requirements + plugin); GET/POST /api/cron/run-clustering (CRON_SECRET) for batch K-means
-15. **P3-13 监控与可观测** - instrumentation.ts, global-error.tsx, withRequestLogging, doc/MONITORING.md
-16. **P3-15 移动端/响应式** - landing hamburger nav, admin mobile drawer, responsive headers
-17. **P3-14 i18n** - LocaleProvider, POST /api/locale, language switcher in LandingNav, landing/nav wired to t()
+1. **P1 Growth** – User “My Requirements” page (real API, filter, CSV export, live stats); Onboarding last-step CTA “View Trends”; Dashboard nav “Invite” + #referral scroll
+2. **Admin System Health Page** - UI for monitoring system status (overall status, system info, database/disk/memory/files/external services)
+3. **Admin Navigation Sidebar** - Unified sidebar navigation for Dashboard, Requirements, Clusters, Users, Analytics, Audit Logs, Privacy Requests, System Health, Settings
+4. **Admin Analytics Page** - Created with time range filtering and metrics display
+5. **Admin Users Page API Integration** - Converted from server to client component with real API integration
+6. **Missing Admin API Endpoints** - Created analytics, audit-logs, privacy-requests, system-health APIs
+7. **Settings Service** - File-based persistence for system settings with caching
+8. **Admin Audit Logs Page** - UI for viewing privacy audit logs with filtering and pagination
+9. **Admin Privacy Requests Page** - UI for managing data deletion requests with bulk actions
+10. **P1-6 邮件摘要** - Weekly digest: /api/cron/weekly-digest (CRON_SECRET); HTML+text template; sends to users with email; Vercel cron Mon 9am
+11. **P2-10 公开 API/文档** - /api-docs page with Swagger UI, GET /api/openapi serves OpenAPI YAML, landing nav API link
+12. **P2-11 性能与缓存** - lib/cache TTL cache; /api/clusters and /api/health cached (60s/10s), Cache-Control headers
+13. **P2-9 向量聚类** - assignToCluster after embedding (POST /api/requirements + plugin); GET/POST /api/cron/run-clustering (CRON_SECRET) for batch K-means
 
 ## Known Issues & Technical Debt
 
@@ -411,7 +405,7 @@ npm run type-check    # TypeScript compilation check
 2. **User documentation** - How-to guides for admins and users
 3. **Developer documentation** - Architecture decisions and contributing guide
 4. **Accessibility audit** - WCAG compliance
-5. **Internationalization** - Multi-language support (P3-14 done)
+5. **Internationalization** - Multi-language support
 
 ## Critical Dependencies & Decisions Needed
 
