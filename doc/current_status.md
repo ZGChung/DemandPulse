@@ -1,5 +1,7 @@
 # DemandPulse Development Status
 
+**Handoff**: Another agent can continue from here. See **In Progress** and doc/HANDOFF.md for current work. Update this file when you complete tasks.
+
 ## Project Overview
 
 **DemandPulse** is a Next.js 14 application that detects and analyzes developer requirements from Claude Code conversations. The platform captures real-time requirements from developers using Claude Code, processes them using AI, clusters similar requirements to identify trends, and provides analytics for product teams.
@@ -155,7 +157,7 @@ Transform unstructured developer requirements from Claude Code conversations int
 
 ### Active Tasks
 
-_None._
+P3-14 i18n (partial): messages + lib/i18n.ts done. TODO: LocaleProvider, POST /api/locale, language switcher, wire landing/nav to t(). See doc/HANDOFF.md.
 
 ### Recently Completed
 
@@ -172,6 +174,9 @@ _None._
 11. **P2-10 公开 API/文档** - /api-docs page with Swagger UI, GET /api/openapi serves OpenAPI YAML, landing nav API link
 12. **P2-11 性能与缓存** - lib/cache TTL cache; /api/clusters and /api/health cached (60s/10s), Cache-Control headers
 13. **P2-9 向量聚类** - assignToCluster after embedding (POST /api/requirements + plugin); GET/POST /api/cron/run-clustering (CRON_SECRET) for batch K-means
+14. **P3-13 监控与可观测** - instrumentation.ts, global-error.tsx, withRequestLogging, doc/MONITORING.md
+15. **P3-15 移动端/响应式** - landing hamburger nav, admin mobile drawer, responsive headers
+16. **P3-14 i18n (started)** - messages + lib/i18n.ts; provider and UI wiring TODO (doc/HANDOFF.md)
 
 ## Known Issues & Technical Debt
 
