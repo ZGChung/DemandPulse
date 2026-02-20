@@ -10,10 +10,9 @@ Next.js 14 App Router: collect developer requirements from Claude Code, process 
 
 Core (requirements API + plugin, consent, DB), auth, full admin (sidebar + mobile drawer), security, growth (landing stats, analytics, trends, My Requirements, onboarding, referral, weekly digest, API docs, cache, vector clustering), mobile/responsive, P3-13 observability (instrumentation, global-error, withRequestLogging, MONITORING.md).
 
-## In Progress - P3-14 i18n
+## In Progress
 
-Done: messages/en.json, messages/zh.json, lib/i18n.ts (LOCALE_COOKIE, SUPPORTED_LOCALES, getMessage).
-TODO: (1) Client LocaleProvider with locale and t(key), read cookie NEXT_LOCALE. (2) POST /api/locale to set cookie. (3) Language switcher in LandingNav. (4) Wrap app with provider and use t() in landing/nav.
+None. P3-14 i18n completed.
 
 ## Next
 

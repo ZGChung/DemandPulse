@@ -157,7 +157,7 @@ Transform unstructured developer requirements from Claude Code conversations int
 
 ### Active Tasks
 
-P3-14 i18n (partial): messages + lib/i18n.ts done. TODO: LocaleProvider, POST /api/locale, language switcher, wire landing/nav to t(). See doc/HANDOFF.md.
+None.
 
 ### Recently Completed
 
@@ -176,7 +176,7 @@ P3-14 i18n (partial): messages + lib/i18n.ts done. TODO: LocaleProvider, POST /a
 13. **P2-9 向量聚类** - assignToCluster after embedding (POST /api/requirements + plugin); GET/POST /api/cron/run-clustering (CRON_SECRET) for batch K-means
 14. **P3-13 监控与可观测** - instrumentation.ts, global-error.tsx, withRequestLogging, doc/MONITORING.md
 15. **P3-15 移动端/响应式** - landing hamburger nav, admin mobile drawer, responsive headers
-16. **P3-14 i18n (started)** - messages + lib/i18n.ts; provider and UI wiring TODO (doc/HANDOFF.md)
+16. **P3-14 i18n** - LocaleProvider, POST /api/locale, language switcher in LandingNav, landing/nav wired to t()
 
 ## Known Issues & Technical Debt
 
