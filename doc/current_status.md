@@ -147,7 +147,7 @@ Transform unstructured developer requirements from Claude Code conversations int
 
 #### 3. **Advanced Features**
 
-- Email notifications for admins
+- ✅ Email notifications for admins (new requirement → all ADMIN users with email, via Resend/mock)
 - User dashboard with personal insights
 - Requirement prioritization algorithms
 - Team collaboration features
@@ -161,23 +161,24 @@ None.
 
 ### Recently Completed
 
-1. **P3-12 团队/组织能力** – Organization + OrganizationMember schema, GET/POST /api/organizations, GET /api/organizations/[id] and [id]/requirements, Teams page and team detail (org board), dashboard nav “Teams”
-2. **P1 Growth** – User “My Requirements” page (real API, filter, CSV export, live stats); Onboarding last-step CTA “View Trends”; Dashboard nav “Invite” + #referral scroll
-3. **Admin System Health Page** - UI for monitoring system status (overall status, system info, database/disk/memory/files/external services)
-4. **Admin Navigation Sidebar** - Unified sidebar navigation for Dashboard, Requirements, Clusters, Users, Analytics, Audit Logs, Privacy Requests, System Health, Settings
-5. **Admin Analytics Page** - Created with time range filtering and metrics display
-6. **Admin Users Page API Integration** - Converted from server to client component with real API integration
-7. **Missing Admin API Endpoints** - Created analytics, audit-logs, privacy-requests, system-health APIs
-8. **Settings Service** - File-based persistence for system settings with caching
-9. **Admin Audit Logs Page** - UI for viewing privacy audit logs with filtering and pagination
-10. **Admin Privacy Requests Page** - UI for managing data deletion requests with bulk actions
-11. **P1-6 邮件摘要** - Weekly digest: /api/cron/weekly-digest (CRON_SECRET); HTML+text template; sends to users with email; Vercel cron Mon 9am
-12. **P2-10 公开 API/文档** - /api-docs page with Swagger UI, GET /api/openapi serves OpenAPI YAML, landing nav API link
-13. **P2-11 性能与缓存** - lib/cache TTL cache; /api/clusters and /api/health cached (60s/10s), Cache-Control headers
-14. **P2-9 向量聚类** - assignToCluster after embedding (POST /api/requirements + plugin); GET/POST /api/cron/run-clustering (CRON_SECRET) for batch K-means
-15. **P3-13 监控与可观测** - instrumentation.ts, global-error.tsx, withRequestLogging, doc/MONITORING.md
-16. **P3-15 移动端/响应式** - landing hamburger nav, admin mobile drawer, responsive headers
-17. **P3-14 i18n** - LocaleProvider, POST /api/locale, language switcher in LandingNav, landing/nav wired to t()
+1. **Admin email notifications** – On new requirement submission, all users with role ADMIN (and email) receive a notification (subject/summary/submitter link). Uses existing email-service (Resend/mock). Dependabot: ignore eslint/tailwind/dotenv/@types/node; ESLint import resolver set to node on main.
+2. **P3-12 团队/组织能力** – Organization + OrganizationMember schema, GET/POST /api/organizations, GET /api/organizations/[id] and [id]/requirements, Teams page and team detail (org board), dashboard nav “Teams”
+3. **P1 Growth** – User “My Requirements” page (real API, filter, CSV export, live stats); Onboarding last-step CTA “View Trends”; Dashboard nav “Invite” + #referral scroll
+4. **Admin System Health Page** - UI for monitoring system status (overall status, system info, database/disk/memory/files/external services)
+5. **Admin Navigation Sidebar** - Unified sidebar navigation for Dashboard, Requirements, Clusters, Users, Analytics, Audit Logs, Privacy Requests, System Health, Settings
+6. **Admin Analytics Page** - Created with time range filtering and metrics display
+7. **Admin Users Page API Integration** - Converted from server to client component with real API integration
+8. **Missing Admin API Endpoints** - Created analytics, audit-logs, privacy-requests, system-health APIs
+9. **Settings Service** - File-based persistence for system settings with caching
+10. **Admin Audit Logs Page** - UI for viewing privacy audit logs with filtering and pagination
+11. **Admin Privacy Requests Page** - UI for managing data deletion requests with bulk actions
+12. **P1-6 邮件摘要** - Weekly digest: /api/cron/weekly-digest (CRON_SECRET); HTML+text template; sends to users with email; Vercel cron Mon 9am
+13. **P2-10 公开 API/文档** - /api-docs page with Swagger UI, GET /api/openapi serves OpenAPI YAML, landing nav API link
+14. **P2-11 性能与缓存** - lib/cache TTL cache; /api/clusters and /api/health cached (60s/10s), Cache-Control headers
+15. **P2-9 向量聚类** - assignToCluster after embedding (POST /api/requirements + plugin); GET/POST /api/cron/run-clustering (CRON_SECRET) for batch K-means
+16. **P3-13 监控与可观测** - instrumentation.ts, global-error.tsx, withRequestLogging, doc/MONITORING.md
+17. **P3-15 移动端/响应式** - landing hamburger nav, admin mobile drawer, responsive headers
+18. **P3-14 i18n** - LocaleProvider, POST /api/locale, language switcher in LandingNav, landing/nav wired to t()
 
 ## Known Issues & Technical Debt
 
@@ -198,7 +199,7 @@ None.
 
 - Claude Code integration is entirely mocked
 - Rate limiting uses in-memory fallback (not Redis in production)
-- Email service not implemented
+- Email service: implemented (Resend + mock); admin new-requirement notifications wired
 - **Priority**: High for Claude Code integration, Medium for others
 
 ### 4. **Performance Considerations**

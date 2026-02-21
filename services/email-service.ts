@@ -221,6 +221,17 @@ Best,
 The DemandPulse Team`,
     }),
 
+    adminNewRequirement: (summary: string, submitterEmail?: string | null): EmailTemplate => ({
+      subject: "[DemandPulse] New requirement submitted",
+      body: `A new requirement was submitted to DemandPulse.\n\nSummary: "${summary}"${submitterEmail ? `\nSubmitted by: ${submitterEmail}` : ""}\n\nView in Admin: Requirements.`,
+      htmlBody: `<div style="font-family: Arial, sans-serif; max-width: 600px;">
+        <h2 style="color: #2563eb;">New requirement submitted</h2>
+        <p><strong>Summary:</strong> ${escapeHtml(summary)}</p>
+        ${submitterEmail ? `<p><strong>Submitted by:</strong> ${escapeHtml(submitterEmail)}</p>` : ""}
+        <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "https://demandpulse.app"}/admin/requirements">View in Admin → Requirements</a></p>
+      </div>`,
+    }),
+
     weeklyDigest: (
       trends: Array<{ name: string; growth: number; requirements: number }>
     ): EmailTemplate => {
@@ -309,6 +320,22 @@ The DemandPulse Team`,
       template: EmailService.templates.weeklyDigest(trends),
       metadata: { digest: "weekly" },
     });
+  }
+
+  /** Send a notification to multiple admin recipients (e.g. new requirement). */
+  async sendAdminNotification(
+    admins: EmailRecipient[],
+    template: EmailTemplate
+  ): Promise<{ sent: number; failed: number }> {
+    let sent = 0;
+    let failed = 0;
+    for (const to of admins) {
+      if (!to.email) continue;
+      const result = await this.sendEmail({ to, template, metadata: {} });
+      if (result.success) sent++;
+      else failed++;
+    }
+    return { sent, failed };
   }
 
   // Configuration

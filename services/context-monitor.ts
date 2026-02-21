@@ -1,6 +1,6 @@
-import type { HookHandler } from "@/types/claude-code";
-
 import { hookManager } from "./hook-manager";
+
+import type { HookHandler } from "@/types/claude-code";
 
 export interface ContextMonitorConfig {
   // Context window size in tokens

@@ -1,8 +1,8 @@
-import { HookEvent, HookHandler } from "@/types/claude-code";
-
 import { autoCompactService } from "./auto-compact-service";
 import { contextMonitor } from "./context-monitor";
 import { hookManager } from "./hook-manager";
+
+import { HookEvent, HookHandler } from "@/types/claude-code";
 
 export interface ClaudeCodeIntegrationConfig {
   // Feature toggles

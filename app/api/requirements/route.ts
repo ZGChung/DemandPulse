@@ -18,7 +18,7 @@ import { AIProcessingService } from "@/services/ai-processing";
 import { ClusteringService } from "@/services/clustering-service";
 import { DataCollectionFlow } from "@/services/data-collection-flow";
 import { DatabaseService } from "@/services/database-service";
-import { emailService } from "@/services/email-service";
+import { emailService, EmailService } from "@/services/email-service";
 
 // Initialize services
 const dataCollectionFlow = new DataCollectionFlow();
@@ -181,6 +181,29 @@ export async function POST(request: NextRequest) {
           console.error("Failed to send email notification:", emailError);
           // Don't fail the request if email fails
         }
+      }
+
+      // Notify admins of new requirement (non-blocking)
+      try {
+        const summary = result.collectedRequirement?.summarizedRequirement;
+        if (prisma && summary) {
+          const admins = await prisma.user.findMany({
+            where: { role: "ADMIN" },
+            select: { email: true, name: true },
+          });
+          const recipients = admins
+            .filter((u) => u.email)
+            .map((u) => ({ email: u.email!, name: u.name ?? undefined }));
+          if (recipients.length > 0) {
+            const template = EmailService.templates.adminNewRequirement(
+              summary,
+              session.user?.email ?? null
+            );
+            await emailService.sendAdminNotification(recipients, template);
+          }
+        }
+      } catch (adminEmailErr) {
+        console.error("Failed to send admin notification:", adminEmailErr);
       }
     } catch (error) {
       console.error("Failed to store requirement:", error);

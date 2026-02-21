@@ -16,7 +16,7 @@ None. P3-14 i18n completed.
 
 ## Next
 
-P3-12 team/org done. See doc/roadmap_growth.md for remaining items.
+P3-12 team/org done. Admin email notifications done (new requirement → admins). See doc/roadmap_growth.md and current_status.md for remaining items.
 
 ## Commands
 
