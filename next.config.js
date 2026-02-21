@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone",
   env: {
     // Expose environment variables to the browser
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,

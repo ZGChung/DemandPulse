@@ -1,0 +1,35 @@
+# Dependencies and build
+node_modules
+.next
+out
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Git and IDE
+.git
+.gitignore
+.cursor
+.vscode
+*.swp
+*.swo
+
+# Env (inject at run)
+.env*
+!.env.example
+
+# Test and dev
+coverage
+.nyc_output
+__tests__
+*.test.ts
+*.test.tsx
+*.spec.ts
+jest.config.js
+.husky
+
+# Docs and misc (optional: keep if you want them in image)
+# doc/
+# *.md
+.DS_Store

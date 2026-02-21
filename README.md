@@ -91,6 +91,19 @@ npm run dev
 
 6. Open http://localhost:3000
 
+### Running with Docker
+
+Build and run the production image:
+
+```bash
+cp .env.example .env
+# Set NEXTAUTH_SECRET and optional DATABASE_URL in .env
+docker compose up --build
+```
+
+Or build only: `docker build -t demandpulse .` then run with `docker run -p 3000:3000 --env-file .env demandpulse`.  
+Requires `NEXTAUTH_SECRET` and (for auth) GitHub OAuth credentials in the env. For SQLite persistence, use a volume and `DATABASE_URL=file:/path/in/container/dev.db`.
+
 ## 📊 Development Roadmap
 
 ### Phase 1: Core Platform (Current)
