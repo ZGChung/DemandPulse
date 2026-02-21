@@ -26,7 +26,8 @@
     "format": "prettier --write .",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "prepare": "husky",
-    "e2e:plugin": "./scripts/e2e-plugin-api.sh"
+    "e2e:plugin": "./scripts/e2e-plugin-api.sh",
+    "check:ci": "node scripts/check-ci-status.js"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",

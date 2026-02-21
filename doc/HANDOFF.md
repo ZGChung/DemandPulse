@@ -20,4 +20,4 @@ P3-12 team/org done. See doc/roadmap_growth.md for remaining items.
 
 ## Commands
 
-npm ci; npm run dev (needs .env). npm run build; npm test; npm run lint. E2E plugin: PLUGIN_API_KEY=key npm run e2e:plugin.
+npm ci; npm run dev (needs .env). npm run build; npm test; npm run lint. E2E plugin: PLUGIN_API_KEY=key npm run e2e:plugin. Check CI/CD: npm run check:ci (optional GITHUB_TOKEN, GITHUB_REPO).
