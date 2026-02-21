@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { FaGithub, FaChartLine, FaEye, FaUsers, FaLock, FaRocket } from "react-icons/fa";
 
-import { useLocale } from "@/components/LocaleProvider";
-
 import LandingNav from "./landing-nav";
+
+import { useLocale } from "@/components/LocaleProvider";
 
 export interface LandingStats {
   totalUsers: number;

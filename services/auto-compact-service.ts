@@ -1,7 +1,7 @@
-import { HookHandler } from "@/types/claude-code";
-
 import { contextMonitor } from "./context-monitor";
 import { hookManager } from "./hook-manager";
+
+import { HookHandler } from "@/types/claude-code";
 
 export interface AutoCompactConfig {
   enabled: boolean;

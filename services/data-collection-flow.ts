@@ -1,12 +1,12 @@
+import { ConsentService } from "./consent-service";
+import { RequirementDetectionService } from "./requirement-detection";
+
 import {
   RequirementDetection,
   ConsentPrompt,
   UserConsent,
   CollectedRequirement,
 } from "@/types/claude-code";
-
-import { ConsentService } from "./consent-service";
-import { RequirementDetectionService } from "./requirement-detection";
 
 export class DataCollectionFlow {
   private requirementDetection: RequirementDetectionService;

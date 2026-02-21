@@ -39,11 +39,7 @@ export default [
       react: {
         version: "detect",
       },
-      "import/resolver": {
-        typescript: {
-          alwaysTryTypes: true,
-        },
-      },
+      "import/resolver": "node",
     },
     rules: {
       ...tseslint.configs.recommended.rules,
