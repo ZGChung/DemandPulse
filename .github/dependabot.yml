@@ -10,6 +10,13 @@ updates:
       - "dependencies"
       - "automated"
     versioning-strategy: "increase"
+    ignore:
+      # Avoid major bumps that break CI (eslint-plugin-import vs eslint 10, tailwind 4, etc.)
+      - dependency-name: "eslint"
+      - dependency-name: "@eslint/js"
+      - dependency-name: "tailwindcss"
+      - dependency-name: "dotenv"
+      - dependency-name: "@types/node"
     groups:
       production-dependencies:
         dependency-type: "production"
