@@ -143,13 +143,13 @@ Transform unstructured developer requirements from Claude Code conversations int
 - ✅ Docker containerization (Dockerfile multi-stage, docker-compose, Next.js standalone output)
 - ✅ Production environment configuration (doc/PRODUCTION_ENV.md：必选/推荐/可选变量，部署前检查清单)
 - ✅ Monitoring: Sentry (client/server), structured logging, instrumentation, global-error, request logging + trace ids (see doc/MONITORING.md)
-- Performance optimization and caching
+- ✅ Performance optimization and caching (GET /api/requirements anonymous response cached 30s; clusters/health already cached)
 
 #### 3. **Advanced Features**
 
 - ✅ Email notifications for admins (new requirement → all ADMIN users with email, via Resend/mock)
 - ✅ User dashboard with personal insights (GET /api/me/insights, “Trends you’re in” in PersonalInsights)
-- Requirement prioritization algorithms
+- ✅ Requirement prioritization algorithms (GET /api/requirements?sort=priority, recency + cluster size)
 - Team collaboration features
 - API documentation (Swagger/OpenAPI)
 

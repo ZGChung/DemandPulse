@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";
+import { cacheGet, cacheKey, cacheSet } from "@/lib/cache";
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 import { defaultRateLimiter } from "@/lib/rate-limiter";
@@ -268,14 +269,30 @@ export async function GET(request: NextRequest) {
 
     const { status, limit = 50, offset = 0, sort } = validationResult.data;
 
-    // Check authentication (optional for GET)
     const session = await getServerSession(authOptions);
     const userId = session?.user?.id;
 
-    // Get statistics
+    const cacheable = !userId && sort !== "priority";
+    const statusKey = status ?? "processed";
+    const reqCacheKey = cacheKey(
+      "requirements",
+      "recent",
+      statusKey,
+      String(limit),
+      String(offset)
+    );
+    if (cacheable) {
+      const cached = cacheGet<Record<string, unknown>>(reqCacheKey);
+      if (cached) {
+        return NextResponse.json(cached, {
+          status: 200,
+          headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" },
+        });
+      }
+    }
+
     const databaseService = new DatabaseService();
     const statistics = await databaseService.getStatistics();
-
     const cap = Math.min(limit + offset, 100);
     const requirements =
       sort === "priority"
@@ -286,30 +303,36 @@ export async function GET(request: NextRequest) {
             userId
           );
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: {
-          statistics,
-          requirements: requirements.slice(offset, offset + limit),
-          pagination: {
-            total: requirements.length,
-            limit,
-            offset,
-            hasMore: offset + limit < requirements.length,
-          },
-        },
-        endpoints: {
-          POST: "/api/requirements - Submit a new requirement",
-          GET: "/api/requirements - Get requirements (optional query: status, limit, offset, sort=recent|priority)",
-        },
-        rateLimit: {
-          maxRequests: env.rateLimitMaxRequests(),
-          windowMs: env.rateLimitWindowMs(),
+    const body = {
+      success: true,
+      data: {
+        statistics,
+        requirements: requirements.slice(offset, offset + limit),
+        pagination: {
+          total: requirements.length,
+          limit,
+          offset,
+          hasMore: offset + limit < requirements.length,
         },
       },
-      { status: 200 }
-    );
+      endpoints: {
+        POST: "/api/requirements - Submit a new requirement",
+        GET: "/api/requirements - Get requirements (optional query: status, limit, offset, sort=recent|priority)",
+      },
+      rateLimit: {
+        maxRequests: env.rateLimitMaxRequests(),
+        windowMs: env.rateLimitWindowMs(),
+      },
+    };
+
+    if (cacheable) cacheSet(reqCacheKey, body, 30_000);
+
+    return NextResponse.json(body, {
+      status: 200,
+      headers: cacheable
+        ? { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" }
+        : undefined,
+    });
   } catch (error) {
     console.error("Error fetching requirements:", error);
 
