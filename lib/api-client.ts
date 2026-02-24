@@ -56,11 +56,13 @@ class ApiClient {
     status?: string;
     limit?: number;
     offset?: number;
+    sort?: "recent" | "priority";
   }): Promise<RequirementsResponse> {
     const params = new URLSearchParams();
     if (options?.status) params.append("status", options.status);
     if (options?.limit) params.append("limit", options.limit.toString());
     if (options?.offset) params.append("offset", options.offset.toString());
+    if (options?.sort) params.append("sort", options.sort);
 
     const url = `${this.baseUrl}/api/requirements${params.toString() ? `?${params.toString()}` : ""}`;
 

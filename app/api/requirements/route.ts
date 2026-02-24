@@ -266,7 +266,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { status, limit = 50, offset = 0 } = validationResult.data;
+    const { status, limit = 50, offset = 0, sort } = validationResult.data;
 
     // Check authentication (optional for GET)
     const session = await getServerSession(authOptions);
@@ -276,13 +276,15 @@ export async function GET(request: NextRequest) {
     const databaseService = new DatabaseService();
     const statistics = await databaseService.getStatistics();
 
-    // Get recent requirements
-    const mappedStatus = status ? (status.toUpperCase() as RequirementStatus) : "PROCESSED";
-    const requirements = await databaseService.getRequirementsByStatus(
-      mappedStatus,
-      Math.min(limit, 100), // Cap at 100 for performance
-      userId // Optional user filter
-    );
+    const cap = Math.min(limit + offset, 100);
+    const requirements =
+      sort === "priority"
+        ? await databaseService.getPrioritizedRequirements(cap, userId)
+        : await databaseService.getRequirementsByStatus(
+            status ? (status.toUpperCase() as RequirementStatus) : "PROCESSED",
+            cap,
+            userId
+          );
 
     return NextResponse.json(
       {
@@ -299,7 +301,7 @@ export async function GET(request: NextRequest) {
         },
         endpoints: {
           POST: "/api/requirements - Submit a new requirement",
-          GET: "/api/requirements - Get requirements (optional query: status, limit, offset)",
+          GET: "/api/requirements - Get requirements (optional query: status, limit, offset, sort=recent|priority)",
         },
         rateLimit: {
           maxRequests: env.rateLimitMaxRequests(),

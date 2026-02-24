@@ -289,6 +289,50 @@ export class DatabaseService {
     }
   }
 
+  /**
+   * Requirements sorted by priority: recency + cluster size.
+   * Score = 100 - min(100, daysSinceDetected) + sum(cluster.requirementCount) for linked clusters.
+   */
+  async getPrioritizedRequirements(limit = 100, userId?: string) {
+    try {
+      if (this.prisma) {
+        const whereClause: { status: { in: RequirementStatus[] }; userId?: string } = {
+          status: { in: ["PROCESSED", "CLUSTERED"] },
+        };
+        if (userId) whereClause.userId = userId;
+
+        const raw = await this.prisma.requirement.findMany({
+          where: whereClause,
+          take: Math.min(limit * 3, 300),
+          orderBy: { detectedAt: "desc" },
+          include: { clusters: { select: { requirementCount: true } } },
+        });
+
+        const now = Date.now();
+        const withScore = raw.map((req) => {
+          const daysSince = (now - new Date(req.detectedAt).getTime()) / (24 * 60 * 60 * 1000);
+          const recencyScore = Math.max(0, 100 - Math.min(100, daysSince));
+          const clusterScore = req.clusters.reduce((s, c) => s + (c.requirementCount ?? 0), 0);
+          return { ...req, _priorityScore: recencyScore + clusterScore };
+        });
+        withScore.sort(
+          (a, b) =>
+            (b as { _priorityScore: number })._priorityScore -
+            (a as { _priorityScore: number })._priorityScore
+        );
+        const trimmed = withScore
+          .slice(0, limit)
+          .map(({ clusters: _c, _priorityScore: _p, ...req }) => req);
+
+        return Promise.all(trimmed.map((req: unknown) => this.applyPrivacyControls(req, false)));
+      }
+      return this.getRequirementsByStatus("PROCESSED", limit, userId);
+    } catch (error) {
+      console.error("Error fetching prioritized requirements:", error);
+      return this.getRequirementsByStatus("PROCESSED", limit, userId);
+    }
+  }
+
   async getRequirementsByStatus(status: RequirementStatus, limit = 100, userId?: string) {
     try {
       if (this.prisma) {

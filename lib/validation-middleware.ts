@@ -232,6 +232,7 @@ export const requirementQuerySchema = z.object({
   status: z.enum(["pending", "processed", "rejected"]).optional(),
   limit: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().min(1).max(100)).optional(),
   offset: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().min(0)).optional(),
+  sort: z.enum(["recent", "priority"]).optional(),
 });
 
 export type RequirementQueryParams = z.infer<typeof requirementQuerySchema>;
