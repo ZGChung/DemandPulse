@@ -27,6 +27,10 @@ tags:
     description: Claude Code plugin integration endpoints
   - name: Authentication
     description: Authentication and user management
+  - name: User
+    description: Current user insights and profile
+  - name: Organizations
+    description: Teams and organizations
 
 paths:
   /api/health:
@@ -37,18 +41,18 @@ paths:
       description: Check if the API is running and get system information
       operationId: getHealth
       responses:
-        '200':
+        "200":
           description: API is healthy
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthResponse'
-        '500':
+                $ref: "#/components/schemas/HealthResponse"
+        "500":
           description: API is unhealthy
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/requirements:
     get:
@@ -79,19 +83,25 @@ paths:
             type: integer
             minimum: 0
             default: 0
+        - name: sort
+          in: query
+          description: Sort order - recent (default) or priority (recency + cluster size)
+          schema:
+            type: string
+            enum: [recent, priority]
       responses:
-        '200':
+        "200":
           description: List of requirements
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RequirementsResponse'
-        '400':
+                $ref: "#/components/schemas/RequirementsResponse"
+        "400":
           description: Invalid query parameters
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     post:
       tags:
@@ -106,32 +116,32 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RequirementSubmission'
+              $ref: "#/components/schemas/RequirementSubmission"
       responses:
-        '201':
+        "201":
           description: Requirement submitted successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SubmissionSuccess'
-        '400':
+                $ref: "#/components/schemas/SubmissionSuccess"
+        "400":
           description: Invalid request body
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
           description: Not authenticated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '429':
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
           description: Rate limit exceeded
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/clusters:
     get:
@@ -157,24 +167,24 @@ paths:
             minimum: 0
             default: 0
       responses:
-        '200':
+        "200":
           description: Clusters and statistics
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ClustersResponse'
-        '400':
+                $ref: "#/components/schemas/ClustersResponse"
+        "400":
           description: Invalid query parameters
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
           description: Not authenticated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/plugin/requirements:
     get:
@@ -195,18 +205,18 @@ paths:
             maximum: 100
             default: 1
       responses:
-        '200':
+        "200":
           description: Generated requirements
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PluginRequirementsResponse'
-        '401':
+                $ref: "#/components/schemas/PluginRequirementsResponse"
+        "401":
           description: Invalid or missing API key
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     post:
       tags:
@@ -221,26 +231,124 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RequirementSubmission'
+              $ref: "#/components/schemas/RequirementSubmission"
       responses:
-        '201':
+        "201":
           description: Requirement submitted successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SubmissionSuccess'
-        '400':
+                $ref: "#/components/schemas/SubmissionSuccess"
+        "400":
           description: Invalid request body
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
           description: Invalid or missing API key
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/me/insights:
+    get:
+      tags:
+        - User
+      summary: Get current user insights
+      description: Returns contribution count and clusters the user's requirements belong to. Requires authentication.
+      operationId: getMyInsights
+      security:
+        - nextAuth: []
+      responses:
+        "200":
+          description: User insights
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MyInsightsResponse"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/organizations:
+    get:
+      tags:
+        - Organizations
+      summary: List my organizations
+      description: Returns organizations the current user is a member of. Requires authentication.
+      operationId: listOrganizations
+      security:
+        - nextAuth: []
+      responses:
+        "200":
+          description: List of organizations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganizationsListResponse"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Database not available
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      tags:
+        - Organizations
+      summary: Create organization
+      description: Create a new organization (team). Caller becomes OWNER. Requires authentication.
+      operationId: createOrganization
+      security:
+        - nextAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrganizationRequest"
+      responses:
+        "201":
+          description: Organization created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganizationResponse"
+        "400":
+          description: Invalid body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Organization slug already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Database not available
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   securitySchemes:
@@ -331,9 +439,9 @@ components:
           description: Summarized version of the requirement
           maxLength: 200
         context:
-          $ref: '#/components/schemas/RequirementContext'
+          $ref: "#/components/schemas/RequirementContext"
         consent:
-          $ref: '#/components/schemas/Consent'
+          $ref: "#/components/schemas/Consent"
 
     RequirementContext:
       type: object
@@ -364,7 +472,7 @@ components:
           type: string
           format: uuid
         consentOptions:
-          $ref: '#/components/schemas/ConsentOptions'
+          $ref: "#/components/schemas/ConsentOptions"
         userProvidedEmail:
           type: string
           format: email
@@ -415,13 +523,13 @@ components:
           type: object
           properties:
             statistics:
-              $ref: '#/components/schemas/Statistics'
+              $ref: "#/components/schemas/Statistics"
             requirements:
               type: array
               items:
-                $ref: '#/components/schemas/Requirement'
+                $ref: "#/components/schemas/Requirement"
             pagination:
-              $ref: '#/components/schemas/Pagination'
+              $ref: "#/components/schemas/Pagination"
         endpoints:
           type: object
           properties:
@@ -506,11 +614,11 @@ components:
             clusters:
               type: array
               items:
-                $ref: '#/components/schemas/Cluster'
+                $ref: "#/components/schemas/Cluster"
             statistics:
-              $ref: '#/components/schemas/PublicStatistics'
+              $ref: "#/components/schemas/PublicStatistics"
         pagination:
-          $ref: '#/components/schemas/Pagination'
+          $ref: "#/components/schemas/Pagination"
 
     Cluster:
       type: object
@@ -560,7 +668,83 @@ components:
         requirements:
           type: array
           items:
-            $ref: '#/components/schemas/Requirement'
+            $ref: "#/components/schemas/Requirement"
         message:
           type: string
           example: Generated requirements for plugin testing
+
+    MyInsightsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            contributionCount:
+              type: integer
+              description: Number of requirements submitted by the user
+            clusters:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  requirementCount:
+                    type: integer
+
+    CreateOrganizationRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        slug:
+          type: string
+          maxLength: 60
+          description: Optional slug (lowercase, hyphens). Auto-generated from name if omitted.
+
+    OrganizationResponse:
+      type: object
+      properties:
+        organization:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            slug:
+              type: string
+            _count:
+              type: object
+              properties:
+                members:
+                  type: integer
+
+    OrganizationsListResponse:
+      type: object
+      properties:
+        organizations:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              slug:
+                type: string
+              _count:
+                type: object
+                properties:
+                  members:
+                    type: integer
