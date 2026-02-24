@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 
 import DashboardHeader from "@/components/dashboard-header";
+import MyTeamsWidget from "@/components/my-teams-widget";
 import OnboardingModal from "@/components/onboarding-modal";
 import PersonalInsights from "@/components/personal-insights";
 import RecentRequirements from "@/components/recent-requirements";
@@ -30,6 +31,7 @@ export default async function Dashboard() {
             </div>
             <div id="referral" className="lg:col-span-1 space-y-8 scroll-mt-6">
               <PersonalInsights />
+              <MyTeamsWidget />
               <ReferralWidget
                 userId={session.user.id || session.user.email || "anonymous"}
                 userName={session.user.name || undefined}

@@ -16,7 +16,7 @@ None. P3-14 i18n completed.
 
 ## Next
 
-P3-12 team/org done. Admin email notifications done. Docker containerization done. User dashboard personal insights done (api/me/insights, Trends you’re in). Production env config done. Requirement prioritization done. Requirements API cache (anonymous, 30s) done. See doc/roadmap_growth.md and current_status.md for remaining items.
+P3-12 team/org done. Admin email notifications done. Docker containerization done. User dashboard personal insights done (api/me/insights, Trends you’re in). Production env config done. Requirement prioritization done. Requirements API cache done. Team collaboration (dashboard Your teams widget) done. See doc/roadmap_growth.md and current_status.md for remaining items.
 
 ## Commands
 
