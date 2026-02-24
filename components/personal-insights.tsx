@@ -1,33 +1,39 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import { FaTrophy, FaStar, FaChartLine, FaUpload } from "react-icons/fa";
 
-import { apiClient } from "@/lib/api-client";
-
 export default function PersonalInsights() {
   const [contributionCount, setContributionCount] = useState<number>(0);
+  const [clusters, setClusters] = useState<
+    { id: string; name: string; requirementCount: number }[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchUserContributions();
+    fetchInsights();
   }, []);
 
-  const fetchUserContributions = async () => {
+  const fetchInsights = async () => {
     try {
       setLoading(true);
-      // Fetch requirements with a small limit to get pagination total
-      const response = await apiClient.getRequirements({ limit: 1 });
-      // The pagination total represents total requirements matching the filter
-      // Since we're authenticated, the API filters by user
-      const total = response.data.pagination.total;
-      setContributionCount(total);
+      const res = await fetch("/api/me/insights", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to load insights");
+      const json = await res.json();
+      if (json.success && json.data) {
+        setContributionCount(json.data.contributionCount ?? 0);
+        setClusters(json.data.clusters ?? []);
+      } else {
+        setContributionCount(0);
+        setClusters([]);
+      }
     } catch (err) {
-      console.error("Failed to fetch user contributions:", err);
+      console.error("Failed to fetch insights:", err);
       setError("Could not load contribution data");
-      // Fallback to 0
       setContributionCount(0);
+      setClusters([]);
     } finally {
       setLoading(false);
     }
@@ -178,6 +184,37 @@ export default function PersonalInsights() {
             ))}
           </div>
         </div>
+
+        {/* Trends you're in */}
+        {clusters.length > 0 && (
+          <div>
+            <h4 className="text-sm font-medium text-gray-900 mb-3">Trends you're in</h4>
+            <p className="text-xs text-gray-500 mb-2">
+              Your requirements appear in these community trends.
+            </p>
+            <ul className="space-y-2">
+              {clusters.slice(0, 5).map((c) => (
+                <li key={c.id}>
+                  <Link
+                    href="/trends"
+                    className="text-sm text-blue-600 hover:underline font-medium"
+                  >
+                    {c.name}
+                  </Link>
+                  <span className="text-xs text-gray-500 ml-1">
+                    ({c.requirementCount} requirements)
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/trends"
+              className="inline-block mt-2 text-xs text-blue-600 hover:underline"
+            >
+              View all trends →
+            </Link>
+          </div>
+        )}
 
         {/* Call to action */}
         {contributionCount === 0 && (

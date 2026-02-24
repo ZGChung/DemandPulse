@@ -685,6 +685,38 @@ export class DatabaseService {
     }
   }
 
+  async getRequirementCountForUser(userId: string): Promise<number> {
+    try {
+      if (this.prisma) {
+        return await this.prisma.requirement.count({ where: { userId } });
+      }
+      return 0;
+    } catch (error) {
+      console.error("Error counting user requirements:", error);
+      return 0;
+    }
+  }
+
+  /** Clusters that the user's requirements belong to (for personal insights). */
+  async getClustersForUser(
+    userId: string
+  ): Promise<{ id: string; name: string; requirementCount: number }[]> {
+    try {
+      if (this.prisma) {
+        const clusters = await this.prisma.requirementCluster.findMany({
+          where: { requirements: { some: { userId } } },
+          select: { id: true, name: true, requirementCount: true },
+          orderBy: { requirementCount: "desc" },
+        });
+        return clusters;
+      }
+      return [];
+    } catch (error) {
+      console.error("Error fetching clusters for user:", error);
+      return [];
+    }
+  }
+
   async getPublicStatistics() {
     try {
       if (this.prisma) {
