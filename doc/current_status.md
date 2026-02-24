@@ -133,10 +133,10 @@ Transform unstructured developer requirements from Claude Code conversations int
 
 #### 1. **Real Claude Code Integration**
 
-- Real-time requirement detection from Claude Code conversations
-- WebSocket connection to Claude Code events
-- Claude Code OAuth authentication flow
-- Plugin manifest and packaging for distribution
+- ✅ **Plugin path**: Stop hook reads `transcript_path` (JSONL), submits last user message to `POST /api/plugin/requirements` when `ENABLE_AUTO_DETECTION` and consent env are set; skill `/demandpulse:submit` for manual submit. See doc/CLAUDE_CODE_API.md.
+- ❌ Real-time WebSocket connection to Claude Code events
+- ❌ Claude Code OAuth authentication flow
+- ✅ Plugin manifest and packaging (claude-plugin-demandpulse) for distribution
 
 #### 2. **Production Deployment**
 
@@ -161,31 +161,32 @@ None.
 
 ### Recently Completed
 
-1. **API documentation** – OpenAPI 文档补充 GET /api/requirements 的 sort 参数（recent|priority）、GET /api/me/insights、GET|POST /api/organizations 及对应 schema。
-2. **Team collaboration** – Dashboard 右侧增加 “Your teams” 组件，拉取 /api/organizations，展示最多 3 个团队及成员数，链接到 /teams 与 /teams/[id]。
-3. **Performance/caching** – GET /api/requirements 匿名请求结果缓存 30s（Cache-Control s-maxage=30），与 clusters/health 一致。
-4. **Requirement prioritization** – DatabaseService.getPrioritizedRequirements (recency + cluster size score); GET /api/requirements?sort=priority; api-client getRequirements(sort).
-5. **Production environment configuration** – doc/PRODUCTION_ENV.md：生产环境变量说明（必选/推荐/可选）、部署前检查清单、Vercel/Docker 简述。
-6. **User dashboard personal insights** – GET /api/me/insights (contributionCount + clusters for user); PersonalInsights fetches it and shows “Trends you’re in” with links to /trends. DatabaseService: getRequirementCountForUser, getClustersForUser.
-7. **Docker containerization** – Dockerfile (node:20-alpine, deps → builder → runner), Next.js `output: "standalone"`, docker-compose.yml, .dockerignore; README Docker section.
-8. **Admin email notifications** – On new requirement submission, all users with role ADMIN (and email) receive a notification (subject/summary/submitter link). Uses existing email-service (Resend/mock). Dependabot: ignore eslint/tailwind/dotenv/@types/node; ESLint import resolver set to node on main.
-9. **P3-12 团队/组织能力** – Organization + OrganizationMember schema, GET/POST /api/organizations, GET /api/organizations/[id] and [id]/requirements, Teams page and team detail (org board), dashboard nav “Teams”
-10. **P1 Growth** – User “My Requirements” page (real API, filter, CSV export, live stats); Onboarding last-step CTA “View Trends”; Dashboard nav “Invite” + #referral scroll
-11. **Admin System Health Page** - UI for monitoring system status (overall status, system info, database/disk/memory/files/external services)
-12. **Admin Navigation Sidebar** - Unified sidebar navigation for Dashboard, Requirements, Clusters, Users, Analytics, Audit Logs, Privacy Requests, System Health, Settings
-13. **Admin Analytics Page** - Created with time range filtering and metrics display
-14. **Admin Users Page API Integration** - Converted from server to client component with real API integration
-15. **Missing Admin API Endpoints** - Created analytics, audit-logs, privacy-requests, system-health APIs
-16. **Settings Service** - File-based persistence for system settings with caching
-17. **Admin Audit Logs Page** - UI for viewing privacy audit logs with filtering and pagination
-18. **Admin Privacy Requests Page** - UI for managing data deletion requests with bulk actions
-19. **P1-6 邮件摘要** - Weekly digest: /api/cron/weekly-digest (CRON_SECRET); HTML+text template; sends to users with email; Vercel cron Mon 9am
-20. **P2-10 公开 API/文档** - /api-docs page with Swagger UI, GET /api/openapi serves OpenAPI YAML, landing nav API link
-21. **P2-11 性能与缓存** - lib/cache TTL cache; /api/clusters and /api/health cached (60s/10s), Cache-Control headers
-22. **P2-9 向量聚类** - assignToCluster after embedding (POST /api/requirements + plugin); GET/POST /api/cron/run-clustering (CRON_SECRET) for batch K-means
-23. **P3-13 监控与可观测** - instrumentation.ts, global-error.tsx, withRequestLogging, doc/MONITORING.md
-24. **P3-15 移动端/响应式** - landing hamburger nav, admin mobile drawer, responsive headers
-25. **P3-14 i18n** - LocaleProvider, POST /api/locale, language switcher in LandingNav, landing/nav wired to t()
+1. **Real Claude Code (plugin)** – Stop hook in claude-plugin-demandpulse: handler uses `hook_event_name` and `transcript_path`, parses JSONL for last user message, keyword/consent/length check, POST to /api/plugin/requirements; doc/CLAUDE_CODE_API.md updated.
+2. **API documentation** – OpenAPI 文档补充 GET /api/requirements 的 sort 参数（recent|priority）、GET /api/me/insights、GET|POST /api/organizations 及对应 schema。
+3. **Team collaboration** – Dashboard 右侧增加 “Your teams” 组件，拉取 /api/organizations，展示最多 3 个团队及成员数，链接到 /teams 与 /teams/[id]。
+4. **Performance/caching** – GET /api/requirements 匿名请求结果缓存 30s（Cache-Control s-maxage=30），与 clusters/health 一致。
+5. **Requirement prioritization** – DatabaseService.getPrioritizedRequirements (recency + cluster size score); GET /api/requirements?sort=priority; api-client getRequirements(sort).
+6. **Production environment configuration** – doc/PRODUCTION_ENV.md：生产环境变量说明（必选/推荐/可选）、部署前检查清单、Vercel/Docker 简述。
+7. **User dashboard personal insights** – GET /api/me/insights (contributionCount + clusters for user); PersonalInsights fetches it and shows “Trends you’re in” with links to /trends. DatabaseService: getRequirementCountForUser, getClustersForUser.
+8. **Docker containerization** – Dockerfile (node:20-alpine, deps → builder → runner), Next.js `output: "standalone"`, docker-compose.yml, .dockerignore; README Docker section.
+9. **Admin email notifications** – On new requirement submission, all users with role ADMIN (and email) receive a notification (subject/summary/submitter link). Uses existing email-service (Resend/mock). Dependabot: ignore eslint/tailwind/dotenv/@types/node; ESLint import resolver set to node on main.
+10. **P3-12 团队/组织能力** – Organization + OrganizationMember schema, GET/POST /api/organizations, GET /api/organizations/[id] and [id]/requirements, Teams page and team detail (org board), dashboard nav “Teams”
+11. **P1 Growth** – User “My Requirements” page (real API, filter, CSV export, live stats); Onboarding last-step CTA “View Trends”; Dashboard nav “Invite” + #referral scroll
+12. **Admin System Health Page** - UI for monitoring system status (overall status, system info, database/disk/memory/files/external services)
+13. **Admin Navigation Sidebar** - Unified sidebar navigation for Dashboard, Requirements, Clusters, Users, Analytics, Audit Logs, Privacy Requests, System Health, Settings
+14. **Admin Analytics Page** - Created with time range filtering and metrics display
+15. **Admin Users Page API Integration** - Converted from server to client component with real API integration
+16. **Missing Admin API Endpoints** - Created analytics, audit-logs, privacy-requests, system-health APIs
+17. **Settings Service** - File-based persistence for system settings with caching
+18. **Admin Audit Logs Page** - UI for viewing privacy audit logs with filtering and pagination
+19. **Admin Privacy Requests Page** - UI for managing data deletion requests with bulk actions
+20. **P1-6 邮件摘要** - Weekly digest: /api/cron/weekly-digest (CRON_SECRET); HTML+text template; sends to users with email; Vercel cron Mon 9am
+21. **P2-10 公开 API/文档** - /api-docs page with Swagger UI, GET /api/openapi serves OpenAPI YAML, landing nav API link
+22. **P2-11 性能与缓存** - lib/cache TTL cache; /api/clusters and /api/health cached (60s/10s), Cache-Control headers
+23. **P2-9 向量聚类** - assignToCluster after embedding (POST /api/requirements + plugin); GET/POST /api/cron/run-clustering (CRON_SECRET) for batch K-means
+24. **P3-13 监控与可观测** - instrumentation.ts, global-error.tsx, withRequestLogging, doc/MONITORING.md
+25. **P3-15 移动端/响应式** - landing hamburger nav, admin mobile drawer, responsive headers
+26. **P3-14 i18n** - LocaleProvider, POST /api/locale, language switcher in LandingNav, landing/nav wired to t()
 
 ## Known Issues & Technical Debt
 
@@ -204,7 +205,7 @@ None.
 
 ### 3. **Mock Dependencies**
 
-- Claude Code integration is entirely mocked
+- Claude Code: plugin path (Stop hook + skill) implemented; WebSocket/OAuth not implemented
 - Rate limiting uses in-memory fallback (not Redis in production)
 - Email service: implemented (Resend + mock); admin new-requirement notifications wired
 - **Priority**: High for Claude Code integration, Medium for others

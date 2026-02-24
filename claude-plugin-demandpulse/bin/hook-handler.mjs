@@ -4,84 +4,57 @@
 /**
  * DemandPulse Claude Code Plugin Hook Handler
  *
- * This script is called by Claude Code hooks to process events and send
- * requirement data to the DemandPulse API.
+ * Called by Claude Code hooks (PostToolUse, Stop). Uses official input schema:
+ * session_id, transcript_path, cwd, permission_mode, hook_event_name; for tools: tool_name, tool_input.
+ * On Stop + ENABLE_AUTO_DETECTION, reads transcript_path (JSONL) and may submit last user message to API.
  */
 
 import { randomUUID } from 'crypto';
+import { readFile } from 'fs/promises';
 
-// Configuration
 const CONFIG = {
   apiUrl: process.env.DEMANDPULSE_API_URL || 'http://localhost:3000',
   apiKey: process.env.DEMANDPULSE_API_KEY || '',
-  enableAutoDetection: process.env.ENABLE_AUTO_DETECTION === 'true', // Default false, must be explicitly enabled
+  enableAutoDetection: process.env.ENABLE_AUTO_DETECTION === 'true',
   defaultConsent: {
-    dataCollection: process.env.DEFAULT_DATA_COLLECTION_CONSENT === 'true', // Default false
-    contact: process.env.DEFAULT_CONTACT_CONSENT === 'true', // Default false
-    anonymization: process.env.DEFAULT_ANONYMIZATION_CONSENT !== 'false', // Default true
+    dataCollection: process.env.DEFAULT_DATA_COLLECTION_CONSENT === 'true',
+    contact: process.env.DEFAULT_CONTACT_CONSENT === 'true',
+    anonymization: process.env.DEFAULT_ANONYMIZATION_CONSENT !== 'false',
   },
   requirementKeywords: [
     'need', 'want', 'should', 'must', 'require', 'requirement',
     'feature', 'bug', 'fix', 'improve', 'improvement', 'enhance',
-    'problem', 'issue', 'error', 'broken', 'doesn\'t work',
+    'problem', 'issue', 'error', 'broken', "doesn't work",
     'add', 'create', 'implement', 'build', 'develop'
   ],
   minRequirementLength: 10,
   maxRequirementLength: 1000,
 };
 
-// Parse hook input from stdin
 const hookInput = await readStdinJson();
+const eventName = hookInput.hook_event_name || hookInput.event;
 
-// Log for debugging
-console.error('[DemandPulse Hook] Event:', hookInput.event);
-console.error('[DemandPulse Hook] Tool:', hookInput.tool_name);
+console.error('[DemandPulse Hook] Event:', eventName);
 
-// Only process if auto-detection is enabled
-if (!CONFIG.enableAutoDetection) {
-  console.error('[DemandPulse Hook] Auto-detection disabled');
-  process.exit(0);
+// Only auto-submit on Stop when enabled
+if (eventName === 'Stop' && CONFIG.enableAutoDetection && CONFIG.defaultConsent.dataCollection) {
+  const transcriptPath = hookInput.transcript_path;
+  if (transcriptPath) {
+    try {
+      const messageText = await getLastUserMessageFromTranscript(transcriptPath);
+      if (messageText && containsRequirementKeywords(messageText) &&
+          messageText.length >= CONFIG.minRequirementLength &&
+          messageText.length <= CONFIG.maxRequirementLength) {
+        await submitRequirement(messageText, hookInput);
+        console.error('[DemandPulse Hook] Requirement submitted from transcript');
+      }
+    } catch (e) {
+      console.error('[DemandPulse Hook] Transcript read/submit failed:', e.message);
+    }
+  }
 }
 
-// Check if this is a message event
-if (!isMessageEvent(hookInput)) {
-  console.error('[DemandPulse Hook] Not a message event, skipping');
-  process.exit(0);
-}
-
-// Extract message text
-const messageText = extractMessageText(hookInput);
-if (!messageText) {
-  console.error('[DemandPulse Hook] No message text found');
-  process.exit(0);
-}
-
-// Check if message contains requirement keywords
-if (!containsRequirementKeywords(messageText)) {
-  console.error('[DemandPulse Hook] No requirement keywords found');
-  process.exit(0);
-}
-
-// Validate message length
-if (messageText.length < CONFIG.minRequirementLength || messageText.length > CONFIG.maxRequirementLength) {
-  console.error('[DemandPulse Hook] Message length outside valid range');
-  process.exit(0);
-}
-
-// Check if data collection is consented
-if (!CONFIG.defaultConsent.dataCollection) {
-  console.error('[DemandPulse Hook] Data collection not consented, skipping submission');
-  process.exit(0);
-}
-
-// Process as requirement
-try {
-  await submitRequirement(messageText, hookInput);
-  console.error('[DemandPulse Hook] Requirement submitted successfully');
-} catch (error) {
-  console.error('[DemandPulse Hook] Failed to submit requirement:', error.message);
-  process.exit(1);
-}
+process.exit(0);
 
 /**
  * Read JSON from stdin
@@ -105,42 +78,25 @@ async function readStdinJson() {
 }
 
 /**
- * Check if hook input is a message event
+ * Read transcript JSONL and return the last user message text, or null.
+ * Tolerates common shapes: { role: "user", content: "..." }, { type: "user", text: "..." }, etc.
  */
-function isMessageEvent(hookInput) {
-  const toolName = hookInput.tool_name?.toLowerCase() || '';
-  const event = hookInput.event?.toLowerCase() || '';
-
-  // Look for message-related events
-  return toolName.includes('message') ||
-         event.includes('message') ||
-         toolName.includes('chat') ||
-         event.includes('chat');
-}
-
-/**
- * Extract message text from hook input
- */
-function extractMessageText(hookInput) {
-  // Try different possible locations for message text
-  const candidates = [
-    hookInput.tool_input?.text,
-    hookInput.tool_input?.content,
-    hookInput.tool_input?.message,
-    hookInput.tool_input?.input,
-    hookInput.message,
-    hookInput.content,
-  ];
-
-  for (const candidate of candidates) {
-    if (typeof candidate === 'string' && candidate.trim().length > 0) {
-      return candidate.trim();
-    }
-    if (typeof candidate === 'object' && candidate.text) {
-      return candidate.text.trim();
-    }
+async function getLastUserMessageFromTranscript(transcriptPath) {
+  const raw = await readFile(transcriptPath, 'utf-8');
+  const lines = raw.split('\n').filter((l) => l.trim());
+  for (let i = lines.length - 1; i >= 0; i--) {
+    try {
+      const obj = JSON.parse(lines[i]);
+      const role = (obj.role || obj.type || '').toLowerCase();
+      if (role !== 'user') continue;
+      const text = obj.content ?? obj.text ?? obj.message ?? obj.input;
+      if (typeof text === 'string' && text.trim().length > 0) return text.trim();
+      if (Array.isArray(obj.content)) {
+        const part = obj.content.find((p) => p?.type === 'text' && p?.text);
+        if (part?.text) return String(part.text).trim();
+      }
+    } catch (_) { /* skip malformed line */ }
   }
-
   return null;
 }
 
@@ -157,8 +113,8 @@ function containsRequirementKeywords(text) {
  */
 async function submitRequirement(messageText, hookInput) {
   const requirementId = randomUUID();
-  const conversationId = hookInput.conversation_id || randomUUID();
-  const workspacePath = hookInput.workspace_path || null;
+  const conversationId = hookInput.session_id || hookInput.conversation_id || requirementId;
+  const workspacePath = hookInput.cwd ?? hookInput.workspace_path ?? null;
   const now = new Date().toISOString();
 
   // Create a simple summary (first 100 chars)
