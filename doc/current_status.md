@@ -161,28 +161,29 @@ None.
 
 ### Recently Completed
 
-1. **Requirement prioritization** – DatabaseService.getPrioritizedRequirements (recency + cluster size score); GET /api/requirements?sort=priority; api-client getRequirements(sort).
-2. **Production environment configuration** – doc/PRODUCTION_ENV.md：生产环境变量说明（必选/推荐/可选）、部署前检查清单、Vercel/Docker 简述。
-3. **User dashboard personal insights** – GET /api/me/insights (contributionCount + clusters for user); PersonalInsights fetches it and shows “Trends you’re in” with links to /trends. DatabaseService: getRequirementCountForUser, getClustersForUser.
-4. **Docker containerization** – Dockerfile (node:20-alpine, deps → builder → runner), Next.js `output: "standalone"`, docker-compose.yml, .dockerignore; README Docker section.
-5. **Admin email notifications** – On new requirement submission, all users with role ADMIN (and email) receive a notification (subject/summary/submitter link). Uses existing email-service (Resend/mock). Dependabot: ignore eslint/tailwind/dotenv/@types/node; ESLint import resolver set to node on main.
-6. **P3-12 团队/组织能力** – Organization + OrganizationMember schema, GET/POST /api/organizations, GET /api/organizations/[id] and [id]/requirements, Teams page and team detail (org board), dashboard nav “Teams”
-7. **P1 Growth** – User “My Requirements” page (real API, filter, CSV export, live stats); Onboarding last-step CTA “View Trends”; Dashboard nav “Invite” + #referral scroll
-8. **Admin System Health Page** - UI for monitoring system status (overall status, system info, database/disk/memory/files/external services)
-9. **Admin Navigation Sidebar** - Unified sidebar navigation for Dashboard, Requirements, Clusters, Users, Analytics, Audit Logs, Privacy Requests, System Health, Settings
-10. **Admin Analytics Page** - Created with time range filtering and metrics display
-11. **Admin Users Page API Integration** - Converted from server to client component with real API integration
-12. **Missing Admin API Endpoints** - Created analytics, audit-logs, privacy-requests, system-health APIs
-13. **Settings Service** - File-based persistence for system settings with caching
-14. **Admin Audit Logs Page** - UI for viewing privacy audit logs with filtering and pagination
-15. **Admin Privacy Requests Page** - UI for managing data deletion requests with bulk actions
-16. **P1-6 邮件摘要** - Weekly digest: /api/cron/weekly-digest (CRON_SECRET); HTML+text template; sends to users with email; Vercel cron Mon 9am
-17. **P2-10 公开 API/文档** - /api-docs page with Swagger UI, GET /api/openapi serves OpenAPI YAML, landing nav API link
-18. **P2-11 性能与缓存** - lib/cache TTL cache; /api/clusters and /api/health cached (60s/10s), Cache-Control headers
-19. **P2-9 向量聚类** - assignToCluster after embedding (POST /api/requirements + plugin); GET/POST /api/cron/run-clustering (CRON_SECRET) for batch K-means
-20. **P3-13 监控与可观测** - instrumentation.ts, global-error.tsx, withRequestLogging, doc/MONITORING.md
-21. **P3-15 移动端/响应式** - landing hamburger nav, admin mobile drawer, responsive headers
-22. **P3-14 i18n** - LocaleProvider, POST /api/locale, language switcher in LandingNav, landing/nav wired to t()
+1. **Performance/caching** – GET /api/requirements 匿名请求结果缓存 30s（Cache-Control s-maxage=30），与 clusters/health 一致。
+2. **Requirement prioritization** – DatabaseService.getPrioritizedRequirements (recency + cluster size score); GET /api/requirements?sort=priority; api-client getRequirements(sort).
+3. **Production environment configuration** – doc/PRODUCTION_ENV.md：生产环境变量说明（必选/推荐/可选）、部署前检查清单、Vercel/Docker 简述。
+4. **User dashboard personal insights** – GET /api/me/insights (contributionCount + clusters for user); PersonalInsights fetches it and shows “Trends you’re in” with links to /trends. DatabaseService: getRequirementCountForUser, getClustersForUser.
+5. **Docker containerization** – Dockerfile (node:20-alpine, deps → builder → runner), Next.js `output: "standalone"`, docker-compose.yml, .dockerignore; README Docker section.
+6. **Admin email notifications** – On new requirement submission, all users with role ADMIN (and email) receive a notification (subject/summary/submitter link). Uses existing email-service (Resend/mock). Dependabot: ignore eslint/tailwind/dotenv/@types/node; ESLint import resolver set to node on main.
+7. **P3-12 团队/组织能力** – Organization + OrganizationMember schema, GET/POST /api/organizations, GET /api/organizations/[id] and [id]/requirements, Teams page and team detail (org board), dashboard nav “Teams”
+8. **P1 Growth** – User “My Requirements” page (real API, filter, CSV export, live stats); Onboarding last-step CTA “View Trends”; Dashboard nav “Invite” + #referral scroll
+9. **Admin System Health Page** - UI for monitoring system status (overall status, system info, database/disk/memory/files/external services)
+10. **Admin Navigation Sidebar** - Unified sidebar navigation for Dashboard, Requirements, Clusters, Users, Analytics, Audit Logs, Privacy Requests, System Health, Settings
+11. **Admin Analytics Page** - Created with time range filtering and metrics display
+12. **Admin Users Page API Integration** - Converted from server to client component with real API integration
+13. **Missing Admin API Endpoints** - Created analytics, audit-logs, privacy-requests, system-health APIs
+14. **Settings Service** - File-based persistence for system settings with caching
+15. **Admin Audit Logs Page** - UI for viewing privacy audit logs with filtering and pagination
+16. **Admin Privacy Requests Page** - UI for managing data deletion requests with bulk actions
+17. **P1-6 邮件摘要** - Weekly digest: /api/cron/weekly-digest (CRON_SECRET); HTML+text template; sends to users with email; Vercel cron Mon 9am
+18. **P2-10 公开 API/文档** - /api-docs page with Swagger UI, GET /api/openapi serves OpenAPI YAML, landing nav API link
+19. **P2-11 性能与缓存** - lib/cache TTL cache; /api/clusters and /api/health cached (60s/10s), Cache-Control headers
+20. **P2-9 向量聚类** - assignToCluster after embedding (POST /api/requirements + plugin); GET/POST /api/cron/run-clustering (CRON_SECRET) for batch K-means
+21. **P3-13 监控与可观测** - instrumentation.ts, global-error.tsx, withRequestLogging, doc/MONITORING.md
+22. **P3-15 移动端/响应式** - landing hamburger nav, admin mobile drawer, responsive headers
+23. **P3-14 i18n** - LocaleProvider, POST /api/locale, language switcher in LandingNav, landing/nav wired to t()
 
 ## Known Issues & Technical Debt
 
