@@ -321,9 +321,9 @@ export class ClaudeCodeIntegrationService {
     autoCompact: boolean;
     requirementDetection: boolean;
     statistics: {
-      context: any;
-      autoCompact: any;
-      hooks: any;
+      context: Record<string, unknown>;
+      autoCompact: Record<string, unknown>;
+      hooks: Record<string, unknown>;
     };
   } {
     return {
