@@ -122,12 +122,9 @@ export async function PATCH(request: NextRequest) {
     }
 
     const databaseService = new DatabaseService();
+    const requirement = await databaseService.updateRequirementStatus(requirementId, status);
 
-    // In a real implementation, we would update the requirement status in the database
-    // For now, we'll log the action and return success
-    // TODO: Implement actual requirement status update in DatabaseService
-
-    apiLogger.info("Requirement status update requested", {
+    apiLogger.info("Requirement status updated", {
       adminId: session!.user.id,
       requirementId,
       newStatus: status,
@@ -136,9 +133,8 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        message: `Requirement status would be updated to ${status}`,
-        requirementId,
-        status,
+        message: "Requirement status updated successfully",
+        requirement,
       },
     });
   } catch (error: any) {

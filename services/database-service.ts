@@ -1,4 +1,10 @@
-import { PrismaClient, RequirementStatus, PrivacyAction, ActorType } from "@prisma/client";
+import {
+  PrismaClient,
+  RequirementStatus,
+  RequirementCluster,
+  PrivacyAction,
+  ActorType,
+} from "@prisma/client";
 
 import { encryptionService } from "@/lib/encryption";
 import { maskRequirementsForAdmin, canViewUnmaskedData } from "@/lib/masking";
@@ -726,6 +732,50 @@ export class DatabaseService {
     } catch (error) {
       console.error("Error counting clusters:", error);
       throw new Error("Failed to count clusters");
+    }
+  }
+
+  async createCluster(name: string, description: string): Promise<RequirementCluster> {
+    try {
+      if (this.prisma) {
+        const cluster = await this.prisma.requirementCluster.create({
+          data: {
+            name,
+            description,
+            requirementCount: 0,
+            firstDetectedAt: new Date(),
+            lastDetectedAt: new Date(),
+          },
+        });
+
+        await this.logPrivacyAction({
+          action: "CREATE",
+          entityType: "RequirementCluster",
+          entityId: cluster.id,
+          actorType: "SYSTEM",
+          changes: { name, description },
+          reason: "Cluster created by admin",
+        });
+
+        return cluster;
+      } else {
+        // Mock implementation
+        const mockCluster: RequirementCluster = {
+          id: `cluster-${Date.now()}`,
+          name,
+          description,
+          requirementCount: 0,
+          firstDetectedAt: new Date(),
+          lastDetectedAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          centroidEmbedding: null,
+        };
+        return mockCluster;
+      }
+    } catch (error) {
+      console.error("Error creating cluster:", error);
+      throw new Error("Failed to create cluster");
     }
   }
 

@@ -114,11 +114,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO: Implement actual cluster creation in DatabaseService
-    // For now, return success with mock data
+    const databaseService = new DatabaseService();
+    const cluster = await databaseService.createCluster(name, description);
 
-    apiLogger.info("Cluster creation requested", {
+    apiLogger.info("Cluster created", {
       adminId: session!.user.id,
+      clusterId: cluster.id,
       name,
       description,
     });
@@ -126,16 +127,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        message: "Cluster would be created",
-        cluster: {
-          id: `new-cluster-${Date.now()}`,
-          name,
-          description,
-          requirementCount: 0,
-          firstDetectedAt: new Date(),
-          lastDetectedAt: new Date(),
-          sampleRequirements: [],
-        },
+        message: "Cluster created successfully",
+        cluster,
       },
     });
   } catch (error: any) {
