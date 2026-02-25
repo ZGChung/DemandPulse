@@ -82,6 +82,7 @@ export default function AdminAuditLogsPage() {
 
   useEffect(() => {
     fetchAuditLogs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.page, pagination.limit]);
 
   const handleFilterSubmit = (e: React.FormEvent) => {

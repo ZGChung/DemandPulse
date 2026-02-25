@@ -70,6 +70,7 @@ export default function AdminAnalyticsPage() {
 
   useEffect(() => {
     fetchAnalytics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleTimeRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
