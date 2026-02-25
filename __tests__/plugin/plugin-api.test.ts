@@ -81,15 +81,17 @@ describe("Plugin API Endpoint", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env = { ...originalEnv };
-    (process.env as any).NODE_ENV = "test";
-    (process.env as any).DATABASE_URL = "file:./test.db";
-    (process.env as any).PLUGIN_API_KEY = "test-plugin-api-key-123";
-    (process.env as any).ENABLE_AI_PROCESSING = "false";
+    process.env = {
+      ...originalEnv,
+      NODE_ENV: "test",
+      DATABASE_URL: "file:./test.db",
+      PLUGIN_API_KEY: "test-plugin-api-key-123",
+      ENABLE_AI_PROCESSING: "false",
+    };
   });
 
   afterEach(() => {
-    (process.env as any) = originalEnv;
+    process.env = originalEnv;
   });
 
   describe("POST /api/plugin/requirements", () => {

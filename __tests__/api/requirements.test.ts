@@ -57,7 +57,12 @@ jest.mock("@/lib/auth", () => ({
 }));
 
 describe("Requirements API Contract", () => {
-  let mockDataCollectionFlow: jest.Mocked<DataCollectionFlow>;
+  interface MockDataCollectionFlow {
+    handleUserConsent: jest.Mock;
+    getFlowStatistics: jest.Mock;
+  }
+
+  let mockDataCollectionFlow: MockDataCollectionFlow;
 
   beforeEach(() => {
     jest.resetModules();
@@ -69,7 +74,7 @@ describe("Requirements API Contract", () => {
     mockDataCollectionFlow = {
       handleUserConsent: jest.fn(),
       getFlowStatistics: jest.fn(),
-    } as any;
+    };
 
     // Replace the module
     require("@/services/data-collection-flow").DataCollectionFlow = jest.fn(

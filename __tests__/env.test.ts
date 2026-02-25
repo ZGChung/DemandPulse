@@ -47,8 +47,8 @@ describe("Environment Validation", () => {
 
   describe("getEnv", () => {
     it("should return environment variable value", () => {
-      process.env.TEST_VAR = "test-value";
-      expect(getEnv("TEST_VAR" as any)).toBe("test-value");
+      process.env.DATABASE_URL = "test-value";
+      expect(getEnv("DATABASE_URL")).toBe("test-value");
     });
 
     it("should throw for missing required env var", () => {
@@ -62,7 +62,7 @@ describe("Environment Validation", () => {
       // Temporarily delete the env var to test default value
       const originalValue = process.env.NEXT_PUBLIC_APP_NAME;
       delete process.env.NEXT_PUBLIC_APP_NAME;
-      expect(getEnv("NEXT_PUBLIC_APP_NAME" as any, "DefaultApp")).toBe("DefaultApp");
+      expect(getEnv("NEXT_PUBLIC_APP_NAME", "DefaultApp")).toBe("DefaultApp");
       // Restore the original value
       if (originalValue !== undefined) {
         process.env.NEXT_PUBLIC_APP_NAME = originalValue;
@@ -73,32 +73,33 @@ describe("Environment Validation", () => {
   describe("getEnvAsBoolean", () => {
     it('should return true for "true" string', () => {
       process.env.TEST_BOOL = "true";
-      expect(getEnvAsBoolean("TEST_BOOL" as any)).toBe(true);
+      expect(getEnvAsBoolean("ENABLE_CLAUDE_CODE_PLUGIN")).toBe(true);
     });
 
     it('should return false for "false" string', () => {
-      process.env.TEST_BOOL = "false";
-      expect(getEnvAsBoolean("TEST_BOOL" as any)).toBe(false);
+      process.env.ENABLE_CLAUDE_CODE_PLUGIN = "false";
+      expect(getEnvAsBoolean("ENABLE_CLAUDE_CODE_PLUGIN")).toBe(false);
     });
 
     it("should return default value for missing env var", () => {
-      expect(getEnvAsBoolean("TEST_BOOL" as any, true)).toBe(true);
+      expect(getEnvAsBoolean("ENABLE_CLAUDE_CODE_PLUGIN", true)).toBe(true);
     });
   });
 
   describe("getEnvAsNumber", () => {
     it("should parse numeric string", () => {
-      process.env.TEST_NUM = "123";
-      expect(getEnvAsNumber("TEST_NUM" as any)).toBe(123);
+      process.env.RATE_LIMIT_MAX_REQUESTS = "123";
+      expect(getEnvAsNumber("RATE_LIMIT_MAX_REQUESTS")).toBe(123);
     });
 
     it("should return default for invalid number", () => {
-      process.env.TEST_NUM = "not-a-number";
-      expect(getEnvAsNumber("TEST_NUM" as any, 999)).toBe(999);
+      process.env.RATE_LIMIT_MAX_REQUESTS = "not-a-number";
+      expect(getEnvAsNumber("RATE_LIMIT_MAX_REQUESTS", 999)).toBe(999);
     });
 
     it("should return default for missing env var", () => {
-      expect(getEnvAsNumber("TEST_NUM" as any, 456)).toBe(456);
+      delete process.env.RATE_LIMIT_MAX_REQUESTS;
+      expect(getEnvAsNumber("RATE_LIMIT_MAX_REQUESTS", 456)).toBe(456);
     });
   });
 

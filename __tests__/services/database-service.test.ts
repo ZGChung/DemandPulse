@@ -1,8 +1,30 @@
 import { DatabaseService } from "@/services/database-service";
 
+interface MockPrismaClient {
+  requirement: {
+    create: jest.Mock;
+    findUnique: jest.Mock;
+    findMany: jest.Mock;
+    update: jest.Mock;
+    count: jest.Mock;
+  };
+  dataDeletionQueue: {
+    create: jest.Mock;
+  };
+  privacyAuditLog: {
+    create: jest.Mock;
+  };
+  $disconnect: jest.Mock;
+}
+
+interface MockPrismaClientConstructor {
+  new (config?: Record<string, unknown>): MockPrismaClient;
+  lastConfig: Record<string, unknown> | null;
+}
+
 // Mock Prisma client
 jest.mock("@prisma/client", () => {
-  const mockPrisma = {
+  const mockPrisma: MockPrismaClient = {
     requirement: {
       create: jest.fn(),
       findUnique: jest.fn(),
@@ -20,16 +42,16 @@ jest.mock("@prisma/client", () => {
   };
 
   // Mock PrismaClient constructor that accepts config
-  const PrismaClient = jest.fn().mockImplementation((config?: any) => {
+  const PrismaClient = jest.fn().mockImplementation((config?: Record<string, unknown>) => {
     // Store config for verification if needed
     if (config) {
-      (PrismaClient as any).lastConfig = config;
+      (PrismaClient as MockPrismaClientConstructor).lastConfig = config;
     }
     return mockPrisma;
   });
 
   // Static property to track last config
-  (PrismaClient as any).lastConfig = null;
+  (PrismaClient as MockPrismaClientConstructor).lastConfig = null;
 
   return {
     PrismaClient,
