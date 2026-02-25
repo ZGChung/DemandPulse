@@ -25,14 +25,21 @@ async function getClusters(): Promise<ClusterItem[]> {
 
     const data = await response.json();
     if (data.success && data.data?.clusters) {
-      return data.data.clusters.map((cluster: any) => ({
-        id: cluster.id,
-        name: cluster.name,
-        requirements: cluster.requirementCount ?? 0,
-        growth: Math.min(50, Math.floor((cluster.requirementCount ?? 0) / 2)),
-        trending: (cluster.requirementCount ?? 0) / 2 > 15,
-        description: cluster.description ?? "",
-      }));
+      return data.data.clusters.map(
+        (cluster: {
+          id: string;
+          name: string;
+          requirementCount?: number;
+          description?: string;
+        }) => ({
+          id: cluster.id,
+          name: cluster.name,
+          requirements: cluster.requirementCount ?? 0,
+          growth: Math.min(50, Math.floor((cluster.requirementCount ?? 0) / 2)),
+          trending: (cluster.requirementCount ?? 0) / 2 > 15,
+          description: cluster.description ?? "",
+        })
+      );
     }
     throw new Error("Invalid response format");
   } catch (error) {
