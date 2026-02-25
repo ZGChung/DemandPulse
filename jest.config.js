@@ -16,10 +16,16 @@ const customJestConfig = {
   },
   collectCoverageFrom: [
     "app/**/*.{js,jsx,ts,tsx}",
+    "lib/**/*.{js,jsx,ts,tsx}",
+    "services/**/*.{js,jsx,ts,tsx}",
     "!app/**/*.d.ts",
     "!app/**/_*.{js,jsx,ts,tsx}",
     "!app/**/*.stories.{js,jsx,ts,tsx}",
     "!app/**/*.test.{js,jsx,ts,tsx}",
+    "!lib/**/*.d.ts",
+    "!lib/**/*.test.{js,jsx,ts,tsx}",
+    "!services/**/*.d.ts",
+    "!services/**/*.test.{js,jsx,ts,tsx}",
   ],
   testPathIgnorePatterns: ["<rootDir>/node_modules/", "<rootDir>/.next/"],
   transformIgnorePatterns: [

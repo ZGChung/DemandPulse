@@ -1,0 +1,17 @@
+{
+  "clusteringEnabled": true,
+  "clusteringThreshold": 0.7,
+  "autoClusterFrequency": "daily",
+  "emailNotifications": true,
+  "adminEmail": "",
+  "notificationThreshold": 10,
+  "dataRetentionDays": 365,
+  "autoAnonymization": true,
+  "requireConsentForCollection": true,
+  "maintenanceMode": false,
+  "apiRateLimit": 100,
+  "enablePublicApi": false,
+  "siteName": "Modified",
+  "allowPublicRequirements": false,
+  "updatedAt": "2026-02-25T13:20:05.432Z"
+}
