@@ -79,7 +79,7 @@ jest.mock("@/lib/prisma", () => {
 
 describe("DatabaseService", () => {
   let service: DatabaseService;
-  let mockPrisma: any;
+  let mockPrisma: unknown;
 
   beforeEach(() => {
     jest.clearAllMocks();
