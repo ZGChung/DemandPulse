@@ -159,7 +159,7 @@ Transform unstructured developer requirements from Claude Code conversations int
 
 None.
 
-### Recently Completed
+### Recently Completed (latest first)
 
 1. **Real Claude Code (plugin)** – Stop hook in claude-plugin-demandpulse: handler uses `hook_event_name` and `transcript_path`, parses JSONL for last user message, keyword/consent/length check, POST to /api/plugin/requirements; doc/CLAUDE_CODE_API.md updated.
 2. **API documentation** – OpenAPI 文档补充 GET /api/requirements 的 sort 参数（recent|priority）、GET /api/me/insights、GET|POST /api/organizations 及对应 schema。
@@ -499,6 +499,12 @@ The immediate priority is completing the admin UI and implementing real Claude C
 
 ---
 
-_Last Updated: 2026-02-15_
+_Last Updated: 2026-02-25_
 _Documentation Maintainer: Claude (deepseek-chat)_
 _Project Goal: Make DemandPulse a mature, production-ready platform for developer requirement analysis_
+
+### Progress Summary (2026-02-25)
+
+- **Branch**: main, 3 commits ahead of origin (plugin Stop hook + transcript_path, OpenAPI sort/me/insights/organizations, dashboard Your teams widget).
+- **CI/CD**: GitHub Actions – test (lint + tests), build (Next.js), deploy (Vercel), security (audit, license, gitleaks). Pipeline runs on push to main.
+- **Status**: Working tree clean. Core platform complete; plugin path for Claude Code done; admin UI, auth, security, Docker, monitoring, i18n, teams/orgs in place.
