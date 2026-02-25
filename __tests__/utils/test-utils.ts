@@ -1,11 +1,19 @@
 // Test utilities for API testing
 
+interface MockNextRequest {
+  method: string;
+  ip: string;
+  headers: Map<string, string>;
+  json: () => Promise<unknown>;
+  clone: () => MockNextRequest;
+}
+
 export function createMockNextRequest(
   method: string = "GET",
-  body?: any,
+  body?: unknown,
   headers: Record<string, string> = {},
   ip: string = "127.0.0.1"
-): any {
+): MockNextRequest {
   return {
     method,
     ip,
@@ -15,8 +23,14 @@ export function createMockNextRequest(
   };
 }
 
-export function createMockNextResponse() {
-  const response: any = {
+interface MockNextResponse {
+  status: ReturnType<typeof jest.fn>;
+  json: ReturnType<typeof jest.fn>;
+  headers: ReturnType<typeof jest.fn>;
+}
+
+export function createMockNextResponse(): MockNextResponse {
+  const response: MockNextResponse = {
     status: jest.fn().mockReturnThis(),
     json: jest.fn().mockReturnThis(),
     headers: jest.fn().mockReturnThis(),

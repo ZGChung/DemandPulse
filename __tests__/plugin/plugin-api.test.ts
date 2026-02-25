@@ -59,8 +59,7 @@ function createMockRequest(options: {
   url: string;
   headers?: Record<string, string>;
   body?: unknown;
-}): any {
-  const urlObj = new URL(options.url);
+}): unknown {
   return {
     method: options.method,
     url: options.url,
