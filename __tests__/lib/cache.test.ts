@@ -41,4 +41,25 @@ describe("Cache Module", () => {
       expect(key).toContain("123");
     });
   });
+
+  describe("cache expiry", () => {
+    it("should return undefined for expired entries", async () => {
+      const { cacheGet, cacheSet, cacheKey } = await import("@/lib/cache");
+      const key = cacheKey("test", "expiry");
+      // Set with very short TTL (1ms) and wait
+      cacheSet(key, { data: "test" }, 1);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      const result = cacheGet(key);
+      expect(result).toBeUndefined();
+    });
+
+    it("should return value for non-expired entries", async () => {
+      const { cacheGet, cacheSet, cacheKey } = await import("@/lib/cache");
+      const key = cacheKey("test", "valid");
+      const testValue = { data: "valid" };
+      cacheSet(key, testValue, 60_000);
+      const result = cacheGet(key);
+      expect(result).toEqual(testValue);
+    });
+  });
 });

@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/auth";
 import { env } from "@/lib/env";
 import { apiLogger } from "@/lib/logger";
 import { defaultRateLimiter } from "@/lib/rate-limiter";
-import { settingsService, SystemSettings, DEFAULT_SETTINGS } from "@/services/settings-service";
+import { settingsService, DEFAULT_SETTINGS } from "@/services/settings-service";
 
 // Validation schema for settings update
 const settingsUpdateSchema = z
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
     const settings = await settingsService.getSettings();
 
     // Don't include timestamps in response for security
-    const { updatedAt, updatedBy, ...safeSettings } = settings;
+    const { updatedAt: _updatedAt, updatedBy: _updatedBy, ...safeSettings } = settings;
 
     return NextResponse.json({
       success: true,

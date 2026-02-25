@@ -1,4 +1,4 @@
-import { ReferralService, referralService } from "../../services/referral-service";
+import { ReferralService } from "../../services/referral-service";
 
 describe("ReferralService", () => {
   let service: ReferralService;

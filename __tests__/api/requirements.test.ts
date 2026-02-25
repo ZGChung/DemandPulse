@@ -1,8 +1,6 @@
 // Integration tests for requirements API
 // These tests verify the API contract and behavior
 
-import { DataCollectionFlow } from "@/services/data-collection-flow";
-
 // Mock the services
 jest.mock("@/services/data-collection-flow");
 
