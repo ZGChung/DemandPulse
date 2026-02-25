@@ -4,7 +4,7 @@ import os from "os";
 import path from "path";
 
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { getServerSession, Session } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
 import { env } from "@/lib/env";
@@ -13,14 +13,14 @@ import { prisma } from "@/lib/prisma";
 import { defaultRateLimiter } from "@/lib/rate-limiter";
 
 // Helper to check admin access
-async function requireAdminAccess(session: any) {
+async function requireAdminAccess(session: Session) {
   if (!session?.user || session.user.role !== "ADMIN") {
     throw new Error("Admin access required");
   }
 }
 
 // Helper for rate limiting
-async function checkRateLimit(session: any, request: NextRequest) {
+async function checkRateLimit(session: Session, request: NextRequest) {
   const ip =
     request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
   const rateLimitKey = `admin:system-health:${session.user.id}:${ip}`;
@@ -68,7 +68,7 @@ async function checkDatabase(db: NonNullable<typeof prisma>) {
   } catch (error) {
     return {
       status: "unhealthy",
-      error: error instanceof Error ? error.message : "Unknown database error",
+      error: error instanceof Error ? (error as Error).message : "Unknown database error",
     };
   }
 }
@@ -94,7 +94,7 @@ async function checkDiskSpace() {
   } catch (error) {
     return {
       status: "unhealthy",
-      error: error instanceof Error ? error.message : "Unknown disk space error",
+      error: error instanceof Error ? (error as Error).message : "Unknown disk space error",
     };
   }
 }
@@ -117,7 +117,7 @@ function checkMemory() {
   } catch (error) {
     return {
       status: "unhealthy",
-      error: error instanceof Error ? error.message : "Unknown memory error",
+      error: error instanceof Error ? (error as Error).message : "Unknown memory error",
     };
   }
 }
@@ -178,6 +178,9 @@ export async function GET(request: NextRequest) {
   try {
     if (!prisma) throw new Error("Database not available");
     const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     await requireAdminAccess(session);
     await checkRateLimit(session, request);
 
@@ -234,13 +237,13 @@ export async function GET(request: NextRequest) {
         },
       },
     });
-  } catch (error: any) {
-    apiLogger.error("Admin system-health GET error", { error: error.message });
+  } catch (error: unknown) {
+    apiLogger.error("Admin system-health GET error", { error: (error as Error).message });
 
-    if (error.message === "Admin access required") {
+    if ((error as Error).message === "Admin access required") {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });
     }
-    if (error.message === "Rate limit exceeded") {
+    if ((error as Error).message === "Rate limit exceeded") {
       return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
     }
 

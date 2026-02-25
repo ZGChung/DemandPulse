@@ -1,6 +1,6 @@
 import { RequirementStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { getServerSession, Session } from "next-auth";
 import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";

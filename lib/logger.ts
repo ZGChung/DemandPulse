@@ -15,7 +15,7 @@ export interface LogEntry {
   timestamp: string;
   level: LogLevel;
   message: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   error?: Error;
 }
 
@@ -38,7 +38,7 @@ export class Logger {
   private formatLogEntry(
     level: LogLevel,
     message: string,
-    context?: Record<string, any>,
+    context?: Record<string, unknown>,
     error?: Error
   ): LogEntry {
     const traceId = getCurrentTraceId();
@@ -103,28 +103,28 @@ export class Logger {
     }
   }
 
-  debug(message: string, context?: Record<string, any>): void {
+  debug(message: string, context?: Record<string, unknown>): void {
     if (this.shouldLog(LogLevel.DEBUG)) {
       const entry = this.formatLogEntry(LogLevel.DEBUG, message, context);
       this.output(entry);
     }
   }
 
-  info(message: string, context?: Record<string, any>): void {
+  info(message: string, context?: Record<string, unknown>): void {
     if (this.shouldLog(LogLevel.INFO)) {
       const entry = this.formatLogEntry(LogLevel.INFO, message, context);
       this.output(entry);
     }
   }
 
-  warn(message: string, context?: Record<string, any>, error?: Error): void {
+  warn(message: string, context?: Record<string, unknown>, error?: Error): void {
     if (this.shouldLog(LogLevel.WARN)) {
       const entry = this.formatLogEntry(LogLevel.WARN, message, context, error);
       this.output(entry);
     }
   }
 
-  error(message: string, context?: Record<string, any>, error?: Error): void {
+  error(message: string, context?: Record<string, unknown>, error?: Error): void {
     if (this.shouldLog(LogLevel.ERROR)) {
       const entry = this.formatLogEntry(LogLevel.ERROR, message, context, error);
       this.output(entry);
@@ -201,7 +201,7 @@ export class ErrorTracker {
     }
   }
 
-  static captureError(error: Error, context?: Record<string, any>): void {
+  static captureError(error: Error, context?: Record<string, unknown>): void {
     if (!this.enabled) {
       console.error("Error (Sentry disabled):", error, context);
       return;
@@ -218,7 +218,7 @@ export class ErrorTracker {
   static captureMessage(
     message: string,
     level: "info" | "warning" | "error" = "error",
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ): void {
     if (!this.enabled) {
       console.log(`Message (Sentry disabled) [${level}]:`, message, context);
@@ -235,8 +235,8 @@ export class ErrorTracker {
 }
 
 // Simple request/response logging middleware for Next.js
-export function withLogging(handler: (req: Request, ...args: any[]) => Promise<any>) {
-  return async function (req: Request, ...args: any[]) {
+export function withLogging(handler: (req: Request, ...args: unknown[]) => Promise<unknown>) {
+  return async function (req: Request, ...args: unknown[]) {
     const startTime = Date.now();
     const url = new URL(req.url);
 
@@ -247,7 +247,7 @@ export function withLogging(handler: (req: Request, ...args: any[]) => Promise<a
         query: Object.fromEntries(url.searchParams),
       });
 
-      const response = await handler(req, ...args);
+      const response = (await handler(req, ...args)) as { status: number };
       const duration = Date.now() - startTime;
 
       apiLogger.info("Request completed", {

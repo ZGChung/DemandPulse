@@ -1,6 +1,6 @@
 import { UserRole } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { getServerSession, Session } from "next-auth";
 import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";
@@ -21,14 +21,14 @@ const updateUserStatusSchema = z.object({
 });
 
 // Helper to check admin access
-async function requireAdminAccess(session: any) {
+async function requireAdminAccess(session: Session) {
   if (!session?.user || session.user.role !== "ADMIN") {
     throw new Error("Admin access required");
   }
 }
 
 // Helper for rate limiting
-async function checkRateLimit(session: any, request: NextRequest) {
+async function checkRateLimit(session: Session, request: NextRequest) {
   const ip =
     request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
   const rateLimitKey = `admin:${session.user.id}:${ip}`;
@@ -54,6 +54,9 @@ export async function GET(request: NextRequest) {
   try {
     if (!prisma) throw new Error("Database not available");
     const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     await requireAdminAccess(session);
     await checkRateLimit(session, request);
 
@@ -109,13 +112,13 @@ export async function GET(request: NextRequest) {
         },
       },
     });
-  } catch (error: any) {
-    apiLogger.error("Admin users GET error", { error: error.message });
+  } catch (error: unknown) {
+    apiLogger.error("Admin users GET error", { error: (error as Error).message });
 
-    if (error.message === "Admin access required") {
+    if ((error as Error).message === "Admin access required") {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });
     }
-    if (error.message === "Rate limit exceeded") {
+    if ((error as Error).message === "Rate limit exceeded") {
       return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
     }
 
@@ -127,6 +130,9 @@ export async function PATCH(request: NextRequest) {
   try {
     if (!prisma) throw new Error("Database not available");
     const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     await requireAdminAccess(session);
     await checkRateLimit(session, request);
 
@@ -185,8 +191,8 @@ export async function PATCH(request: NextRequest) {
         },
       },
     });
-  } catch (error: any) {
-    apiLogger.error("Admin users PATCH error", { error: error.message });
+  } catch (error: unknown) {
+    apiLogger.error("Admin users PATCH error", { error: (error as Error).message });
 
     if (error instanceof ValidationError) {
       return NextResponse.json(
@@ -194,13 +200,13 @@ export async function PATCH(request: NextRequest) {
         { status: 400 }
       );
     }
-    if (error.message === "Admin access required") {
+    if ((error as Error).message === "Admin access required") {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });
     }
-    if (error.message === "Rate limit exceeded") {
+    if ((error as Error).message === "Rate limit exceeded") {
       return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
     }
-    if (error.code === "P2025") {
+    if ((error as { code?: string }).code === "P2025") {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
@@ -212,6 +218,9 @@ export async function DELETE(request: NextRequest) {
   try {
     if (!prisma) throw new Error("Database not available");
     const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     await requireAdminAccess(session);
     await checkRateLimit(session, request);
 
@@ -272,13 +281,13 @@ export async function DELETE(request: NextRequest) {
       success: true,
       message: "User account marked for deletion. Data will be removed within 24 hours.",
     });
-  } catch (error: any) {
-    apiLogger.error("Admin users DELETE error", { error: error.message });
+  } catch (error: unknown) {
+    apiLogger.error("Admin users DELETE error", { error: (error as Error).message });
 
-    if (error.message === "Admin access required") {
+    if ((error as Error).message === "Admin access required") {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });
     }
-    if (error.message === "Rate limit exceeded") {
+    if ((error as Error).message === "Rate limit exceeded") {
       return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
     }
 

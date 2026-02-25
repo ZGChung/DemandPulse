@@ -104,7 +104,7 @@ export function maskConversationId(conversationId: string): string {
  * @param options Masking options
  * @returns Requirement object with masked fields
  */
-export function maskRequirementForAdmin<T extends Record<string, any>>(
+export function maskRequirementForAdmin<T extends Record<string, unknown>>(
   requirement: T,
   options: {
     maskEmail?: boolean;

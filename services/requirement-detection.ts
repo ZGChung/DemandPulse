@@ -1,4 +1,4 @@
-import { RequirementDetection, HookEvent } from "@/types/claude-code";
+import { RequirementDetection } from "@/types/claude-code";
 
 export class RequirementDetectionService {
   private detectionKeywords = [
@@ -124,7 +124,6 @@ export class RequirementDetectionService {
   }
 
   private extractKeywords(text: string): string[] {
-    const words = text.toLowerCase().split(/\s+/);
     const keywords: string[] = [];
 
     for (const keyword of this.detectionKeywords) {
