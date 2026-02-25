@@ -67,7 +67,7 @@ export type HookEvent =
 
 export interface HookHandler {
   event: HookEvent;
-  handler: (data: any) => Promise<void> | void;
+  handler: (data: Record<string, unknown>) => Promise<void> | void;
   priority?: number;
 }
 

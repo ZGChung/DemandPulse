@@ -2,7 +2,11 @@ import { HookEvent, HookHandler } from "@/types/claude-code";
 
 export class HookManager {
   private handlers: Map<HookEvent, HookHandler[]> = new Map();
-  private eventHistory: Array<{ event: HookEvent; timestamp: Date; data?: any }> = [];
+  private eventHistory: Array<{
+    event: HookEvent;
+    timestamp: Date;
+    data?: Record<string, unknown>;
+  }> = [];
 
   constructor() {
     // Initialize handlers map for all event types
@@ -47,7 +51,7 @@ export class HookManager {
     }
   }
 
-  async trigger(event: HookEvent, data?: any): Promise<void> {
+  async trigger(event: HookEvent, data?: Record<string, unknown>): Promise<void> {
     // Record event in history
     this.eventHistory.push({
       event,
@@ -65,7 +69,7 @@ export class HookManager {
     if (handlers) {
       for (const handler of handlers) {
         try {
-          await handler.handler(data);
+          await handler.handler(data || {});
         } catch (error) {
           console.error(`Error executing handler for event ${event}:`, error);
           // Continue with other handlers even if one fails
@@ -78,7 +82,9 @@ export class HookManager {
     return this.handlers.get(event) || [];
   }
 
-  getEventHistory(limit?: number): Array<{ event: HookEvent; timestamp: Date; data?: any }> {
+  getEventHistory(
+    limit?: number
+  ): Array<{ event: HookEvent; timestamp: Date; data?: Record<string, unknown> }> {
     const history = [...this.eventHistory];
     if (limit && limit > 0) {
       return history.slice(-limit);

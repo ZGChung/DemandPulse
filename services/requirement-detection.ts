@@ -36,7 +36,7 @@ export class RequirementDetectionService {
     new_tool: /\b(tool|script|automation|workflow|pipeline)\b/i,
   };
 
-  detectRequirement(text: string, context: any): RequirementDetection | null {
+  detectRequirement(text: string, context: Record<string, unknown>): RequirementDetection | null {
     // Check if text contains requirement-like language
     const hasRequirementKeywords = this.detectionKeywords.some((keyword) =>
       text.toLowerCase().includes(keyword.toLowerCase())
@@ -60,16 +60,16 @@ export class RequirementDetectionService {
     return {
       id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       context: {
-        conversationId: context.conversationId || "unknown",
-        userId: context.userId,
-        workspacePath: context.workspacePath,
+        conversationId: (context.conversationId as string) || "unknown",
+        userId: context.userId as string | undefined,
+        workspacePath: context.workspacePath as string | undefined,
         timestamp: new Date(),
       },
       requirementText: text,
       detectedAt: new Date(),
       confidence,
       metadata: {
-        conversationLength: context.conversationLength || 0,
+        conversationLength: (context.conversationLength as number) || 0,
         keywords: this.extractKeywords(text),
         intent,
       },
