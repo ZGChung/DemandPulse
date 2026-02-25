@@ -260,7 +260,7 @@ export class ClaudeCodeIntegrationService {
     }
   }
 
-  private async recordCompactEvent(data: any): Promise<void> {
+  private async recordCompactEvent(data: Record<string, unknown>): Promise<void> {
     if (!this.config.persistenceEnabled) {
       return;
     }
@@ -285,7 +285,7 @@ export class ClaudeCodeIntegrationService {
     }
   }
 
-  private log(message: string, data?: any): void {
+  private log(message: string, data?: Record<string, unknown>): void {
     if (this.config.verboseLogging) {
       if (data) {
         console.log(`[ClaudeCodeIntegration] ${message}`, data);
@@ -340,7 +340,7 @@ export class ClaudeCodeIntegrationService {
     };
   }
 
-  public triggerTestEvent(event: HookEvent, data?: any): Promise<void> {
+  public triggerTestEvent(event: HookEvent, data?: Record<string, unknown>): Promise<void> {
     return hookManager.trigger(event, data);
   }
 

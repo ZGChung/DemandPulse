@@ -19,7 +19,7 @@ export class DataCollectionFlow {
 
   async processConversationMessage(
     text: string,
-    context: any
+    context: Record<string, unknown>
   ): Promise<{
     detected: RequirementDetection | null;
     prompt: ConsentPrompt | null;
@@ -51,7 +51,7 @@ export class DataCollectionFlow {
     requirementId: string,
     originalRequirement: string,
     summarizedRequirement: string,
-    context: any,
+    context: Record<string, unknown>,
     userConsent: Partial<UserConsent>
   ): Promise<{
     success: boolean;
@@ -112,7 +112,7 @@ export class DataCollectionFlow {
 
   async simulateClaudeCodeIntegration(
     conversation: Array<{ role: "user" | "assistant"; content: string }>,
-    context: any
+    context: Record<string, unknown>
   ): Promise<
     Array<{
       message: string;

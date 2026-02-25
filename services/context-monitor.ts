@@ -82,7 +82,7 @@ export class ContextMonitorService {
     // Register hook handlers for context monitoring
     const messageHandler: HookHandler = {
       event: "message_received",
-      handler: async (data: any) => {
+      handler: async (data: Record<string, unknown>) => {
         await this.handleNewMessage(data);
       },
       priority: 10,
@@ -109,17 +109,17 @@ export class ContextMonitorService {
     hookManager.register(conversationEndHandler);
   }
 
-  private async handleNewMessage(data: any): Promise<void> {
+  private async handleNewMessage(data: Record<string, unknown>): Promise<void> {
     if (!data || !data.content) return;
 
     const message: ConversationMessage = {
       id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      role: data.role || "user",
-      content: data.content,
+      role: (data.role as "user" | "assistant" | "system") || "user",
+      content: data.content as string,
       timestamp: new Date(),
-      estimatedTokens: this.estimateTokens(data.content),
-      important: this.isImportantMessage(data.content),
-      metadata: this.extractMessageMetadata(data.content),
+      estimatedTokens: this.estimateTokens(data.content as string),
+      important: this.isImportantMessage(data.content as string),
+      metadata: this.extractMessageMetadata(data.content as string),
     };
 
     this.conversation.push(message);

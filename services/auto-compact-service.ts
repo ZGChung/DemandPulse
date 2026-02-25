@@ -27,8 +27,8 @@ export class AutoCompactService {
     strategy: string;
     status: "success" | "failed" | "cancelled";
     reason?: string;
-    contextBefore: any;
-    contextAfter?: any;
+    contextBefore: Record<string, unknown>;
+    contextAfter?: Record<string, unknown>;
   }> = [];
 
   // Default configuration
@@ -69,7 +69,7 @@ export class AutoCompactService {
     // Register hook handlers for auto-compact
     const autoCompactHandler: HookHandler = {
       event: "auto_compact_triggered",
-      handler: async (data: any) => {
+      handler: async (data: Record<string, unknown>) => {
         await this.handleAutoCompactTrigger(data);
       },
       priority: 100, // High priority to ensure it runs
@@ -77,7 +77,7 @@ export class AutoCompactService {
 
     const contextLimitHandler: HookHandler = {
       event: "context_limit_reached",
-      handler: async (data: any) => {
+      handler: async (data: Record<string, unknown>) => {
         await this.handleContextLimitReached(data);
       },
       priority: 90,
@@ -85,7 +85,7 @@ export class AutoCompactService {
 
     const contextWarningHandler: HookHandler = {
       event: "context_limit_approaching",
-      handler: async (data: any) => {
+      handler: async (data: Record<string, unknown>) => {
         await this.handleContextWarning(data);
       },
       priority: 80,
@@ -96,7 +96,7 @@ export class AutoCompactService {
     hookManager.register(contextWarningHandler);
   }
 
-  private async handleAutoCompactTrigger(data: any): Promise<void> {
+  private async handleAutoCompactTrigger(data: Record<string, unknown>): Promise<void> {
     if (!this.config.enabled || this.isExecuting) {
       return;
     }
@@ -114,7 +114,7 @@ export class AutoCompactService {
       };
 
       // Determine which strategy to use
-      const strategy = data?.strategy || this.getDefaultStrategy();
+      const strategy = (data?.strategy as string) || this.getDefaultStrategy();
 
       // Execute compact
       const result = await this.executeCompact(strategy);
@@ -159,7 +159,7 @@ export class AutoCompactService {
     }
   }
 
-  private async handleContextLimitReached(data: any): Promise<void> {
+  private async handleContextLimitReached(data: Record<string, unknown>): Promise<void> {
     if (!this.config.enabled) {
       this.notify("CRITICAL: Context limit reached! Manual compact required.", "error");
       return;
@@ -177,12 +177,12 @@ export class AutoCompactService {
     }
   }
 
-  private async handleContextWarning(data: any): Promise<void> {
+  private async handleContextWarning(data: Record<string, unknown>): Promise<void> {
     if (!this.config.enabled) {
       return;
     }
 
-    const status = data?.status;
+    const status = data?.status as { shouldCompact?: boolean; shouldWarn?: boolean } | undefined;
     if (status?.shouldCompact) {
       this.notify("Context usage high. Auto-compact recommended.", "warning", data);
 

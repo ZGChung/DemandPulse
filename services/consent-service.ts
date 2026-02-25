@@ -64,7 +64,7 @@ export class ConsentService {
     requirementId: string,
     originalRequirement: string,
     summarizedRequirement: string,
-    context: any,
+    context: Record<string, unknown>,
     consent: UserConsent
   ): CollectedRequirement {
     return {
@@ -72,9 +72,9 @@ export class ConsentService {
       originalRequirement,
       summarizedRequirement,
       context: {
-        conversationId: context.conversationId || "unknown",
-        userId: context.userId,
-        workspacePath: context.workspacePath,
+        conversationId: (context.conversationId as string) || "unknown",
+        userId: context.userId as string | undefined,
+        workspacePath: context.workspacePath as string | undefined,
         timestamp: new Date(),
       },
       consent,
