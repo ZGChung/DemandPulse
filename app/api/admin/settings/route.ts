@@ -185,7 +185,8 @@ export async function PUT(request: NextRequest) {
     );
 
     // Don't include timestamps in response for security
-    const { updatedAt, updatedBy, ...safeSettings } = updatedSettings;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { updatedAt: _updatedAt, updatedBy: _updatedBy, ...safeSettings } = updatedSettings;
 
     apiLogger.info("System settings reset to defaults", {
       adminId: session!.user.id,

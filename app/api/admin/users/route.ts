@@ -16,9 +16,10 @@ const updateUserRoleSchema = z.object({
   role: z.enum(["USER", "ANALYST", "ADMIN"]),
 });
 
-const updateUserStatusSchema = z.object({
-  active: z.boolean(),
-});
+// Schema reserved for future user status toggle feature
+// const updateUserStatusSchema = z.object({
+//   active: z.boolean(),
+// });
 
 // Helper to check admin access
 async function requireAdminAccess(session: Session) {
