@@ -74,7 +74,10 @@ export async function GET(request: NextRequest) {
 
     const settings = await settingsService.getSettings();
 
-    const { updatedAt: _updatedAt, updatedBy: _updatedBy, ...safeSettings } = settings;
+    const { updatedAt, updatedBy, ...safeSettings } = settings;
+    // Prevent leaking timestamps
+    void updatedAt;
+    void updatedBy;
 
     return NextResponse.json({
       success: true,
@@ -135,7 +138,9 @@ export async function POST(request: NextRequest) {
     );
 
     // Don't include timestamps in response for security
-    const { updatedAt: _updatedAt, updatedBy: _updatedBy, ...safeSettings } = updatedSettings;
+    const { updatedAt, updatedBy, ...safeSettings } = updatedSettings;
+    void updatedAt;
+    void updatedBy;
 
     apiLogger.info("System settings updated via API", {
       adminId: session!.user.id,
@@ -179,7 +184,9 @@ export async function PUT(request: NextRequest) {
     );
 
     // Don't include timestamps in response for security
-    const { updatedAt: _updatedAt, updatedBy: _updatedBy, ...safeSettings } = updatedSettings;
+    const { updatedAt, updatedBy, ...safeSettings } = updatedSettings;
+    void updatedAt;
+    void updatedBy;
 
     apiLogger.info("System settings reset to defaults", {
       adminId: session!.user.id,
