@@ -44,7 +44,6 @@ export default function MyRequirementsList({ onStats }: MyRequirementsListProps)
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(0);
-  const [stats, setStats] = useState<MyRequirementsStats>({ total: 0, pending: 0, processed: 0 });
 
   const fetchAll = useCallback(async () => {
     try {
@@ -65,12 +64,10 @@ export default function MyRequirementsList({ onStats }: MyRequirementsListProps)
         pending: pending.length,
         processed: processed.length,
       };
-      setStats(nextStats);
       onStats?.(nextStats);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load requirements");
       setAll([]);
-      setStats({ total: 0, pending: 0, processed: 0 });
     } finally {
       setLoading(false);
     }
