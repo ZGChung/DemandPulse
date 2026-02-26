@@ -18,6 +18,40 @@ describe("Encryption Module", () => {
       const service = new EncryptionService({ key: "test-key-12345678901234567890123456789012" });
       expect(typeof service.decrypt).toBe("function");
     });
+
+    it("should encrypt and decrypt text correctly", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const service = new EncryptionService({ key: "test-key-12345678901234567890123456789012" });
+      const plaintext = "Hello, World!";
+      const encrypted = await service.encrypt(plaintext);
+      const decrypted = await service.decrypt(encrypted);
+      expect(decrypted).toBe(plaintext);
+    });
+
+    it("should handle empty string", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const service = new EncryptionService({ key: "test-key-12345678901234567890123456789012" });
+      const encrypted = await service.encrypt("");
+      const decrypted = await service.decrypt(encrypted);
+      expect(decrypted).toBe("");
+    });
+
+    it("should handle unicode text", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const service = new EncryptionService({ key: "test-key-12345678901234567890123456789012" });
+      const plaintext = "你好世界";
+      const encrypted = await service.encrypt(plaintext);
+      const decrypted = await service.decrypt(encrypted);
+      expect(decrypted).toBe(plaintext);
+    });
+
+    it("should handle invalid encrypted data", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const service = new EncryptionService({ key: "test-key-12345678901234567890123456789012" });
+      // Service may return invalid data as-is or throw depending on implementation
+      const result = await service.decrypt("invalid-data");
+      expect(result).toBeDefined();
+    });
   });
 
   describe("EncryptionError", () => {
