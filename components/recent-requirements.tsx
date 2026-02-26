@@ -7,7 +7,7 @@ import { apiClient, Requirement } from "@/lib/api-client";
 export default function RecentRequirements() {
   const [requirements, setRequirements] = useState<Requirement[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRequirements();

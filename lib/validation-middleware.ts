@@ -62,7 +62,7 @@ export function withValidation<T extends z.ZodSchema>(
       let body;
       try {
         body = await request.json();
-      } catch (error) {
+      } catch {
         return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
       }
 
@@ -186,7 +186,7 @@ export async function validateRequirementBody(request: Request): Promise<Require
   let body;
   try {
     body = await request.json();
-  } catch (error) {
+  } catch {
     throw new ValidationError("Invalid JSON in request body");
   }
 

@@ -60,7 +60,7 @@ if (typeof crypto !== "undefined" && crypto.subtle) {
       return {
         update(data: string) {
           return {
-            async digest(encoding: string): Promise<string> {
+            async digest(_encoding: string): Promise<string> {
               const key = await getKey();
               const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(data));
               const hashArray = new Uint8Array(signature);
@@ -102,7 +102,7 @@ if (typeof crypto !== "undefined" && crypto.subtle) {
       },
       timingSafeEqual: nodeCrypto.timingSafeEqual,
     };
-  } catch (error) {
+  } catch {
     throw new Error("No crypto implementation available");
   }
 }

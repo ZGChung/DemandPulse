@@ -17,7 +17,7 @@ interface StatItem {
 export default function RequirementStats() {
   const [stats, setStats] = useState<Statistics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
 
   useEffect(() => {
     fetchStats();

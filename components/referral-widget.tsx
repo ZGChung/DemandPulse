@@ -11,7 +11,11 @@ interface ReferralWidgetProps {
   userEmail?: string;
 }
 
-export default function ReferralWidget({ userId, userName, userEmail }: ReferralWidgetProps) {
+export default function ReferralWidget({
+  userId,
+  userName: _userName,
+  userEmail,
+}: ReferralWidgetProps) {
   const [referralCode, setReferralCode] = useState<string>("");
   const [referralLink, setReferralLink] = useState<string>("");
   const [stats, setStats] = useState<any>(null);

@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 
 import { authOptions } from "./auth";
 
-export async function requireAuth(request: Request) {
+export async function requireAuth(_request: Request) {
   const session = await getServerSession(authOptions);
 
   if (!session) {
