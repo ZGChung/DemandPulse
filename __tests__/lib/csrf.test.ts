@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "@jest/globals";
+import { describe, it, expect } from "@jest/globals";
 
 import { generateToken, verifyToken, CSRFTokenError } from "@/lib/csrf";
 
