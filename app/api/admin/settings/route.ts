@@ -74,12 +74,7 @@ export async function GET(request: NextRequest) {
 
     const settings = await settingsService.getSettings();
 
-    // Don't include timestamps in response for security
     const { updatedAt: _updatedAt, updatedBy: _updatedBy, ...safeSettings } = settings;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    void _updatedAt; // Reserved for future use
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    void _updatedBy;
 
     return NextResponse.json({
       success: true,
@@ -140,7 +135,6 @@ export async function POST(request: NextRequest) {
     );
 
     // Don't include timestamps in response for security
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { updatedAt: _updatedAt, updatedBy: _updatedBy, ...safeSettings } = updatedSettings;
 
     apiLogger.info("System settings updated via API", {
@@ -185,7 +179,6 @@ export async function PUT(request: NextRequest) {
     );
 
     // Don't include timestamps in response for security
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { updatedAt: _updatedAt, updatedBy: _updatedBy, ...safeSettings } = updatedSettings;
 
     apiLogger.info("System settings reset to defaults", {
