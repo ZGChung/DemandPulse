@@ -50,7 +50,7 @@ async function testDatabaseConfig() {
     const { execSync } = require("child_process");
     const output = execSync("npx prisma --version", { encoding: "utf8" });
     console.log(`   ✅ Prisma CLI: ${output.trim()}`);
-  } catch (error) {
+  } catch {
     console.log("   ❌ Prisma CLI not available");
     console.log("   Run: npm install");
   }
