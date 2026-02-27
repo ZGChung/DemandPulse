@@ -24,15 +24,21 @@ interface ClusterStats {
 }
 
 interface TopCluster {
+  id: string;
   name: string;
+  description: string;
   count: number;
+  requirementCount: number;
   trend: number;
+  createdAt: string;
 }
 
 interface SystemMetrics {
+  nodeVersion: string;
   uptime: number;
   cpuUsage: number;
-  memoryUsage: number;
+  memoryUsage: { heapUsed: number };
+  databaseSize: string;
 }
 
 interface AnalyticsData {
@@ -372,7 +378,7 @@ export default function AdminAnalyticsPage() {
                     data={data.details.topClusters.map((c) => ({
                       name: c.name.length > 20 ? c.name.slice(0, 20) + "…" : c.name,
                       fullName: c.name,
-                      count: c.requirementCount,
+                      count: c.count,
                     }))}
                     layout="vertical"
                     margin={{ top: 8, right: 24, left: 120, bottom: 8 }}

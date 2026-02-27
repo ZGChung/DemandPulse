@@ -32,6 +32,12 @@ jest.mock("@prisma/client", () => {
       update: jest.fn(),
       count: jest.fn(),
     },
+    requirementCluster: {
+      count: jest.fn(),
+    },
+    user: {
+      count: jest.fn(),
+    },
     dataDeletionQueue: {
       create: jest.fn(),
     },
@@ -83,6 +89,12 @@ jest.mock("@/lib/prisma", () => {
       findUnique: jest.fn(),
       findMany: jest.fn(),
       update: jest.fn(),
+      count: jest.fn(),
+    },
+    requirementCluster: {
+      count: jest.fn(),
+    },
+    user: {
       count: jest.fn(),
     },
     dataDeletionQueue: {
@@ -370,12 +382,20 @@ describe("DatabaseService", () => {
         .mockResolvedValueOnce(50) // processed
         .mockResolvedValueOnce(30) // clustered
         .mockResolvedValueOnce(10) // with contact consent
-        .mockResolvedValueOnce(40); // with anonymization
+        .mockResolvedValueOnce(40) // with anonymization
+        .mockResolvedValueOnce(15); // recentRequirements
+
+      mockPrisma.requirementCluster.count.mockResolvedValueOnce(10); // totalClusters
+
+      mockPrisma.user.count.mockResolvedValueOnce(5); // totalUsers
 
       const stats = await service.getStatistics();
 
       expect(stats).toEqual({
         totalRequirements: 100,
+        totalClusters: 10,
+        totalUsers: 5,
+        recentRequirements: 15,
         byStatus: {
           pending: 20,
           processed: 50,

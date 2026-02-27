@@ -3,6 +3,9 @@ import { DatabaseService } from "@/services/database-service";
 
 interface Statistics {
   totalRequirements: number;
+  totalClusters: number;
+  totalUsers: number;
+  recentRequirements: number;
   byStatus: {
     pending: number;
     processed: number;
@@ -17,6 +20,7 @@ interface Statistics {
 interface AdminRequirement {
   id: string;
   content: string;
+  summarizedRequirement?: string;
   status: string;
   createdAt: Date;
   user?: {
@@ -29,6 +33,9 @@ export default async function AdminPage() {
   const databaseService = new DatabaseService();
   let statistics: Statistics = {
     totalRequirements: 0,
+    totalClusters: 0,
+    totalUsers: 0,
+    recentRequirements: 0,
     byStatus: { pending: 0, processed: 0, clustered: 0 },
     privacyMetrics: { withContactConsent: 0, withAnonymization: 0 },
   };

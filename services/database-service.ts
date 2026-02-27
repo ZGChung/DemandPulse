@@ -465,6 +465,8 @@ export class DatabaseService {
       if (this.prisma) {
         const [
           totalRequirements,
+          totalClusters,
+          totalUsers,
           pendingRequirements,
           processedRequirements,
           clusteredRequirements,
@@ -472,6 +474,8 @@ export class DatabaseService {
           requirementsWithAnonymization,
         ] = await Promise.all([
           this.prisma.requirement.count(),
+          this.prisma.requirementCluster.count(),
+          this.prisma.user.count(),
           this.prisma.requirement.count({ where: { status: "PENDING" } }),
           this.prisma.requirement.count({ where: { status: "PROCESSED" } }),
           this.prisma.requirement.count({ where: { status: "CLUSTERED" } }),
@@ -479,8 +483,18 @@ export class DatabaseService {
           this.prisma.requirement.count({ where: { anonymizationConsent: true } }),
         ]);
 
+        // Get recent requirements (last 7 days)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const recentRequirements = await this.prisma.requirement.count({
+          where: { createdAt: { gte: sevenDaysAgo } },
+        });
+
         return {
           totalRequirements,
+          totalClusters,
+          totalUsers,
+          recentRequirements,
           byStatus: {
             pending: pendingRequirements,
             processed: processedRequirements,
@@ -494,6 +508,8 @@ export class DatabaseService {
       } else {
         // Mock implementation
         const totalRequirements = this.mockRequirements.length;
+        const totalClusters = 0; // Mock clusters not implemented
+        const totalUsers = 0; // Mock users not implemented
         const pendingRequirements = this.mockRequirements.filter(
           (req) => req.status === "PENDING"
         ).length;
@@ -510,8 +526,18 @@ export class DatabaseService {
           (req) => req.anonymizationConsent
         ).length;
 
+        // Get recent requirements (last 7 days)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const recentRequirements = this.mockRequirements.filter(
+          (req) => req.createdAt && new Date(req.createdAt) >= sevenDaysAgo
+        ).length;
+
         return {
           totalRequirements,
+          totalClusters,
+          totalUsers,
+          recentRequirements,
           byStatus: {
             pending: pendingRequirements,
             processed: processedRequirements,
