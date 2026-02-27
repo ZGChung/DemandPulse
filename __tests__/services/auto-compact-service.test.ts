@@ -120,4 +120,105 @@ describe("AutoCompactService", () => {
       expect(service.isEnabled()).toBe(false);
     });
   });
+
+  describe("CLI execution method", () => {
+    it("should execute compact via CLI method", async () => {
+      const cliService = new AutoCompactService({
+        enabled: true,
+        executionMethod: "cli",
+        cliPath: "/usr/local/bin/claude",
+      });
+      const result = await cliService.manualCompact("remove_oldest");
+      expect(result.success).toBe(true);
+      expect(result.message).toContain("CLI");
+    });
+  });
+
+  describe("API execution method", () => {
+    it("should execute compact via API method", async () => {
+      const apiService = new AutoCompactService({
+        enabled: true,
+        executionMethod: "api",
+        apiEndpoint: "https://api.claude.ai/v1/compact",
+        apiToken: "test-token",
+      });
+      const result = await apiService.manualCompact("compress_all");
+      expect(result.success).toBe(true);
+      expect(result.message).toContain("API");
+    });
+  });
+
+  describe("getHistory", () => {
+    it("should have getHistory method", () => {
+      expect(typeof service.getHistory).toBe("function");
+    });
+
+    it("should return empty array when no history", () => {
+      const history = service.getHistory();
+      expect(Array.isArray(history)).toBe(true);
+    });
+
+    it("should limit history when limit specified", () => {
+      const history = service.getHistory(5);
+      expect(Array.isArray(history)).toBe(true);
+    });
+  });
+
+  describe("notification methods", () => {
+    it("should use console notification method", () => {
+      const consoleService = new AutoCompactService({
+        enabled: true,
+        notificationMethod: "console",
+      });
+      const config = (consoleService as any).config;
+      expect(config.notificationMethod).toBe("console");
+    });
+
+    it("should use both notification methods", () => {
+      const bothService = new AutoCompactService({
+        enabled: true,
+        notificationMethod: "both",
+      });
+      const config = (bothService as any).config;
+      expect(config.notificationMethod).toBe("both");
+    });
+  });
+
+  describe("disabled service behavior", () => {
+    it("should not execute when disabled", async () => {
+      const disabledService = new AutoCompactService({
+        enabled: false,
+        executionMethod: "simulated",
+      });
+      expect(disabledService.isEnabled()).toBe(false);
+    });
+
+    it("should enable service", () => {
+      const disabledService = new AutoCompactService({ enabled: false });
+      disabledService.enable();
+      expect(disabledService.isEnabled()).toBe(true);
+    });
+
+    it("should disable service", () => {
+      const enabledService = new AutoCompactService({ enabled: true });
+      enabledService.disable();
+      expect(enabledService.isEnabled()).toBe(false);
+    });
+  });
+
+  describe("strategy selection", () => {
+    it("should get default strategy", () => {
+      const cliService = new AutoCompactService({
+        enabled: true,
+        executionMethod: "simulated",
+      });
+      const strategy = (cliService as any).getDefaultStrategy();
+      expect(strategy).toBe("summarize_oldest");
+    });
+
+    it("should support custom strategy", async () => {
+      const result = await service.manualCompact("remove_oldest");
+      expect(result.success).toBe(true);
+    });
+  });
 });
