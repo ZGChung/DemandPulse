@@ -81,7 +81,7 @@ describe("Trace Utilities", () => {
   describe("traceStorage", () => {
     it("should run callback with store", () => {
       const store = { traceId: "test", spanId: "span1" };
-      let result: any;
+      let result: string;
       traceStorage.run(store, () => {
         result = "executed";
       });
