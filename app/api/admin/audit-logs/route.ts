@@ -90,9 +90,9 @@ export async function GET(request: NextRequest) {
     if (entityType) whereClause.entityType = entityType;
     if (actorType) whereClause.actorType = actorType;
     if (startDate || endDate) {
-      whereClause.createdAt = {};
-      if (startDate) (whereClause.createdAt as Prisma.DateTimeFilter).gte = new Date(startDate);
-      if (endDate) (whereClause.createdAt as Prisma.DateTimeFilter).lte = new Date(endDate);
+      whereClause.performedAt = {};
+      if (startDate) (whereClause.performedAt as Prisma.DateTimeFilter).gte = new Date(startDate);
+      if (endDate) (whereClause.performedAt as Prisma.DateTimeFilter).lte = new Date(endDate);
     }
 
     // Fetch audit logs with pagination
@@ -112,11 +112,10 @@ export async function GET(request: NextRequest) {
 
       // Mask email in changes if present
       if (sanitizedLog.changes && typeof sanitizedLog.changes === "object") {
-        const changes = { ...sanitizedLog.changes };
+        const changes = sanitizedLog.changes as Record<string, unknown>;
         if (changes.email) {
           changes.email = "***masked***";
         }
-        sanitizedLog.changes = changes;
       }
 
       return sanitizedLog;
