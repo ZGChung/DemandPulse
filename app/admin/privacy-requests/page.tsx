@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import { apiLogger } from "@/lib/logger";
 
@@ -41,7 +41,7 @@ export default function AdminPrivacyRequestsPage() {
   });
   const [selectedRequests, setSelectedRequests] = useState<Set<string>>(new Set());
 
-  const fetchPrivacyRequests = async () => {
+  const fetchPrivacyRequests = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -78,11 +78,11 @@ export default function AdminPrivacyRequestsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filters, pagination.page, pagination.limit]);
 
   useEffect(() => {
     fetchPrivacyRequests();
-  }, [pagination.page, pagination.limit]);
+  }, [fetchPrivacyRequests]);
 
   const handleFilterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
