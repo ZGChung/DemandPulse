@@ -11,6 +11,18 @@ interface AdminRequirementsPageProps {
   };
 }
 
+interface AdminRequirement {
+  id: string;
+  status: RequirementStatus;
+  requirementText: string;
+  summarizedRequirement: string | null;
+  userId: string;
+  conversationId: string | null;
+  workspacePath: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export default async function AdminRequirementsPage({ searchParams }: AdminRequirementsPageProps) {
   const status = searchParams?.status as RequirementStatus | undefined;
   const page = parseInt(searchParams?.page || "1");
@@ -18,7 +30,7 @@ export default async function AdminRequirementsPage({ searchParams }: AdminRequi
   const offset = (page - 1) * limit;
 
   const databaseService = new DatabaseService();
-  let requirements: any[] = [];
+  let requirements: AdminRequirement[] = [];
   let totalCount = 0;
 
   try {

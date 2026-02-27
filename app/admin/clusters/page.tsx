@@ -8,13 +8,26 @@ interface AdminClustersPageProps {
   };
 }
 
+interface ClusterSummary {
+  id: string;
+  name: string;
+  description: string;
+  requirementCount: number;
+  firstDetectedAt: Date;
+  lastDetectedAt: Date;
+  sampleRequirements: Array<{
+    summary: string;
+    detectedAt: Date;
+  }>;
+}
+
 export default async function AdminClustersPage({ searchParams }: AdminClustersPageProps) {
   const page = parseInt(searchParams?.page || "1");
   const limit = parseInt(searchParams?.limit || "20");
   const offset = (page - 1) * limit;
 
   const databaseService = new DatabaseService();
-  let clusters: any[] = [];
+  let clusters: ClusterSummary[] = [];
   let totalCount = 0;
 
   try {

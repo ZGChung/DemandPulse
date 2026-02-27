@@ -114,11 +114,12 @@ export default function AdminSettingsPage() {
         type: "success",
         text: data.data?.message || "Settings saved successfully!",
       });
-    } catch (error: any) {
-      apiLogger.error("Failed to save admin settings", { error: error.message });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      apiLogger.error("Failed to save admin settings", { error: errorMessage });
       setSaveMessage({
         type: "error",
-        text: error.message || "Failed to save settings. Please try again.",
+        text: errorMessage || "Failed to save settings. Please try again.",
       });
     } finally {
       setIsSaving(false);
@@ -149,11 +150,12 @@ export default function AdminSettingsPage() {
         type: "success",
         text: data.data?.message || "Settings reset to defaults!",
       });
-    } catch (error: any) {
-      apiLogger.error("Failed to reset settings", { error: error.message });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      apiLogger.error("Failed to reset settings", { error: errorMessage });
       setSaveMessage({
         type: "error",
-        text: error.message || "Failed to reset settings. Please try again.",
+        text: errorMessage || "Failed to reset settings. Please try again.",
       });
     } finally {
       setIsSaving(false);

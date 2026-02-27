@@ -4,6 +4,12 @@ import { useState, useEffect } from "react";
 
 import { apiLogger } from "@/lib/logger";
 
+interface AuditLogChange {
+  field: string;
+  oldValue: unknown;
+  newValue: unknown;
+}
+
 interface AuditLog {
   id: string;
   action: string;
@@ -17,7 +23,7 @@ interface AuditLog {
     name: string | null;
     role: string;
   } | null;
-  changes: any;
+  changes: AuditLogChange[] | null;
   reason: string | null;
   createdAt: string;
 }

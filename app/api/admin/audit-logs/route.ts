@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession, Session } from "next-auth";
 import { z } from "zod";
@@ -84,14 +85,14 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // Build where clause
-    const whereClause: any = {};
+    const whereClause: Prisma.PrivacyAuditLogWhereInput = {};
     if (action) whereClause.action = action;
     if (entityType) whereClause.entityType = entityType;
     if (actorType) whereClause.actorType = actorType;
     if (startDate || endDate) {
       whereClause.createdAt = {};
-      if (startDate) whereClause.createdAt.gte = new Date(startDate);
-      if (endDate) whereClause.createdAt.lte = new Date(endDate);
+      if (startDate) (whereClause.createdAt as Prisma.DateTimeFilter).gte = new Date(startDate);
+      if (endDate) (whereClause.createdAt as Prisma.DateTimeFilter).lte = new Date(endDate);
     }
 
     // Fetch audit logs with pagination
@@ -107,7 +108,7 @@ export async function GET(request: NextRequest) {
 
     // Mask sensitive data in logs
     const sanitizedLogs = auditLogs.map((log) => {
-      const sanitizedLog: any = { ...log };
+      const sanitizedLog: Record<string, unknown> = { ...log };
 
       // Mask email in changes if present
       if (sanitizedLog.changes && typeof sanitizedLog.changes === "object") {
