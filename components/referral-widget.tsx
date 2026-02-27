@@ -51,7 +51,7 @@ export default function ReferralWidget({
 
   useEffect(() => {
     loadReferralData();
-  }, [userId]);
+  }, [userId, userEmail]);
 
   const handleCopyLink = async () => {
     try {
