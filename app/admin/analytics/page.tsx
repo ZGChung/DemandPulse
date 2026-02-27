@@ -5,6 +5,36 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 import { apiLogger } from "@/lib/logger";
 
+interface UserStats {
+  total: number;
+  active: number;
+  newThisMonth: number;
+}
+
+interface RequirementStats {
+  total: number;
+  pending: number;
+  completed: number;
+}
+
+interface ClusterStats {
+  total: number;
+  active: number;
+  avgSize: number;
+}
+
+interface TopCluster {
+  name: string;
+  count: number;
+  trend: number;
+}
+
+interface SystemMetrics {
+  uptime: number;
+  cpuUsage: number;
+  memoryUsage: number;
+}
+
 interface AnalyticsData {
   timeRange: {
     startDate: string;
@@ -21,11 +51,11 @@ interface AnalyticsData {
     avgRequirementsPerCluster: number;
   };
   details: {
-    userStats: any;
-    requirementStats: any;
-    clusterStats: any;
-    topClusters: any[];
-    systemMetrics: any;
+    userStats: UserStats;
+    requirementStats: RequirementStats;
+    clusterStats: ClusterStats;
+    topClusters: TopCluster[];
+    systemMetrics: SystemMetrics;
   };
 }
 

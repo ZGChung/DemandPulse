@@ -1,10 +1,38 @@
 import { apiLogger } from "@/lib/logger";
 import { DatabaseService } from "@/services/database-service";
 
+interface Statistics {
+  totalRequirements: number;
+  byStatus: {
+    pending: number;
+    processed: number;
+    clustered: number;
+  };
+  privacyMetrics: {
+    withContactConsent: number;
+    withAnonymization: number;
+  };
+}
+
+interface AdminRequirement {
+  id: string;
+  content: string;
+  status: string;
+  createdAt: Date;
+  user?: {
+    id: string;
+    email: string;
+  };
+}
+
 export default async function AdminPage() {
   const databaseService = new DatabaseService();
-  let statistics: any = {};
-  let recentRequirements: any[] = [];
+  let statistics: Statistics = {
+    totalRequirements: 0,
+    byStatus: { pending: 0, processed: 0, clustered: 0 },
+    privacyMetrics: { withContactConsent: 0, withAnonymization: 0 },
+  };
+  let recentRequirements: AdminRequirement[] = [];
 
   try {
     // Fetch statistics
