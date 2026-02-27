@@ -1,6 +1,6 @@
 // Email service tests
 
-import { EmailService, type EmailOptions, type EmailRecipient } from "../../services/email-service";
+import { EmailService, type EmailRecipient } from "../../services/email-service";
 
 describe("EmailService", () => {
   let emailService: EmailService;

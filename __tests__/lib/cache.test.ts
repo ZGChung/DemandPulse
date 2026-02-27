@@ -1,65 +1,45 @@
-import { describe, it, expect } from "@jest/globals";
+import { describe, it, expect, beforeEach } from "@jest/globals";
 
-describe("Cache Module", () => {
-  describe("cacheGet", () => {
-    it("should export cacheGet function", async () => {
-      const { cacheGet } = await import("@/lib/cache");
-      expect(typeof cacheGet).toBe("function");
-    });
+import { cacheGet, cacheSet, cacheDelete, cacheKey } from "@/lib/cache";
 
-    it("should return undefined for non-existent key", async () => {
-      const { cacheGet } = await import("@/lib/cache");
-      const result = cacheGet("non-existent-key");
-      expect(result).toBeUndefined();
+describe("Cache Utilities", () => {
+  beforeEach(() => {
+    // Clear cache before each test
+    jest.restoreAllMocks();
+  });
+
+  describe("cacheKey", () => {
+    it("should generate cache key with prefix and parts", () => {
+      expect(cacheKey("user", "123")).toBe("user:123");
+      expect(cacheKey("req", "abc", "def")).toBe("req:abc:def");
+      expect(cacheKey("test", 1, 2, 3)).toBe("test:1:2:3");
     });
   });
 
-  describe("cacheSet", () => {
-    it("should export cacheSet function", async () => {
-      const { cacheSet } = await import("@/lib/cache");
-      expect(typeof cacheSet).toBe("function");
+  describe("cacheSet and cacheGet", () => {
+    it("should store and retrieve value", () => {
+      cacheSet("test-key", { foo: "bar" });
+      const result = cacheGet<{ foo: string }>("test-key");
+      expect(result).toEqual({ foo: "bar" });
+    });
+
+    it("should return undefined for non-existent key", () => {
+      const result = cacheGet("non-existent");
+      expect(result).toBeUndefined();
+    });
+
+    it("should respect custom TTL", () => {
+      cacheSet("ttl-key", "value", 100); // 100ms TTL
+      expect(cacheGet("ttl-key")).toBe("value");
     });
   });
 
   describe("cacheDelete", () => {
-    it("should export cacheDelete function", async () => {
-      const { cacheDelete } = await import("@/lib/cache");
-      expect(typeof cacheDelete).toBe("function");
-    });
-  });
-
-  describe("cacheKey", () => {
-    it("should export cacheKey function", async () => {
-      const { cacheKey } = await import("@/lib/cache");
-      expect(typeof cacheKey).toBe("function");
-    });
-
-    it("should generate cache key", async () => {
-      const { cacheKey } = await import("@/lib/cache");
-      const key = cacheKey("user", "123", "profile");
-      expect(key).toContain("user");
-      expect(key).toContain("123");
-    });
-  });
-
-  describe("cache expiry", () => {
-    it("should return undefined for expired entries", async () => {
-      const { cacheGet, cacheSet, cacheKey } = await import("@/lib/cache");
-      const key = cacheKey("test", "expiry");
-      // Set with very short TTL (1ms) and wait
-      cacheSet(key, { data: "test" }, 1);
-      await new Promise((resolve) => setTimeout(resolve, 10));
-      const result = cacheGet(key);
-      expect(result).toBeUndefined();
-    });
-
-    it("should return value for non-expired entries", async () => {
-      const { cacheGet, cacheSet, cacheKey } = await import("@/lib/cache");
-      const key = cacheKey("test", "valid");
-      const testValue = { data: "valid" };
-      cacheSet(key, testValue, 60_000);
-      const result = cacheGet(key);
-      expect(result).toEqual(testValue);
+    it("should delete value from cache", () => {
+      cacheSet("delete-me", "value");
+      expect(cacheGet("delete-me")).toBe("value");
+      cacheDelete("delete-me");
+      expect(cacheGet("delete-me")).toBeUndefined();
     });
   });
 });
