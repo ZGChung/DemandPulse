@@ -286,7 +286,7 @@ export class AutoCompactService {
   private notify(
     message: string,
     type: "info" | "warning" | "error" | "success",
-    data?: any
+    data?: unknown
   ): void {
     const timestamp = new Date().toISOString();
     const logMessage = `[${timestamp}] [${type.toUpperCase()}] ${message}`;

@@ -75,4 +75,49 @@ describe("AutoCompactService", () => {
       expect(typeof service.disable).toBe("function");
     });
   });
+
+  describe("manualCompact", () => {
+    it("should have manualCompact method", () => {
+      expect(typeof service.manualCompact).toBe("function");
+    });
+
+    it("should execute manual compact", async () => {
+      const result = await service.manualCompact("summarize_oldest");
+      expect(result).toHaveProperty("success");
+      expect(result).toHaveProperty("message");
+    });
+
+    it("should use default strategy when none specified", async () => {
+      const result = await service.manualCompact();
+      expect(result).toHaveProperty("success");
+    });
+  });
+
+  describe("getStatistics", () => {
+    it("should return statistics object", () => {
+      const stats = service.getStatistics();
+      expect(stats).toHaveProperty("totalCompacts");
+      expect(stats).toHaveProperty("successfulCompacts");
+      expect(stats).toHaveProperty("failedCompacts");
+      expect(stats).toHaveProperty("config");
+    });
+  });
+
+  describe("isEnabled", () => {
+    it("should return enabled status", () => {
+      expect(typeof service.isEnabled).toBe("function");
+      expect(service.isEnabled()).toBe(true);
+    });
+  });
+
+  describe("updateConfig", () => {
+    it("should have updateConfig method", () => {
+      expect(typeof service.updateConfig).toBe("function");
+    });
+
+    it("should update configuration", () => {
+      service.updateConfig({ enabled: false });
+      expect(service.isEnabled()).toBe(false);
+    });
+  });
 });
