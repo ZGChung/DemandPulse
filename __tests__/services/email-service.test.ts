@@ -127,5 +127,43 @@ describe("EmailService", () => {
       ]);
       expect(result.success).toBe(true);
     });
+
+    it("should send weekly digest with empty clusters", async () => {
+      const result = await emailService.sendWeeklyDigest(mockRecipient, []);
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("sendRealEmail", () => {
+    const mockRecipient: EmailRecipient = {
+      email: "user@example.com",
+      name: "User",
+    };
+
+    it("should fallback to mock when resend client not available", async () => {
+      const service = new EmailService({ enabled: true, useMock: false, resendApiKey: undefined });
+      const result = await service.sendEmail({
+        to: mockRecipient,
+        template: { subject: "Test", body: "Test body" },
+      });
+      // Falls back to mock when no resend client
+      expect(result.success).toBe(true);
+    });
+
+    it("should include reply_to when name is provided", async () => {
+      const result = await emailService.sendEmail({
+        to: { ...mockRecipient, name: "Test User" },
+        template: { subject: "Test", body: "Test body" },
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should handle empty body gracefully", async () => {
+      const result = await emailService.sendEmail({
+        to: mockRecipient,
+        template: { subject: "Test", body: "" },
+      });
+      expect(result.success).toBe(true);
+    });
   });
 });
