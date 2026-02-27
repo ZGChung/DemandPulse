@@ -2,7 +2,7 @@
 
 const requiredEnvVars = ["DEEPSEEK_API_KEY", "NEXT_PUBLIC_APP_URL"] as const;
 
-const optionalEnvVars = [
+const _optionalEnvVars = [
   "DATABASE_URL",
   "NEXTAUTH_SECRET",
   "NEXTAUTH_URL",
@@ -15,7 +15,7 @@ const optionalEnvVars = [
 ] as const;
 
 type RequiredEnvVar = (typeof requiredEnvVars)[number];
-type OptionalEnvVar = (typeof optionalEnvVars)[number];
+type OptionalEnvVar = (typeof _optionalEnvVars)[number];
 
 class EnvValidationError extends Error {
   constructor(message: string) {
