@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession, Session } from "next-auth";
 import { z } from "zod";
@@ -87,7 +88,7 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // Build where clause
-    const whereClause: any = {};
+    const whereClause: Prisma.DataDeletionQueueWhereInput = {};
     if (status) whereClause.status = status;
     if (entityType) whereClause.entityType = entityType;
     if (startDate || endDate) {

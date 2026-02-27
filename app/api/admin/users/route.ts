@@ -1,4 +1,4 @@
-import { UserRole } from "@prisma/client";
+import { Prisma, UserRole } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession, Session } from "next-auth";
 import { z } from "zod";
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // Build where clause
-    const whereClause: any = {};
+    const whereClause: Prisma.UserWhereInput = {};
     if (role) whereClause.role = role;
     if (search) {
       whereClause.OR = [
