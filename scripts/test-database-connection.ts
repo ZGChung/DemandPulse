@@ -54,7 +54,7 @@ async function testDatabaseConnection() {
     } else {
       console.log(`   ⚠️  Unknown URL format: ${databaseUrl.substring(0, 50)}...\n`);
     }
-  } catch (error) {
+  } catch {
     console.log("   ⚠️  URL format warning (continuing anyway)");
   }
 
@@ -122,7 +122,7 @@ async function testDatabaseConnection() {
         console.log("   ℹ️  No tables found in database");
         console.log("   Run: npx prisma db push to create tables");
       }
-    } catch (schemaError: any) {
+    } catch {
       console.log("   ℹ️  Could not check tables (database might be empty)");
     }
   } catch (error: any) {
