@@ -236,7 +236,7 @@ describe("AutoCompactService", () => {
 
   describe("hook handlers", () => {
     it("should trigger auto_compact handler", async () => {
-      const hookService = new AutoCompactService({
+      const _hookService = new AutoCompactService({
         enabled: true,
         executionMethod: "simulated",
       });

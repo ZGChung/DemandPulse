@@ -47,25 +47,7 @@ async function setupLocalDatabase() {
     // Check if PostgreSQL is installed
     execSync("which psql", { stdio: "pipe" });
     console.log("   ✅ PostgreSQL is installed");
-  } catch (error) {
-    console.log("   ❌ PostgreSQL is not installed or not in PATH");
-    console.log("\n   Installation instructions:");
-    console.log("   macOS: brew install postgresql");
-    console.log("   Ubuntu/Debian: sudo apt install postgresql postgresql-contrib");
-    console.log("   Windows: Download from https://www.postgresql.org/download/windows/");
-    console.log("\n   Or use Docker:");
-    console.log(
-      "   docker run --name demandpulse-postgres -e POSTGRES_PASSWORD=password -d -p 5432:5432 postgres:16-alpine"
-    );
-    return;
-  }
-
-  console.log("\n2. Checking if PostgreSQL is running...");
-
-  try {
-    execSync("pg_isready", { stdio: "pipe" });
-    console.log("   ✅ PostgreSQL is running");
-  } catch (error) {
+  } catch {
     console.log("   ❌ PostgreSQL is not running");
     console.log("\n   Start PostgreSQL:");
     console.log("   macOS: brew services start postgresql");
