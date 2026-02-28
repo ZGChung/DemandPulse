@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 
 import { apiClient, Requirement } from "@/lib/api-client";
 
@@ -44,6 +44,8 @@ export default function MyRequirementsList({ onStats }: MyRequirementsListProps)
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(0);
+  const onStatsRef = useRef(onStats);
+  onStatsRef.current = onStats;
 
   const fetchAll = useCallback(async () => {
     try {
@@ -64,7 +66,7 @@ export default function MyRequirementsList({ onStats }: MyRequirementsListProps)
         pending: pending.length,
         processed: processed.length,
       };
-      onStats?.(nextStats);
+      onStatsRef.current?.(nextStats);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load requirements");
       setAll([]);

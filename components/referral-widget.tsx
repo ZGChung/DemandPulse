@@ -11,6 +11,13 @@ interface ReferralWidgetProps {
   userEmail?: string;
 }
 
+interface ReferralStats {
+  totalReferrals: number;
+  completedReferrals: number;
+  rewardEligible?: boolean;
+  nextRewardAt?: number;
+}
+
 export default function ReferralWidget({
   userId,
   userName: _userName,
@@ -18,7 +25,7 @@ export default function ReferralWidget({
 }: ReferralWidgetProps) {
   const [referralCode, setReferralCode] = useState<string>("");
   const [referralLink, setReferralLink] = useState<string>("");
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<ReferralStats | null>(null);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -51,6 +58,7 @@ export default function ReferralWidget({
 
   useEffect(() => {
     loadReferralData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, userEmail]);
 
   const handleCopyLink = async () => {
