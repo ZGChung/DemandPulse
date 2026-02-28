@@ -22,7 +22,7 @@
     "auto-compact:test": "npx ts-node .claude/test-auto-compact.ts",
     "mock:claude-code": "npx tsx scripts/mock-claude-code.ts",
     "test:e2e": "node scripts/test-e2e-flow.js",
-    "lint": "eslint . --ext .ts,.tsx",
+    "lint": "eslint . --ext .ts,.tsx --max-warnings=100",
     "format": "prettier --write .",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "prepare": "husky",
