@@ -129,7 +129,8 @@ describe("Masking", () => {
     });
 
     it("should mask requirement text when option enabled", async () => {
-      const { maskRequirementForAdmin, maskRequirementText } = await import("@/lib/masking");
+      const { maskRequirementForAdmin, maskRequirementText: _maskRequirementText } =
+        await import("@/lib/masking");
       // Use text longer than 40 chars (visibleChars * 2 = 20*2)
       const longText =
         "This is a very long requirement text that definitely should be masked completely in the admin view";

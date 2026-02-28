@@ -351,4 +351,206 @@ describe("ContextMonitorService", () => {
       expect(msg.important).toBe(false);
     });
   });
+
+  describe("auto-compact functionality", () => {
+    let compactService: ContextMonitorService;
+
+    beforeEach(() => {
+      compactService = new ContextMonitorService({
+        contextWindowSize: 1000,
+        warningThreshold: 0.75,
+        compactThreshold: 0.85,
+        criticalThreshold: 0.95,
+        checkInterval: 5000,
+        maxConversationLength: 100,
+        autoCompactEnabled: true,
+        compactStrategy: "remove_oldest",
+        preserveImportantMessages: true,
+        maxPreservedMessages: 10,
+        tokensPerChar: 0.25,
+        tokensPerMessage: 100,
+      });
+    });
+
+    it("should trigger auto-compact when limit reached", async () => {
+      (compactService as any).conversation.push({
+        id: "test-1",
+        role: "user" as const,
+        content: "a".repeat(4000),
+        timestamp: new Date(),
+        estimatedTokens: 1000,
+        important: false,
+      });
+      await (compactService as any).checkContextStatus();
+      const status = compactService.getContextStatus();
+      expect(status.status).toBe("limit_reached");
+    });
+
+    it("should handle compact with remove_oldest strategy", async () => {
+      for (let i = 0; i < 5; i++) {
+        (compactService as any).conversation.push({
+          id: `test-${i}`,
+          role: "user" as const,
+          content: "a".repeat(200),
+          timestamp: new Date(),
+          estimatedTokens: 50,
+          important: false,
+        });
+      }
+      await (compactService as any).triggerAutoCompact();
+      expect((compactService as any).conversation.length).toBeLessThanOrEqual(5);
+    });
+
+    it("should handle compact with summarize_oldest strategy", async () => {
+      const summarizeService = new ContextMonitorService({
+        contextWindowSize: 1000,
+        autoCompactEnabled: true,
+        compactStrategy: "summarize_oldest",
+        preserveImportantMessages: false,
+        tokensPerChar: 0.25,
+      });
+
+      for (let i = 0; i < 3; i++) {
+        (summarizeService as any).conversation.push({
+          id: `test-${i}`,
+          role: "user" as const,
+          content: "a".repeat(200),
+          timestamp: new Date(),
+          estimatedTokens: 50,
+          important: false,
+        });
+      }
+      await (summarizeService as any).triggerAutoCompact();
+    });
+  });
+
+  describe("conversation snapshot", () => {
+    let snapshotService: ContextMonitorService;
+
+    beforeEach(() => {
+      snapshotService = new ContextMonitorService({
+        tokensPerChar: 0.25,
+      });
+    });
+
+    it("should get conversation snapshot", () => {
+      (snapshotService as any).conversation.push({
+        id: "test-1",
+        role: "user" as const,
+        content: "Hello world",
+        timestamp: new Date(),
+        estimatedTokens: 20,
+        important: false,
+      });
+      const snapshot = (snapshotService as any).getConversationSnapshot();
+      expect(snapshot).toBeDefined();
+      expect(snapshot.length).toBe(1);
+      expect(snapshot[0].role).toBe("user");
+    });
+
+    it("should truncate long content in snapshot", () => {
+      const longContent = "a".repeat(300);
+      (snapshotService as any).conversation.push({
+        id: "test-1",
+        role: "assistant" as const,
+        content: longContent,
+        timestamp: new Date(),
+        estimatedTokens: 75,
+        important: false,
+      });
+      const snapshot = (snapshotService as any).getConversationSnapshot();
+      expect(snapshot[0].content.length).toBeLessThanOrEqual(203);
+    });
+  });
+
+  describe("message handling", () => {
+    let messageService: ContextMonitorService;
+
+    beforeEach(() => {
+      messageService = new ContextMonitorService({
+        maxConversationLength: 5,
+        tokensPerChar: 0.25,
+      });
+    });
+
+    it("should limit conversation length", async () => {
+      for (let i = 0; i < 10; i++) {
+        await (messageService as any).handleNewMessage({
+          content: `Message ${i}`,
+          role: "user",
+        });
+      }
+      expect((messageService as any).conversation.length).toBeLessThanOrEqual(5);
+    });
+
+    it("should handle important messages in conversation", async () => {
+      await (messageService as any).handleNewMessage({
+        content: "I need to build a new feature",
+        role: "user",
+      });
+      const msg = (messageService as any).conversation[0];
+      expect(msg.important).toBe(true);
+    });
+
+    it("should handle non-important messages", async () => {
+      await (messageService as any).handleNewMessage({
+        content: "hello",
+        role: "user",
+      });
+      const msg = (messageService as any).conversation[0];
+      expect(msg.important).toBe(false);
+    });
+
+    it("should handle empty data in handleNewMessage", async () => {
+      await (messageService as any).handleNewMessage({});
+      expect((messageService as any).conversation.length).toBe(0);
+    });
+
+    it("should handle missing content in handleNewMessage", async () => {
+      await (messageService as any).handleNewMessage({ role: "user" });
+      expect((messageService as any).conversation.length).toBe(0);
+    });
+  });
+
+  describe("context status with warnings", () => {
+    let warningService: ContextMonitorService;
+
+    beforeEach(() => {
+      warningService = new ContextMonitorService({
+        contextWindowSize: 10000,
+        warningThreshold: 0.5,
+        compactThreshold: 0.7,
+        criticalThreshold: 0.9,
+        tokensPerChar: 0.25,
+      });
+    });
+
+    it("should return correct status at warning threshold", () => {
+      (warningService as any).conversation.push({
+        id: "test-1",
+        role: "user" as const,
+        content: "a".repeat(20000),
+        timestamp: new Date(),
+        estimatedTokens: 5000,
+        important: false,
+      });
+      const status = warningService.getContextStatus();
+      expect(status.status).toBe("warning");
+      expect(status.usagePercentage).toBe(0.5);
+    });
+
+    it("should include appropriate recommendations", () => {
+      (warningService as any).conversation.push({
+        id: "test-1",
+        role: "user" as const,
+        content: "a".repeat(20000),
+        timestamp: new Date(),
+        estimatedTokens: 5000,
+        important: false,
+      });
+      const status = warningService.getContextStatus();
+      expect(status.recommendations).toBeDefined();
+      expect(status.recommendations.length).toBeGreaterThan(0);
+    });
+  });
 });
