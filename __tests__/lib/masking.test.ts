@@ -112,7 +112,9 @@ describe("Masking", () => {
         context: { workspacePath: "/home/user/project" },
       };
       const result = maskRequirementForAdmin(requirement);
-      expect((result as any).consent.userProvidedEmail).toBe("j***@example.com");
+      expect((result.consent as { userProvidedEmail: string }).userProvidedEmail).toBe(
+        "j***@example.com"
+      );
     });
 
     it("should mask UUIDs when option enabled", async () => {
@@ -123,7 +125,7 @@ describe("Masking", () => {
         clusterId: "123e4567-e89b-12d3-a456-426614174002",
       };
       const result = maskRequirementForAdmin(requirement);
-      expect((result as any).id).not.toBe((requirement as any).id);
+      expect(result.id).not.toBe(requirement.id);
     });
 
     it("should mask requirement text when option enabled", async () => {
@@ -137,8 +139,7 @@ describe("Masking", () => {
       };
       const result = maskRequirementForAdmin(requirement, { maskRequirementText: true });
       // The function uses default visibleChars of 10 for summarizedRequirement
-      const maskedOriginal = maskRequirementText(longText, 20);
-      expect((result as any).originalRequirement).toContain("...");
+      expect((result as { originalRequirement: string }).originalRequirement).toContain("...");
     });
   });
 
@@ -151,7 +152,7 @@ describe("Masking", () => {
       ];
       const result = maskRequirementsForAdmin(requirements);
       expect(result).toHaveLength(2);
-      expect((result[0] as any).id).not.toBe((requirements[0] as any).id);
+      expect(result[0].id).not.toBe(requirements[0].id);
     });
   });
 });
