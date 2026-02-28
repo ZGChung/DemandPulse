@@ -1,5 +1,6 @@
 import {
   PrismaClient,
+  Requirement,
   RequirementStatus,
   RequirementCluster,
   PrivacyAction,
@@ -132,13 +133,21 @@ export class DatabaseService {
   /**
    * Decrypt encrypted fields in a requirement object
    */
-  private async decryptRequirement(requirement: any): Promise<any> {
+  private async decryptRequirement(
+    requirement: Requirement & {
+      originalRequirement: string;
+      summarizedRequirement: string;
+      userProvidedEmail?: string | null;
+      anonymizedData?: Record<string, unknown> | string | null;
+    }
+  ): Promise<Requirement> {
     const { originalRequirement, summarizedRequirement, userProvidedEmail, anonymizedData } =
       await this.decryptRequirementFields(
         requirement.originalRequirement,
         requirement.summarizedRequirement,
-        requirement.userProvidedEmail,
-        requirement.anonymizedData
+        requirement.userProvidedEmail ?? undefined,
+        // Pass anonymizedData if it exists (string or object), undefined if null/undefined
+        requirement.anonymizedData ?? undefined
       );
 
     return {
@@ -615,7 +624,10 @@ export class DatabaseService {
     };
   }
 
-  private async applyPrivacyControls(requirement: any, includeAnonymized: boolean) {
+  private async applyPrivacyControls(
+    requirement: Requirement & { anonymizationConsent: boolean },
+    includeAnonymized: boolean
+  ): Promise<Requirement> {
     // Decrypt encrypted fields before applying privacy controls
     const decryptedRequirement = await this.decryptRequirement(requirement);
 
