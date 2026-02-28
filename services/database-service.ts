@@ -1,6 +1,5 @@
 import {
   PrismaClient,
-  Requirement,
   RequirementStatus,
   RequirementCluster,
   PrivacyAction,
