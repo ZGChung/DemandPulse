@@ -113,7 +113,12 @@ export async function PATCH(request: NextRequest) {
     // Validate request body
     const validationResult = updateRequirementStatusSchema.safeParse(body);
     if (!validationResult.success) {
-      throw new ValidationError("Invalid request body", validationResult.error.issues);
+      const details = validationResult.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+        code: issue.code,
+      }));
+      throw new ValidationError("Invalid request body", { details });
     }
 
     const { status } = validationResult.data;

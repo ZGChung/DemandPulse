@@ -151,7 +151,14 @@ export function validateRequirementSubmission(data: RequirementSubmission): {
   }
 
   // Validate consent using existing utility
-  const consentValidation = validateConsent(data.consent);
+  // Convert Date to string if needed
+  const consentForValidation = {
+    ...data.consent,
+    consentedAt: data.consent.consentedAt
+      ? new Date(data.consent.consentedAt).toISOString()
+      : undefined,
+  };
+  const consentValidation = validateConsent(consentForValidation);
   if (!consentValidation.valid) {
     errors.push(...consentValidation.errors);
   }

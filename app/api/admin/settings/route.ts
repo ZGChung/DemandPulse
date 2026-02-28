@@ -114,10 +114,12 @@ export async function POST(request: NextRequest) {
     // Validate request body
     const validationResult = settingsUpdateSchema.safeParse(body);
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: "Invalid settings data", details: validationResult.error.issues },
-        { status: 400 }
-      );
+      const details = validationResult.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+        code: issue.code,
+      }));
+      return NextResponse.json({ error: "Invalid settings data", details }, { status: 400 });
     }
 
     const settingsUpdate = validationResult.data;

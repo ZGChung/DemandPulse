@@ -25,7 +25,7 @@ interface MockRequirement {
   userProvidedEmail?: string;
   consentedAt: Date;
   userId?: string;
-  anonymizedData: Record<string, unknown>;
+  anonymizedData?: Record<string, unknown> | string;
   dataRetentionDays: number;
   scheduledDeletionAt: Date;
   status: RequirementStatus;

@@ -67,7 +67,13 @@ export async function GET(request: NextRequest) {
     const validationResult = auditLogQuerySchema.safeParse(queryParams);
 
     if (!validationResult.success) {
-      throw new ValidationError("Invalid query parameters", validationResult.error.issues);
+      // Convert Zod issues to ValidationErrorDetails format
+      const details = validationResult.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+        code: issue.code,
+      }));
+      throw new ValidationError("Invalid query parameters", { details } as any);
     }
 
     const {

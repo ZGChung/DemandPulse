@@ -71,7 +71,12 @@ export async function GET(request: NextRequest) {
     const validationResult = privacyRequestQuerySchema.safeParse(queryParams);
 
     if (!validationResult.success) {
-      throw new ValidationError("Invalid query parameters", validationResult.error.issues);
+      const details = validationResult.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+        code: issue.code,
+      }));
+      throw new ValidationError("Invalid query parameters", { details });
     }
 
     const {
@@ -156,7 +161,12 @@ export async function PATCH(request: NextRequest) {
     const validationResult = updatePrivacyRequestSchema.safeParse(body);
 
     if (!validationResult.success) {
-      throw new ValidationError("Invalid request body", validationResult.error.issues);
+      const details = validationResult.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+        code: issue.code,
+      }));
+      throw new ValidationError("Invalid request body", { details });
     }
 
     const { status, notes } = validationResult.data;
