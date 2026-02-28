@@ -6,7 +6,6 @@ import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals
 
 import { SettingsService, DEFAULT_SETTINGS } from "@/services/settings-service";
 
-
 describe("SettingsService", () => {
   let service: SettingsService;
   let tempDir: string;
@@ -69,6 +68,27 @@ describe("SettingsService", () => {
       service.clearCache();
       const settings = await service.getSettings();
       expect(settings.clusteringEnabled).toBe(true);
+    });
+
+    it("should return cached settings when cache is valid", async () => {
+      await service.getSettings();
+      const settings1 = await service.getSettings();
+      expect(settings1.clusteringEnabled).toBe(true);
+    });
+  });
+
+  describe("updateSettings error handling", () => {
+    it("should throw error when save fails", async () => {
+      // First make sure settings file exists
+      await service.getSettings();
+      // Now mock writeFile to fail
+      const writeFileSpy = jest
+        .spyOn(fs, "writeFile")
+        .mockRejectedValueOnce(new Error("Write error"));
+      await expect(service.updateSettings({ apiRateLimit: 100 }, "test-user")).rejects.toThrow(
+        "Failed to update system settings"
+      );
+      writeFileSpy.mockRestore();
     });
   });
 });
