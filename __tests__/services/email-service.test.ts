@@ -166,4 +166,151 @@ describe("EmailService", () => {
       expect(result.success).toBe(true);
     });
   });
+
+  describe("sendSimilarRequirementEmail", () => {
+    const mockRecipient: EmailRecipient = {
+      email: "user@example.com",
+      name: "User",
+    };
+
+    it("should send similar requirement email", async () => {
+      const result = await emailService.sendSimilarRequirementEmail(
+        mockRecipient,
+        "Build a REST API",
+        5
+      );
+      expect(result.success).toBe(true);
+    });
+
+    it("should send similar requirement email with cluster name", async () => {
+      const result = await emailService.sendSimilarRequirementEmail(
+        mockRecipient,
+        "Build a REST API",
+        3,
+        "API Development"
+      );
+      expect(result.success).toBe(true);
+    });
+
+    it("should handle single match count", async () => {
+      const result = await emailService.sendSimilarRequirementEmail(
+        mockRecipient,
+        "Test requirement",
+        1
+      );
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("sendAdminNotification", () => {
+    it("should send admin notification to multiple recipients", async () => {
+      const admins = [
+        { email: "admin1@example.com", name: "Admin 1" },
+        { email: "admin2@example.com", name: "Admin 2" },
+      ];
+      const result = await emailService.sendAdminNotification(admins, {
+        subject: "Test Admin Email",
+        body: "Test body",
+      });
+      expect(result.sent).toBe(2);
+      expect(result.failed).toBe(0);
+    });
+
+    it("should skip recipients without email", async () => {
+      const admins = [
+        { email: "admin1@example.com", name: "Admin 1" },
+        { name: "Admin Without Email" }, // missing email
+      ];
+      const result = await emailService.sendAdminNotification(admins, {
+        subject: "Test Admin Email",
+        body: "Test body",
+      });
+      expect(result.sent).toBe(1);
+      expect(result.failed).toBe(0);
+    });
+  });
+
+  describe("setEnabled", () => {
+    it("should enable/disable email service", () => {
+      emailService.setEnabled(false);
+      expect(emailService.getStatus().enabled).toBe(false);
+      emailService.setEnabled(true);
+      expect(emailService.getStatus().enabled).toBe(true);
+    });
+  });
+
+  describe("setUseMock", () => {
+    it("should switch between mock and real provider", () => {
+      emailService.setUseMock(false);
+      expect(emailService.getStatus().useMock).toBe(false);
+      emailService.setUseMock(true);
+      expect(emailService.getStatus().useMock).toBe(true);
+    });
+  });
+
+  describe("getStatus", () => {
+    it("should return current status", () => {
+      const status = emailService.getStatus();
+      expect(status).toHaveProperty("enabled");
+      expect(status).toHaveProperty("useMock");
+    });
+  });
+
+  describe("EmailService.templates", () => {
+    it("should generate welcome template with name", () => {
+      const template = EmailService.templates.welcome("John");
+      expect(template.subject).toContain("John");
+      expect(template.htmlBody).toContain("John");
+    });
+
+    it("should generate welcome template without name", () => {
+      const template = EmailService.templates.welcome();
+      expect(template.subject).toContain("Welcome");
+      expect(template.body).toContain("Welcome");
+    });
+
+    it("should generate requirement submitted template", () => {
+      const template = EmailService.templates.requirementSubmitted("Test requirement");
+      expect(template.subject).toContain("submitted");
+      expect(template.body).toContain("Test requirement");
+    });
+
+    it("should generate similar requirement template", () => {
+      const template = EmailService.templates.similarRequirementFound("Test", 5, "Cluster");
+      expect(template.subject).toContain("5");
+      expect(template.body).toContain("Test");
+      expect(template.body).toContain("Cluster");
+    });
+
+    it("should generate milestone template", () => {
+      const template = EmailService.templates.milestoneAchieved("First", 10);
+      expect(template.subject).toContain("First");
+      expect(template.body).toContain("10");
+    });
+
+    it("should generate weekly digest template", () => {
+      const template = EmailService.templates.weeklyDigest([
+        { name: "Trend 1", growth: 10, requirements: 5 },
+        { name: "Trend 2", growth: -5, requirements: 3 },
+      ]);
+      expect(template.subject).toContain("weekly");
+      expect(template.body).toContain("Trend 1");
+    });
+
+    it("should generate admin new requirement template", () => {
+      const template = EmailService.templates.adminNewRequirement(
+        "New requirement",
+        "user@example.com"
+      );
+      expect(template.subject).toContain("New requirement");
+      expect(template.body).toContain("New requirement");
+      expect(template.body).toContain("user@example.com");
+    });
+
+    it("should generate admin template without submitter", () => {
+      const template = EmailService.templates.adminNewRequirement("New requirement");
+      expect(template.subject).toContain("New requirement");
+      expect(template.body).toContain("New requirement");
+    });
+  });
 });
