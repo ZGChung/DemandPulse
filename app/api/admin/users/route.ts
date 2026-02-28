@@ -73,10 +73,7 @@ export async function GET(request: NextRequest) {
     const whereClause: Prisma.UserWhereInput = {};
     if (role) whereClause.role = role;
     if (search) {
-      whereClause.OR = [
-        { name: { contains: search, mode: "insensitive" } },
-        { email: { contains: search, mode: "insensitive" } },
-      ];
+      whereClause.OR = [{ name: { contains: search } }, { email: { contains: search } }];
     }
 
     // Fetch users with pagination
