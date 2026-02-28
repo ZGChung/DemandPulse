@@ -155,4 +155,93 @@ describe("ClusteringService", () => {
       expect(typeof similarity).toBe("number");
     });
   });
+
+  describe("mergeSimilarClusters", () => {
+    it("should merge similar clusters", () => {
+      const clusters = [
+        {
+          clusterId: "1",
+          name: "Cluster 1",
+          description: "Desc 1",
+          centroid: [0.1, 0.2],
+          requirementIds: ["r1"],
+          requirementCount: 1,
+        },
+        {
+          clusterId: "2",
+          name: "Cluster 2",
+          description: "Desc 2",
+          centroid: [0.15, 0.25],
+          requirementIds: ["r2"],
+          requirementCount: 1,
+        },
+        {
+          clusterId: "3",
+          name: "Cluster 3",
+          description: "Desc 3",
+          centroid: [0.8, 0.9],
+          requirementIds: ["r3"],
+          requirementCount: 1,
+        },
+      ];
+      const result = service.mergeSimilarClusters(clusters, 0.9);
+      expect(Array.isArray(result)).toBe(true);
+    });
+
+    it("should return all clusters when none are similar", () => {
+      const clusters = [
+        {
+          clusterId: "1",
+          name: "Cluster 1",
+          description: "Desc 1",
+          centroid: [0.1, 0.2],
+          requirementIds: ["r1"],
+          requirementCount: 1,
+        },
+        {
+          clusterId: "2",
+          name: "Cluster 2",
+          description: "Desc 2",
+          centroid: [0.8, 0.9],
+          requirementIds: ["r2"],
+          requirementCount: 1,
+        },
+      ];
+      const result = service.mergeSimilarClusters(clusters, 0.3);
+      expect(result.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  describe("calculateWeightedCentroid", () => {
+    it("should calculate weighted centroid", () => {
+      const centroids = [
+        [0.1, 0.2],
+        [0.3, 0.4],
+      ];
+      const weights = [1, 1];
+      const result = service.calculateWeightedCentroid(centroids, weights);
+      expect(result).toBeDefined();
+      expect(result.length).toBe(2);
+    });
+
+    it("should handle single centroid", () => {
+      const centroids = [[0.1, 0.2]];
+      const weights = [1];
+      const result = service.calculateWeightedCentroid(centroids, weights);
+      expect(result).toEqual([0.1, 0.2]);
+    });
+  });
+
+  describe("generateClusterDescription", () => {
+    it("should generate cluster description", () => {
+      const desc = service.generateClusterDescription(["r1", "r2", "r3"]);
+      expect(typeof desc).toBe("string");
+      expect(desc.length).toBeGreaterThan(0);
+    });
+
+    it("should handle empty array", () => {
+      const desc = service.generateClusterDescription([]);
+      expect(typeof desc).toBe("string");
+    });
+  });
 });

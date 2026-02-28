@@ -101,7 +101,7 @@ export class DatabaseService {
     originalRequirement: string;
     summarizedRequirement: string;
     userProvidedEmail?: string;
-    anonymizedData?: any;
+    anonymizedData?: Record<string, unknown>;
   }> {
     const originalRequirement = await encryptionService.decrypt(encryptedOriginalRequirement);
     const summarizedRequirement = await encryptionService.decrypt(encryptedSummarizedRequirement);
@@ -132,7 +132,17 @@ export class DatabaseService {
   /**
    * Decrypt encrypted fields in a requirement object
    */
-  private async decryptRequirement(requirement: any): Promise<any> {
+  private async decryptRequirement(requirement: {
+    originalRequirement: string;
+    summarizedRequirement: string;
+    userProvidedEmail?: string;
+    anonymizedData?: string | Record<string, unknown>;
+  }): Promise<{
+    originalRequirement: string;
+    summarizedRequirement: string;
+    userProvidedEmail?: string;
+    anonymizedData?: Record<string, unknown>;
+  }> {
     const { originalRequirement, summarizedRequirement, userProvidedEmail, anonymizedData } =
       await this.decryptRequirementFields(
         requirement.originalRequirement,
@@ -342,7 +352,7 @@ export class DatabaseService {
   async getRequirementsByStatus(status: RequirementStatus, limit = 100, userId?: string) {
     try {
       if (this.prisma) {
-        const whereClause: any = { status };
+        const whereClause: { status: RequirementStatus; userId?: string } = { status };
         if (userId) {
           whereClause.userId = userId;
         }
@@ -354,6 +364,7 @@ export class DatabaseService {
         });
 
         // Apply privacy controls to all requirements
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return Promise.all(requirements.map((req: any) => this.applyPrivacyControls(req, false)));
       } else {
         // Mock implementation
@@ -603,7 +614,9 @@ export class DatabaseService {
     return 365; // 1 year for basic consented data
   }
 
-  private anonymizeRequirement(collectedRequirement: CollectedRequirement): any {
+  private anonymizeRequirement(
+    collectedRequirement: CollectedRequirement
+  ): Record<string, unknown> {
     // Create anonymized version of the requirement
     // In production, this would be more sophisticated
     return {
@@ -615,6 +628,7 @@ export class DatabaseService {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async applyPrivacyControls(requirement: any, includeAnonymized: boolean): Promise<any> {
     // Decrypt encrypted fields before applying privacy controls
     const decryptedRequirement = await this.decryptRequirement(requirement);
@@ -651,7 +665,7 @@ export class DatabaseService {
     entityId?: string;
     actorType: ActorType;
     actorId?: string;
-    changes?: any;
+    changes?: Record<string, unknown>;
     reason?: string;
   }) {
     try {
@@ -900,7 +914,7 @@ export class DatabaseService {
 
       let requirements;
       if (this.prisma) {
-        const whereClause: any = {};
+        const whereClause: { status?: string; userId?: string } = {};
         if (status) whereClause.status = status;
         if (userId) whereClause.userId = userId;
 
@@ -957,7 +971,7 @@ export class DatabaseService {
       const { status, userId } = options;
 
       if (this.prisma) {
-        const whereClause: any = {};
+        const whereClause: { status?: string; userId?: string } = {};
         if (status) whereClause.status = status;
         if (userId) whereClause.userId = userId;
 
