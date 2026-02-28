@@ -46,6 +46,113 @@ describe("Masking", () => {
       const result = maskConversationId("conv-123456789");
       expect(result).not.toBe("conv-123456789");
     });
+
+    it("should handle empty conversation ID", async () => {
+      const { maskConversationId } = await import("@/lib/masking");
+      expect(maskConversationId("")).toBe("********");
+    });
+
+    it("should mask short conversation IDs", async () => {
+      const { maskConversationId } = await import("@/lib/masking");
+      const result = maskConversationId("abc");
+      expect(result).toBe("***");
+    });
+  });
+
+  describe("maskWorkspacePath", () => {
+    it("should mask workspace path intermediate directories", async () => {
+      const { maskWorkspacePath } = await import("@/lib/masking");
+      const result = maskWorkspacePath("/Users/johndoe/projects/myproject");
+      // Without HOME env set, it should mask middle parts
+      expect(result).toBe("/***/***/***/myproject");
+    });
+
+    it("should handle null/undefined", async () => {
+      const { maskWorkspacePath } = await import("@/lib/masking");
+      expect(maskWorkspacePath(null)).toBeNull();
+      expect(maskWorkspacePath(undefined)).toBeNull();
+    });
+
+    it("should return short paths unchanged", async () => {
+      const { maskWorkspacePath } = await import("@/lib/masking");
+      const result = maskWorkspacePath("/a/b");
+      expect(result).toBe("/a/b");
+    });
+  });
+
+  describe("canViewUnmaskedData", () => {
+    it("should allow admin in admin context", async () => {
+      const { canViewUnmaskedData } = await import("@/lib/masking");
+      expect(canViewUnmaskedData("admin", "admin")).toBe(true);
+    });
+
+    it("should deny non-admin in production", async () => {
+      const { canViewUnmaskedData } = await import("@/lib/masking");
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = "production";
+      expect(canViewUnmaskedData("analyst", "admin")).toBe(false);
+      process.env.NODE_ENV = originalEnv;
+    });
+
+    it("should allow analyst in development", async () => {
+      const { canViewUnmaskedData } = await import("@/lib/masking");
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = "development";
+      expect(canViewUnmaskedData("analyst", "viewer")).toBe(true);
+      process.env.NODE_ENV = originalEnv;
+    });
+  });
+
+  describe("maskRequirementForAdmin", () => {
+    it("should mask email in consent", async () => {
+      const { maskRequirementForAdmin } = await import("@/lib/masking");
+      const requirement = {
+        id: "123e4567-e89b-12d3-a456-426614174000",
+        consent: { userProvidedEmail: "john@example.com" },
+        context: { workspacePath: "/home/user/project" },
+      };
+      const result = maskRequirementForAdmin(requirement);
+      expect((result as any).consent.userProvidedEmail).toBe("j***@example.com");
+    });
+
+    it("should mask UUIDs when option enabled", async () => {
+      const { maskRequirementForAdmin } = await import("@/lib/masking");
+      const requirement = {
+        id: "123e4567-e89b-12d3-a456-426614174000",
+        requirementId: "123e4567-e89b-12d3-a456-426614174001",
+        clusterId: "123e4567-e89b-12d3-a456-426614174002",
+      };
+      const result = maskRequirementForAdmin(requirement);
+      expect((result as any).id).not.toBe((requirement as any).id);
+    });
+
+    it("should mask requirement text when option enabled", async () => {
+      const { maskRequirementForAdmin, maskRequirementText } = await import("@/lib/masking");
+      // Use text longer than 40 chars (visibleChars * 2 = 20*2)
+      const longText =
+        "This is a very long requirement text that definitely should be masked completely in the admin view";
+      const requirement = {
+        originalRequirement: longText,
+        summarizedRequirement: "Short summary of the requirement",
+      };
+      const result = maskRequirementForAdmin(requirement, { maskRequirementText: true });
+      // The function uses default visibleChars of 10 for summarizedRequirement
+      const maskedOriginal = maskRequirementText(longText, 20);
+      expect((result as any).originalRequirement).toContain("...");
+    });
+  });
+
+  describe("maskRequirementsForAdmin", () => {
+    it("should mask array of requirements", async () => {
+      const { maskRequirementsForAdmin } = await import("@/lib/masking");
+      const requirements = [
+        { id: "123e4567-e89b-12d3-a456-426614174000", name: "Test 1" },
+        { id: "123e4567-e89b-12d3-a456-426614174001", name: "Test 2" },
+      ];
+      const result = maskRequirementsForAdmin(requirements);
+      expect(result).toHaveLength(2);
+      expect((result[0] as any).id).not.toBe((requirements[0] as any).id);
+    });
   });
 });
 
