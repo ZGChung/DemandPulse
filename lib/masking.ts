@@ -98,72 +98,69 @@ export function maskConversationId(conversationId: string): string {
   return `${start}...${end}`;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyRecord = Record<string, any>;
+
+/**
+ * Masking options interface
+ */
+interface MaskOptions {
+  maskEmail?: boolean;
+  maskRequirementText?: boolean;
+  maskWorkspacePath?: boolean;
+  maskConversationId?: boolean;
+  maskUUID?: boolean;
+}
+
 /**
  * Apply masking to a requirement object for admin display
  * @param requirement Requirement object (potentially with sensitive fields)
  * @param options Masking options
  * @returns Requirement object with masked fields
  */
-export function maskRequirementForAdmin<T extends Record<string, unknown>>(
+export function maskRequirementForAdmin<T extends AnyRecord>(
   requirement: T,
-  options: {
-    maskEmail?: boolean;
-    maskRequirementText?: boolean;
-    maskWorkspacePath?: boolean;
-    maskConversationId?: boolean;
-    maskUUID?: boolean;
-  } = {}
+  options: MaskOptions = {}
 ): T {
   const {
     maskEmail: doMaskEmail = true,
-    maskRequirementText: doMaskRequirementText = false, // Usually want to see full text for admin review
+    maskRequirementText: doMaskRequirementText = false,
     maskWorkspacePath: doMaskWorkspacePath = true,
     maskConversationId: doMaskConversationId = true,
     maskUUID: doMaskUUID = true,
   } = options;
 
-  const masked = { ...requirement } as T;
+  const masked = { ...requirement };
 
   // Mask userProvidedEmail if present
-  if (doMaskEmail && (masked as any).consent?.userProvidedEmail) {
-    (masked as any).consent.userProvidedEmail = maskEmail(
-      (masked as any).consent.userProvidedEmail
-    );
+  if (doMaskEmail && masked.consent?.userProvidedEmail) {
+    masked.consent.userProvidedEmail = maskEmail(masked.consent.userProvidedEmail);
   }
 
   // Mask workspace path in context
-  if (doMaskWorkspacePath && (masked as any).context?.workspacePath) {
-    (masked as any).context.workspacePath = maskRequirementText(
-      (masked as any).context.workspacePath,
-      20
-    );
+  if (doMaskWorkspacePath && masked.context?.workspacePath) {
+    masked.context.workspacePath = maskRequirementText(masked.context.workspacePath, 20);
   }
 
   // Mask conversation ID
-  if (doMaskConversationId && (masked as any).context?.conversationId) {
-    (masked as any).context.conversationId = maskUUID((masked as any).context.conversationId);
+  if (doMaskConversationId && masked.context?.conversationId) {
+    masked.context.conversationId = maskUUID(masked.context.conversationId);
   }
 
   // Mask requirement IDs
   if (doMaskUUID) {
-    if ((masked as any).id) (masked as any).id = maskUUID((masked as any).id);
-    if ((masked as any).requirementId)
-      (masked as any).requirementId = maskUUID((masked as any).requirementId);
-    if ((masked as any).clusterId) (masked as any).clusterId = maskUUID((masked as any).clusterId);
+    if (masked.id) masked.id = maskUUID(masked.id);
+    if (masked.requirementId) masked.requirementId = maskUUID(masked.requirementId);
+    if (masked.clusterId) masked.clusterId = maskUUID(masked.clusterId);
   }
 
   // Mask requirement text if requested
   if (doMaskRequirementText) {
-    if ((masked as any).originalRequirement) {
-      (masked as any).originalRequirement = maskRequirementText(
-        (masked as any).originalRequirement
-      );
+    if (masked.originalRequirement) {
+      masked.originalRequirement = maskRequirementText(masked.originalRequirement);
     }
-    if ((masked as any).summarizedRequirement) {
-      (masked as any).summarizedRequirement = maskRequirementText(
-        (masked as any).summarizedRequirement,
-        10
-      );
+    if (masked.summarizedRequirement) {
+      masked.summarizedRequirement = maskRequirementText(masked.summarizedRequirement, 10);
     }
   }
 
@@ -173,9 +170,9 @@ export function maskRequirementForAdmin<T extends Record<string, unknown>>(
 /**
  * Apply masking to an array of requirements for admin display
  */
-export function maskRequirementsForAdmin<T extends Record<string, any>>(
+export function maskRequirementsForAdmin<T extends AnyRecord>(
   requirements: T[],
-  options?: Parameters<typeof maskRequirementForAdmin>[1]
+  options?: MaskOptions
 ): T[] {
   return requirements.map((req) => maskRequirementForAdmin(req, options));
 }

@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | null | undefined;
@@ -15,7 +15,7 @@ if (process.env.NODE_ENV === "development") {
 const databaseUrl = process.env.DATABASE_URL || "";
 
 // Default configuration
-let prismaConfig: any = {
+const prismaConfig: Prisma.PrismaClientOptions = {
   log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
 };
 

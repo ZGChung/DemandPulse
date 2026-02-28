@@ -1,9 +1,18 @@
 // Input validation utilities for security
 
-export class ValidationError extends Error {
-  details?: any;
+/**
+ * Error details interface for ValidationError
+ */
+interface ValidationErrorDetails {
+  field?: string;
+  value?: unknown;
+  [key: string]: unknown;
+}
 
-  constructor(message: string, details?: any) {
+export class ValidationError extends Error {
+  details?: ValidationErrorDetails;
+
+  constructor(message: string, details?: ValidationErrorDetails) {
     super(message);
     this.name = "ValidationError";
     this.details = details;
@@ -105,9 +114,23 @@ export function sanitizeText(text: string): string {
 }
 
 /**
+ * Consent object structure
+ */
+interface ConsentObject {
+  consentOptions?: {
+    analytics?: boolean;
+    improvements?: boolean;
+    [key: string]: unknown;
+  };
+  userProvidedEmail?: string;
+  consentedAt?: string;
+  [key: string]: unknown;
+}
+
+/**
  * Validate consent object structure
  */
-export function validateConsent(consent: any): { valid: boolean; errors: string[] } {
+export function validateConsent(consent: ConsentObject): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
   if (!consent || typeof consent !== "object") {

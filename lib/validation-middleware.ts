@@ -84,12 +84,14 @@ export function withValidation<T extends z.ZodSchema>(
 
       // Sanitize fields if specified
       if (options.sanitizeFields) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const sanitizedData = Object.assign({}, validatedData) as Record<string, any>;
         for (const field of options.sanitizeFields) {
           if (field in sanitizedData && typeof sanitizedData[field] === "string") {
             sanitizedData[field] = sanitizeText(sanitizedData[field]);
           }
         }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return next(sanitizedData as any);
       }
 
