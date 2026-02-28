@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
         message: issue.message,
         code: issue.code,
       }));
-      throw new ValidationError("Invalid query parameters", { details } as any);
+      throw new ValidationError("Invalid query parameters", { details });
     }
 
     const {

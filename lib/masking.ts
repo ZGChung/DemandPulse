@@ -118,7 +118,6 @@ interface MaskOptions {
  * @param options Masking options
  * @returns Requirement object with masked fields
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function maskRequirementForAdmin<T extends AnyRecord>(
   requirement: T,
   options: MaskOptions = {}

@@ -126,11 +126,13 @@ export default async function AdminClustersPage({ searchParams }: AdminClustersP
                 <div className="mb-6">
                   <h4 className="text-sm font-medium text-gray-700 mb-2">Sample Requirements</h4>
                   <ul className="space-y-2">
-                    {cluster.sampleRequirements?.slice(0, 3).map((req: any, index: number) => (
-                      <li key={index} className="text-sm text-gray-600">
-                        • {req.summary}
-                      </li>
-                    ))}
+                    {cluster.sampleRequirements
+                      ?.slice(0, 3)
+                      .map((req: { summary: string }, index: number) => (
+                        <li key={index} className="text-sm text-gray-600">
+                          • {req.summary}
+                        </li>
+                      ))}
                   </ul>
                 </div>
 
