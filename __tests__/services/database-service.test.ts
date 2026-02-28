@@ -536,4 +536,65 @@ describe("DatabaseService", () => {
       expect(count).toBe(50);
     });
   });
+
+  describe("updateRequirementEmbedding", () => {
+    it("should update requirement embedding", async () => {
+      mockPrisma.requirement.update.mockResolvedValue({ id: "req-123" });
+
+      await service.updateRequirementEmbedding("req-123", [0.1, 0.2, 0.3]);
+
+      expect(mockPrisma.requirement.update).toHaveBeenCalledWith({
+        where: { id: "req-123" },
+        data: { embedding: [0.1, 0.2, 0.3] },
+      });
+    });
+
+    it("should throw error when update fails", async () => {
+      mockPrisma.requirement.update.mockRejectedValue(new Error("Database error"));
+
+      await expect(service.updateRequirementEmbedding("req-123", [0.1])).rejects.toThrow(
+        "Failed to update requirement embedding"
+      );
+    });
+  });
+
+  describe("getPrioritizedRequirements", () => {
+    it("should return prioritized requirements", async () => {
+      const mockRequirements = [
+        {
+          id: "req-1",
+          summarizedRequirement: "Test req",
+          status: "PROCESSED",
+          cluster: { requirementCount: 5 },
+        },
+      ];
+
+      mockPrisma.requirement.findMany.mockResolvedValue(mockRequirements);
+
+      const result = await service.getPrioritizedRequirements(10);
+
+      expect(result).toHaveLength(1);
+      expect(mockPrisma.requirement.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: { in: ["PROCESSED", "CLUSTERED"] },
+          }),
+        })
+      );
+    });
+
+    it("should filter by userId when provided", async () => {
+      mockPrisma.requirement.findMany.mockResolvedValue([]);
+
+      await service.getPrioritizedRequirements(10, "user-123");
+
+      expect(mockPrisma.requirement.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            userId: "user-123",
+          }),
+        })
+      );
+    });
+  });
 });
