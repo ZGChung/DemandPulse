@@ -133,21 +133,13 @@ export class DatabaseService {
   /**
    * Decrypt encrypted fields in a requirement object
    */
-  private async decryptRequirement(
-    requirement: Requirement & {
-      originalRequirement: string;
-      summarizedRequirement: string;
-      userProvidedEmail?: string | null;
-      anonymizedData?: Record<string, unknown> | string | null;
-    }
-  ): Promise<Requirement> {
+  private async decryptRequirement(requirement: any): Promise<any> {
     const { originalRequirement, summarizedRequirement, userProvidedEmail, anonymizedData } =
       await this.decryptRequirementFields(
         requirement.originalRequirement,
         requirement.summarizedRequirement,
-        requirement.userProvidedEmail ?? undefined,
-        // Pass anonymizedData if it exists (string or object), undefined if null/undefined
-        requirement.anonymizedData ?? undefined
+        requirement.userProvidedEmail,
+        requirement.anonymizedData
       );
 
     return {
@@ -624,10 +616,7 @@ export class DatabaseService {
     };
   }
 
-  private async applyPrivacyControls(
-    requirement: Requirement & { anonymizationConsent: boolean },
-    includeAnonymized: boolean
-  ): Promise<Requirement> {
+  private async applyPrivacyControls(requirement: any, includeAnonymized: boolean): Promise<any> {
     // Decrypt encrypted fields before applying privacy controls
     const decryptedRequirement = await this.decryptRequirement(requirement);
 
