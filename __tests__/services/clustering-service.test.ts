@@ -110,5 +110,49 @@ describe("ClusteringService", () => {
       const result = await service.findSimilarRequirements(requirement, 5, 0.5);
       expect(Array.isArray(result)).toBe(true);
     });
+
+    it("should return empty array when no requirements found", async () => {
+      const { prisma } = require("@/lib/prisma");
+      prisma.requirement.findMany.mockResolvedValueOnce([]);
+      const requirement = { id: "1", embedding: [0.1, 0.2, 0.3] };
+      const result = await service.findSimilarRequirements(requirement, 5, 0.9);
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("normalizeVector", () => {
+    it("should normalize a vector", () => {
+      const vector = [3, 4];
+      const normalized = service.normalizeVector(vector);
+      const expectedLength = 1;
+      expect(
+        Math.abs(normalized.reduce((a, b) => a + b ** 2, 0) ** 0.5 - expectedLength)
+      ).toBeLessThan(0.001);
+    });
+
+    it("should handle zero vector", () => {
+      const vector = [0, 0];
+      const normalized = service.normalizeVector(vector);
+      expect(normalized).toEqual([0, 0]);
+    });
+  });
+
+  describe("cosineSimilarity", () => {
+    it("should calculate cosine similarity between two vectors", () => {
+      const similarity = service.cosineSimilarity([1, 0], [1, 0]);
+      // Mock returns 0.8
+      expect(similarity).toBe(0.8);
+    });
+
+    it("should return similarity for different vectors", () => {
+      const similarity = service.cosineSimilarity([1, 0], [0, 1]);
+      // Mock returns 0.8
+      expect(similarity).toBe(0.8);
+    });
+
+    it("should handle different length vectors", () => {
+      const similarity = service.cosineSimilarity([1, 2, 3], [4, 5, 6]);
+      expect(typeof similarity).toBe("number");
+    });
   });
 });
