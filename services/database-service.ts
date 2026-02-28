@@ -1,5 +1,4 @@
 import {
-  Prisma,
   PrismaClient,
   RequirementStatus,
   RequirementCluster,
@@ -11,6 +10,27 @@ import { encryptionService } from "@/lib/encryption";
 import { maskRequirementsForAdmin, canViewUnmaskedData } from "@/lib/masking";
 import { prisma } from "@/lib/prisma";
 import { CollectedRequirement } from "@/types/claude-code";
+
+// Prisma Requirement type (simplified for internal use)
+type RequirementData = {
+  id: string;
+  originalRequirement: string;
+  summarizedRequirement: string;
+  conversationId: string;
+  workspacePath?: string;
+  detectedAt: Date;
+  dataCollectionConsent: boolean;
+  contactConsent: boolean;
+  anonymizationConsent: boolean;
+  userProvidedEmail?: string;
+  consentedAt?: Date | null;
+  userId?: string | null;
+  anonymizedData?: Record<string, unknown> | string | null;
+  dataRetentionDays: number;
+  status: RequirementStatus;
+  processedAt?: Date | null;
+  embedding?: unknown;
+};
 
 // Mock in-memory store for when database is unavailable
 interface MockRequirement {
@@ -136,7 +156,7 @@ export class DatabaseService {
   /**
    * Decrypt encrypted fields in a requirement object
    */
-  private async decryptRequirement(requirement: any): Promise<any> {
+  private async decryptRequirement(requirement: RequirementData): Promise<RequirementData> {
     const { originalRequirement, summarizedRequirement, userProvidedEmail, anonymizedData } =
       await this.decryptRequirementFields(
         requirement.originalRequirement,
@@ -622,7 +642,10 @@ export class DatabaseService {
     };
   }
 
-  private async applyPrivacyControls(requirement: any, includeAnonymized: boolean): Promise<any> {
+  private async applyPrivacyControls(
+    requirement: RequirementData,
+    includeAnonymized: boolean
+  ): Promise<RequirementData> {
     // Decrypt encrypted fields before applying privacy controls
     const decryptedRequirement = await this.decryptRequirement(requirement);
 
