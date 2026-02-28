@@ -597,4 +597,82 @@ describe("DatabaseService", () => {
       );
     });
   });
+
+  describe("getRequirement", () => {
+    it("should return requirement by id", async () => {
+      const mockRequirement = {
+        id: "req-123",
+        originalRequirement: "Test requirement",
+        summarizedRequirement: "Test",
+        status: "PENDING",
+      };
+
+      mockPrisma.requirement.findUnique.mockResolvedValue(mockRequirement);
+
+      const result = await service.getRequirement("req-123");
+
+      expect(result).toBeDefined();
+      expect(mockPrisma.requirement.findUnique).toHaveBeenCalledWith({
+        where: { id: "req-123" },
+      });
+    });
+
+    it("should return null when requirement not found", async () => {
+      mockPrisma.requirement.findUnique.mockResolvedValue(null);
+
+      const result = await service.getRequirement("non-existent");
+
+      expect(result).toBeNull();
+    });
+
+    it("should include anonymized data when requested", async () => {
+      const mockRequirement = {
+        id: "req-123",
+        originalRequirement: "Test",
+        summarizedRequirement: "Test",
+        status: "PENDING",
+        anonymizedData: { key: "value" },
+      };
+
+      mockPrisma.requirement.findUnique.mockResolvedValue(mockRequirement);
+
+      const result = await service.getRequirement("req-123", true);
+
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe("getRequirementsByStatus", () => {
+    it("should return requirements by status", async () => {
+      const mockRequirements = [
+        { id: "req-1", status: "PENDING" },
+        { id: "req-2", status: "PENDING" },
+      ];
+
+      mockPrisma.requirement.findMany.mockResolvedValue(mockRequirements);
+
+      const result = await service.getRequirementsByStatus("PENDING", 10);
+
+      expect(result).toHaveLength(2);
+      expect(mockPrisma.requirement.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { status: "PENDING" },
+        })
+      );
+    });
+
+    it("should filter by userId when provided", async () => {
+      mockPrisma.requirement.findMany.mockResolvedValue([]);
+
+      await service.getRequirementsByStatus("PENDING", 10, "user-123");
+
+      expect(mockPrisma.requirement.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            userId: "user-123",
+          }),
+        })
+      );
+    });
+  });
 });
