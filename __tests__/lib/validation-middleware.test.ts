@@ -4,7 +4,6 @@ import {
   requirementQuerySchema,
   claudeCodeContextSchema,
   userConsentSchema,
-  withValidation,
 } from "@/lib/validation-middleware";
 
 describe("validation-middleware", () => {
