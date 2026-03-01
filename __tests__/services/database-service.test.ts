@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 
 import { DatabaseService } from "@/services/database-service";
+import { CollectedRequirement } from "@/types/claude-code";
 
 interface MockPrismaClient {
   requirement: {
@@ -1121,6 +1122,132 @@ describe("DatabaseService", () => {
       expect(stats.totalClusters).toBe(10);
       expect(stats.totalUsers).toBe(5);
       expect(stats.recentRequirements).toBe(100);
+    });
+  });
+
+  describe("anonymizeRequirement", () => {
+    it("should anonymize requirement data", () => {
+      const requirement: CollectedRequirement = {
+        id: "req-1",
+        originalRequirement: "My email is john@example.com and phone is 1234567890",
+        summarizedRequirement: "Contact info",
+        context: {
+          conversationId: "conv-1",
+          workspacePath: "/test",
+          timestamp: new Date(),
+        },
+        consent: {
+          consentedAt: new Date(),
+          userProvidedEmail: "john@example.com",
+          consentOptions: {
+            dataCollection: true,
+            contact: true,
+            anonymization: true,
+          },
+        },
+      };
+
+      const result = service.anonymizeRequirement(requirement);
+
+      expect(result).toBeDefined();
+      expect(result.summarizedRequirement).toBe("Contact info");
+      expect(result.wordCount).toBeGreaterThan(0);
+    });
+  });
+
+  describe("getRequirementsByStatus", () => {
+    it("should return requirements by status", async () => {
+      const mockRequirements = [
+        { id: "req-1", status: "PENDING" },
+        { id: "req-2", status: "PENDING" },
+      ];
+
+      mockPrisma.requirement.findMany.mockResolvedValue(mockRequirements);
+
+      const requirements = await service.getRequirementsByStatus("PENDING");
+
+      expect(requirements).toHaveLength(2);
+      expect(mockPrisma.requirement.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { status: "PENDING" },
+        })
+      );
+    });
+  });
+
+  describe("updateRequirementStatus", () => {
+    it("should update requirement status", async () => {
+      const now = new Date();
+      mockPrisma.requirement.update.mockResolvedValue({
+        id: "req-1",
+        status: "PROCESSED",
+        processedAt: now,
+      });
+
+      const result = await service.updateRequirementStatus("req-1", "PROCESSED");
+
+      expect(result).toBeDefined();
+      expect(mockPrisma.requirement.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "req-1" },
+        })
+      );
+    });
+  });
+
+  describe("deleteRequirement", () => {
+    it("should soft delete requirement", async () => {
+      mockPrisma.dataDeletionQueue.create.mockResolvedValue({});
+      mockPrisma.requirement.update.mockResolvedValue({
+        id: "req-1",
+        status: "DELETED",
+      });
+      mockPrisma.privacyAuditLog.create.mockResolvedValue({});
+
+      const result = await service.deleteRequirement("req-1", "User requested");
+
+      expect(result).toBeDefined();
+      expect(result.status).toBe("DELETED");
+      expect(mockPrisma.dataDeletionQueue.create).toHaveBeenCalled();
+    });
+
+    it("should throw error on delete failure", async () => {
+      mockPrisma.dataDeletionQueue.create.mockRejectedValue(new Error("DB error"));
+
+      await expect(service.deleteRequirement("req-1", "Test")).rejects.toThrow();
+    });
+  });
+
+  describe("getRequirement", () => {
+    it("should return requirement by id", async () => {
+      const mockRequirement = { id: "req-1", status: "PENDING" };
+
+      mockPrisma.requirement.findUnique.mockResolvedValue(mockRequirement);
+
+      const requirement = await service.getRequirement("req-1");
+
+      expect(requirement).toBeDefined();
+      expect(requirement?.id).toBe("req-1");
+    });
+
+    it("should return null when not found", async () => {
+      mockPrisma.requirement.findUnique.mockResolvedValue(null);
+
+      const requirement = await service.getRequirement("nonexistent");
+
+      expect(requirement).toBeNull();
+    });
+  });
+
+  describe("getPrioritizedRequirements", () => {
+    it("should return prioritized requirements", async () => {
+      const mockRequirements = [{ id: "req-1" }, { id: "req-2" }];
+
+      mockPrisma.requirement.findMany.mockResolvedValue(mockRequirements);
+
+      const requirements = await service.getPrioritizedRequirements(10);
+
+      expect(requirements).toHaveLength(2);
     });
   });
 });
