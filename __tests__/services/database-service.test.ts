@@ -1,3 +1,5 @@
+import { PrismaClient } from "@prisma/client";
+
 import { DatabaseService } from "@/services/database-service";
 
 interface MockPrismaClient {
@@ -1057,6 +1059,68 @@ describe("DatabaseService", () => {
 
       expect(count).toBe(100);
       expect(mockPrisma.requirement.count).toHaveBeenCalledWith({ where: {} });
+    });
+  });
+
+  describe("getClustersForUser", () => {
+    it("should return clusters for user", async () => {
+      mockPrisma.requirementCluster.findMany.mockResolvedValue([
+        { id: "cluster-1", name: "Cluster A", requirementCount: 10 },
+        { id: "cluster-2", name: "Cluster B", requirementCount: 5 },
+      ]);
+
+      const clusters = await service.getClustersForUser("user-123");
+
+      expect(clusters).toHaveLength(2);
+      expect(clusters[0].name).toBe("Cluster A");
+      expect(mockPrisma.requirementCluster.findMany).toHaveBeenCalledWith({
+        where: { requirements: { some: { userId: "user-123" } } },
+        select: { id: true, name: true, requirementCount: true },
+        orderBy: { requirementCount: "desc" },
+      });
+    });
+
+    it("should return empty array on error", async () => {
+      mockPrisma.requirementCluster.findMany.mockRejectedValue(new Error("DB error"));
+
+      const clusters = await service.getClustersForUser("user-123");
+
+      expect(clusters).toHaveLength(0);
+    });
+
+    it("should return empty array when no prisma", async () => {
+      const mockService = new DatabaseService({} as PrismaClient);
+      // Mock service has no prisma, so it returns empty array
+      const clusters = await mockService.getClustersForUser("user-123");
+
+      expect(clusters).toHaveLength(0);
+    });
+  });
+
+  describe("getPublicStatistics", () => {
+    it("should return public statistics", async () => {
+      mockPrisma.requirement.count.mockResolvedValue(100);
+      mockPrisma.requirementCluster.count.mockResolvedValue(10);
+      mockPrisma.user.count.mockResolvedValue(5);
+
+      const stats = await service.getPublicStatistics();
+
+      expect(stats.totalRequirements).toBe(100);
+      expect(stats.totalClusters).toBe(10);
+      expect(stats.totalUsers).toBe(5);
+      expect(stats.recentRequirements).toBe(100);
+    });
+
+    it("should return mock statistics when no prisma", async () => {
+      const mockService = new DatabaseService({} as PrismaClient);
+
+      const stats = await mockService.getPublicStatistics();
+
+      // Mock returns hardcoded statistics
+      expect(stats.totalRequirements).toBe(100);
+      expect(stats.totalClusters).toBe(10);
+      expect(stats.totalUsers).toBe(5);
+      expect(stats.recentRequirements).toBe(100);
     });
   });
 });
