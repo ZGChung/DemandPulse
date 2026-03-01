@@ -11,6 +11,36 @@ if (!global.TextDecoder) {
   global.TextDecoder = TextDecoder;
 }
 
+// Polyfill Response and Request for tests
+if (!global.Response) {
+  global.Response = class Response {
+    constructor(body, init) {
+      this.headers = new Headers(init?.headers || {});
+      this.status = init?.status || 200;
+      this.statusText = init?.statusText || "OK";
+      this.ok = this.status >= 200 && this.status < 300;
+      this.body = body;
+    }
+    async json() {
+      return {};
+    }
+    async text() {
+      return "";
+    }
+  };
+}
+
+if (!global.Request) {
+  global.Request = class Request {
+    constructor(input, init) {
+      this.url = typeof input === "string" ? input : input.url;
+      this.method = init?.method || "GET";
+      this.headers = new Headers(init?.headers || {});
+      this.body = init?.body;
+    }
+  };
+}
+
 // Mock Next.js router
 jest.mock("next/navigation", () => ({
   useRouter() {
