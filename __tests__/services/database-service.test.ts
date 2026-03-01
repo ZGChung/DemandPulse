@@ -871,4 +871,44 @@ describe("DatabaseService", () => {
       expect(result?.id).toBe("req-123");
     });
   });
+
+  describe("getClusters with pagination", () => {
+    it("should return clusters with pagination parameters", async () => {
+      const mockClusters = [
+        {
+          id: "cluster-1",
+          name: "Feature Requests",
+          description: "User feature requests",
+          requirementCount: 10,
+          firstDetectedAt: new Date("2024-01-01"),
+          lastDetectedAt: new Date("2024-01-15"),
+          _count: { requirements: 10 },
+          requirements: [
+            { summarizedRequirement: "Add dark mode", detectedAt: new Date("2024-01-01") },
+          ],
+        },
+      ];
+
+      mockPrisma.requirementCluster.findMany.mockResolvedValue(mockClusters);
+
+      const result = await service.getClusters(5, 10);
+
+      expect(result).toHaveLength(1);
+      expect(mockPrisma.requirementCluster.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          take: 5,
+          skip: 10,
+        })
+      );
+    });
+
+    it("should return clusters count", async () => {
+      mockPrisma.requirementCluster.count.mockResolvedValue(5);
+
+      const count = await service.getClustersCount();
+
+      expect(count).toBe(5);
+      expect(mockPrisma.requirementCluster.count).toHaveBeenCalled();
+    });
+  });
 });
