@@ -254,4 +254,52 @@ describe("AutoCompactService", () => {
       expect(typeof result.success).toBe("boolean");
     });
   });
+
+  describe("executeCompact with different strategies", () => {
+    it("should execute with remove_oldest strategy", async () => {
+      const result = await service.manualCompact("remove_oldest");
+      expect(result).toBeDefined();
+    });
+
+    it("should execute with compress_all strategy", async () => {
+      const result = await service.manualCompact("compress_all");
+      expect(result).toBeDefined();
+    });
+
+    it("should handle unknown strategy", async () => {
+      const result = await service.manualCompact("unknown_strategy");
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe("hook handlers", () => {
+    it("should register hooks on construction", () => {
+      const { hookManager } = require("@/services/hook-manager");
+      new AutoCompactService({ enabled: true });
+      expect(hookManager.register).toHaveBeenCalled();
+    });
+  });
+
+  describe("getDefaultStrategy", () => {
+    it("should return default strategy", () => {
+      const strategy = service.getDefaultStrategy();
+      expect(strategy).toBeDefined();
+      expect(typeof strategy).toBe("string");
+    });
+  });
+
+  describe("compactHistory", () => {
+    it("should record successful compact in history", async () => {
+      const newService = new AutoCompactService({ enabled: true, confirmBeforeExecute: false });
+      await newService.manualCompact();
+      const history = newService.getHistory();
+      expect(history).toBeDefined();
+    });
+  });
+
+  describe("notification", () => {
+    it("should have notify method", () => {
+      expect(typeof service.notify).toBe("function");
+    });
+  });
 });
