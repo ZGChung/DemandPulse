@@ -742,4 +742,133 @@ describe("DatabaseService", () => {
       expect(result.summarizedRequirement).toBe("Test requirement");
     });
   });
+
+  describe("storeRequirement with email", () => {
+    it("should store requirement with user email", async () => {
+      const collectedRequirement = {
+        id: "req-456",
+        originalRequirement: "Contact me at test@email.com",
+        summarizedRequirement: "Contact request",
+        context: {
+          conversationId: "conv-789",
+          workspacePath: "/projects/contact",
+          timestamp: new Date("2024-01-02T10:00:00Z"),
+        },
+        consent: {
+          requirementId: "req-456",
+          consentedAt: new Date("2024-01-02T10:01:00Z"),
+          consentOptions: {
+            dataCollection: true,
+            contact: true,
+            anonymization: false,
+          },
+          userProvidedEmail: "user@example.com",
+        },
+        collectedAt: new Date("2024-01-02T10:02:00Z"),
+        status: "pending" as const,
+      };
+
+      mockPrisma.requirement.create.mockResolvedValue({
+        id: "db-req-456",
+      });
+      mockPrisma.privacyAuditLog.create.mockResolvedValue({});
+
+      const result = await service.storeRequirement(collectedRequirement);
+
+      expect(result).toBe("db-req-456");
+      expect(mockPrisma.requirement.create).toHaveBeenCalled();
+      expect(mockPrisma.privacyAuditLog.create).toHaveBeenCalled();
+    });
+  });
+
+  describe("getStatistics error handling", () => {
+    it("should throw error when statistics fetch fails", async () => {
+      mockPrisma.requirement.count.mockRejectedValue(new Error("Database error"));
+
+      await expect(service.getStatistics()).rejects.toThrow("Failed to fetch statistics");
+    });
+  });
+
+  describe("getRequirementsForAdmin filtering", () => {
+    it("should filter requirements by status for admin", async () => {
+      const mockRequirements = [
+        {
+          id: "1",
+          originalRequirement: "Req 1",
+          status: "PENDING",
+          conversationId: "c1",
+          dataCollectionConsent: true,
+          contactConsent: false,
+          anonymizationConsent: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: "2",
+          originalRequirement: "Req 2",
+          status: "PROCESSED",
+          conversationId: "c2",
+          dataCollectionConsent: true,
+          contactConsent: false,
+          anonymizationConsent: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
+
+      mockPrisma.requirement.findMany.mockResolvedValue(mockRequirements);
+
+      const result = await service.getRequirementsForAdmin({
+        status: "PENDING",
+      });
+
+      expect(result).toHaveLength(2);
+      expect(mockPrisma.requirement.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: "PENDING",
+          }),
+        })
+      );
+    });
+  });
+
+  describe("updateRequirementEmbedding", () => {
+    it("should update requirement embedding", async () => {
+      mockPrisma.requirement.update.mockResolvedValue({ id: "req-123" });
+
+      await service.updateRequirementEmbedding("req-123", [0.1, 0.2, 0.3]);
+
+      expect(mockPrisma.requirement.update).toHaveBeenCalledWith({
+        where: { id: "req-123" },
+        data: { embedding: [0.1, 0.2, 0.3] },
+      });
+    });
+  });
+
+  describe("getRequirement", () => {
+    it("should return requirement by id with anonymized data", async () => {
+      const mockRequirement = {
+        id: "req-123",
+        originalRequirement: "encrypted",
+        summarizedRequirement: "encrypted",
+        conversationId: "conv-1",
+        dataCollectionConsent: true,
+        contactConsent: false,
+        anonymizationConsent: true,
+        userProvidedEmail: "encrypted",
+        status: "PENDING",
+        anonymizedData: { email: "test@example.com" },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockPrisma.requirement.findUnique.mockResolvedValue(mockRequirement);
+
+      const result = await service.getRequirement("req-123", true);
+
+      expect(result).toBeDefined();
+      expect(result?.id).toBe("req-123");
+    });
+  });
 });
