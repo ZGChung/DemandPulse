@@ -130,5 +130,86 @@ describe("AutoCompactService", () => {
       expect(config.compactStrategies.length).toBeGreaterThan(0);
       expect(config.compactStrategies[0].name).toBe("summarize_oldest");
     });
+
+    it("should include remove_oldest strategy", () => {
+      const config = service.getConfig();
+      const strategyNames = config.compactStrategies.map((s) => s.name);
+      expect(strategyNames).toContain("remove_oldest");
+    });
+
+    it("should include compress_all strategy", () => {
+      const config = service.getConfig();
+      const strategyNames = config.compactStrategies.map((s) => s.name);
+      expect(strategyNames).toContain("compress_all");
+    });
+  });
+
+  describe("executionMethod", () => {
+    it("should use simulated method by default", () => {
+      const defaultService = new AutoCompactService();
+      const config = defaultService.getConfig();
+      expect(config.executionMethod).toBe("simulated");
+    });
+
+    it("should use cli method when configured", () => {
+      const cliService = new AutoCompactService({ executionMethod: "cli" });
+      const config = cliService.getConfig();
+      expect(config.executionMethod).toBe("cli");
+    });
+
+    it("should use api method when configured", () => {
+      const apiService = new AutoCompactService({ executionMethod: "api" });
+      const config = apiService.getConfig();
+      expect(config.executionMethod).toBe("api");
+    });
+  });
+
+  describe("confirmBeforeExecute", () => {
+    it("should default to not requiring confirmation", () => {
+      const defaultService = new AutoCompactService();
+      const config = defaultService.getConfig();
+      expect(config.confirmBeforeExecute).toBe(false);
+    });
+
+    it("should allow enabling confirmation", () => {
+      const confirmService = new AutoCompactService({ confirmBeforeExecute: true });
+      const config = confirmService.getConfig();
+      expect(config.confirmBeforeExecute).toBe(true);
+    });
+  });
+
+  describe("compactCommand", () => {
+    it("should use default compact command", () => {
+      const config = service.getConfig();
+      expect(config.compactCommand).toBe("/compact");
+    });
+
+    it("should allow custom compact command", () => {
+      const customService = new AutoCompactService({ compactCommand: "/my-compact" });
+      const config = customService.getConfig();
+      expect(config.compactCommand).toBe("/my-compact");
+    });
+  });
+
+  describe("multiple config updates", () => {
+    it("should merge multiple config updates", () => {
+      service.updateConfig({ enabled: false, threshold: 0.5 });
+      const config = service.getConfig();
+      expect(config.enabled).toBe(false);
+      expect(config.threshold).toBe(0.5);
+    });
+  });
+
+  describe("history management", () => {
+    it("should return empty history initially", () => {
+      const newService = new AutoCompactService();
+      const history = newService.getHistory();
+      expect(Array.isArray(history)).toBe(true);
+    });
+
+    it("should respect limit parameter for history", () => {
+      const history = service.getHistory(5);
+      expect(Array.isArray(history)).toBe(true);
+    });
   });
 });
