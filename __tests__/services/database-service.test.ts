@@ -675,4 +675,71 @@ describe("DatabaseService", () => {
       );
     });
   });
+
+  describe("getStatistics", () => {
+    it("should return overall statistics", async () => {
+      // Reset mock to return specific values
+      mockPrisma.requirement.count
+        .mockResolvedValueOnce(100)
+        .mockResolvedValueOnce(50)
+        .mockResolvedValueOnce(10);
+
+      const result = await service.getStatistics();
+
+      expect(result).toBeDefined();
+      expect(result.totalRequirements).toBe(100);
+    });
+  });
+
+  describe("deleteRequirement", () => {
+    it("should delete requirement by id", async () => {
+      mockPrisma.requirement.update.mockResolvedValue({ id: "req-123" });
+
+      await service.deleteRequirement("req-123");
+
+      expect(mockPrisma.requirement.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "req-123" },
+          data: expect.objectContaining({
+            status: "DELETED",
+          }),
+        })
+      );
+    });
+
+    it("should handle delete error", async () => {
+      mockPrisma.requirement.update.mockRejectedValue(new Error("Delete failed"));
+
+      await expect(service.deleteRequirement("req-123")).rejects.toThrow();
+    });
+  });
+
+  describe("anonymizeRequirement", () => {
+    it("should anonymize requirement data", () => {
+      // Create proper mock collected requirement with context
+      const requirement = {
+        id: "req-123",
+        originalRequirement: "My email is test@example.com",
+        summarizedRequirement: "Test requirement",
+        context: {
+          timestamp: new Date().toISOString(),
+          source: "test",
+        },
+        consent: {
+          consentOptions: {
+            anonymization: true,
+          },
+          userProvidedEmail: "test@example.com",
+        },
+      };
+
+      // Access private method via service instance
+      const result = (
+        service as unknown as { anonymizeRequirement: (req: unknown) => unknown }
+      ).anonymizeRequirement(requirement);
+
+      expect(result).toBeDefined();
+      expect(result.summarizedRequirement).toBe("Test requirement");
+    });
+  });
 });
