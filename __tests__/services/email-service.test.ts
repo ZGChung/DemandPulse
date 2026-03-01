@@ -256,6 +256,55 @@ describe("EmailService", () => {
     });
   });
 
+  describe("sendAdminNotification", () => {
+    const mockAdmins: EmailRecipient[] = [
+      { email: "admin1@example.com", name: "Admin 1", userId: "admin-1" },
+      { email: "admin2@example.com", name: "Admin 2", userId: "admin-2" },
+    ];
+
+    it("should send notifications to all admins", async () => {
+      const result = await emailService.sendAdminNotification(
+        mockAdmins,
+        EmailService.templates.welcome("New User")
+      );
+      expect(result.sent).toBe(2);
+      expect(result.failed).toBe(0);
+    });
+
+    it("should skip admins without email", async () => {
+      const result = await emailService.sendAdminNotification(
+        [{ email: "", name: "Admin", userId: "admin" }],
+        EmailService.templates.welcome("New User")
+      );
+      expect(result.sent).toBe(0);
+      expect(result.failed).toBe(0);
+    });
+
+    it("should handle mixed valid and invalid admins", async () => {
+      const result = await emailService.sendAdminNotification(
+        [
+          { email: "valid@example.com", name: "Valid", userId: "v-1" },
+          { email: "", name: "Invalid", userId: "i-1" },
+        ],
+        EmailService.templates.welcome("New User")
+      );
+      expect(result.sent).toBe(1);
+      expect(result.failed).toBe(0);
+    });
+  });
+
+  describe("sendRealEmail path", () => {
+    it("should attempt real email when useMock is false but fall back to mock if no client", async () => {
+      const service = new EmailService({ enabled: true, useMock: false });
+      // When resendClient is null, it falls back to mock
+      const result = await service.sendEmail({
+        to: { email: "test@example.com", name: "Test", userId: "u1" },
+        template: { subject: "Test", body: "Body" },
+      });
+      expect(result.success).toBe(true); // Falls back to mock
+    });
+  });
+
   describe("EmailService.templates", () => {
     it("should generate welcome template with name", () => {
       const template = EmailService.templates.welcome("John");
