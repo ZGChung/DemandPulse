@@ -67,6 +67,9 @@ jest.mock("next/server", () => ({
     json: jest.fn((data, init) => ({
       json: async () => data,
       status: init?.status || 200,
+      statusText: "OK",
+      headers: new Map(),
+      body: data,
     })),
   },
 }));
