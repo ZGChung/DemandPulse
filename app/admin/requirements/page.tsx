@@ -14,12 +14,12 @@ interface AdminRequirementsPageProps {
 interface AdminRequirement {
   id: string;
   status: RequirementStatus;
-  requirementText: string;
+  originalRequirement?: string;
   summarizedRequirement: string | null;
-  userId: string;
-  conversationId: string | null;
-  workspacePath: string | null;
-  createdAt: Date;
+  userId?: string | null;
+  conversationId?: string | null;
+  workspacePath?: string | null;
+  detectedAt: Date;
   updatedAt: Date;
 }
 
@@ -190,7 +190,7 @@ export default async function AdminRequirementsPage({ searchParams }: AdminRequi
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(requirement.createdAt).toLocaleDateString()}
+                      {new Date(requirement.detectedAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {requirement.userId ? (

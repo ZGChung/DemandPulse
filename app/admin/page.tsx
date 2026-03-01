@@ -19,10 +19,12 @@ interface Statistics {
 
 interface AdminRequirement {
   id: string;
-  content: string;
+  originalRequirement?: string;
   summarizedRequirement?: string;
   status: string;
-  createdAt: Date;
+  detectedAt: Date;
+  createdAt?: Date;
+  content?: string;
   user?: {
     id: string;
     email: string;
@@ -255,7 +257,7 @@ export default async function AdminPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(requirement.createdAt).toLocaleDateString()}
+                      {new Date(requirement.detectedAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button className="text-blue-600 hover:text-blue-900 mr-4">View</button>

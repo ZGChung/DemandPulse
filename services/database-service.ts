@@ -11,26 +11,28 @@ import { maskRequirementsForAdmin, canViewUnmaskedData } from "@/lib/masking";
 import { prisma } from "@/lib/prisma";
 import { CollectedRequirement } from "@/types/claude-code";
 
-// Prisma Requirement type (simplified for internal use)
-type RequirementData = {
+// Prisma Requirement type - defined inline to avoid build-time null issues
+interface PrismaRequirement {
   id: string;
   originalRequirement: string;
   summarizedRequirement: string;
+  embedding?: unknown;
   conversationId: string;
-  workspacePath?: string;
+  workspacePath?: string | null;
   detectedAt: Date;
   dataCollectionConsent: boolean;
   contactConsent: boolean;
   anonymizationConsent: boolean;
-  userProvidedEmail?: string;
+  userProvidedEmail?: string | null;
   consentedAt?: Date | null;
   userId?: string | null;
-  anonymizedData?: Record<string, unknown> | string | null;
-  dataRetentionDays: number;
   status: RequirementStatus;
   processedAt?: Date | null;
-  embedding?: unknown;
-};
+  anonymizedData?: unknown; // Prisma JsonValue can be string | number | boolean | null | JSONArray | JSONObject
+  dataRetentionDays: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 // Mock in-memory store for when database is unavailable
 interface MockRequirement {
@@ -50,6 +52,7 @@ interface MockRequirement {
   dataRetentionDays: number;
   scheduledDeletionAt: Date;
   status: RequirementStatus;
+  processedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
   embedding?: number[];
@@ -117,12 +120,12 @@ export class DatabaseService {
     encryptedOriginalRequirement: string,
     encryptedSummarizedRequirement: string,
     encryptedUserProvidedEmail?: string | null,
-    encryptedAnonymizedData?: string | null
+    encryptedAnonymizedData?: unknown
   ): Promise<{
     originalRequirement: string;
     summarizedRequirement: string;
     userProvidedEmail?: string;
-    anonymizedData?: Record<string, unknown>;
+    anonymizedData?: unknown;
   }> {
     const originalRequirement = await encryptionService.decrypt(encryptedOriginalRequirement);
     const summarizedRequirement = await encryptionService.decrypt(encryptedSummarizedRequirement);
@@ -156,7 +159,7 @@ export class DatabaseService {
   /**
    * Decrypt encrypted fields in a requirement object
    */
-  private async decryptRequirement(requirement: RequirementData): Promise<RequirementData> {
+  private async decryptRequirement(requirement: PrismaRequirement): Promise<PrismaRequirement> {
     const { originalRequirement, summarizedRequirement, userProvidedEmail, anonymizedData } =
       await this.decryptRequirementFields(
         requirement.originalRequirement,
@@ -354,7 +357,9 @@ export class DatabaseService {
           .slice(0, limit)
           .map(({ clusters: _c, _priorityScore: _p, ...req }) => req);
 
-        return Promise.all(trimmed.map((req: unknown) => this.applyPrivacyControls(req, false)));
+        return Promise.all(
+          trimmed.map((req) => this.applyPrivacyControls(req as PrismaRequirement, false))
+        );
       }
       return this.getRequirementsByStatus("PROCESSED", limit, userId);
     } catch (error) {
@@ -643,9 +648,9 @@ export class DatabaseService {
   }
 
   private async applyPrivacyControls(
-    requirement: RequirementData,
+    requirement: PrismaRequirement,
     includeAnonymized: boolean
-  ): Promise<RequirementData> {
+  ): Promise<PrismaRequirement> {
     // Decrypt encrypted fields before applying privacy controls
     const decryptedRequirement = await this.decryptRequirement(requirement);
 
