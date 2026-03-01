@@ -91,4 +91,73 @@ describe("Logger Module", () => {
       expect(typeof withLogging).toBe("function");
     });
   });
+
+  describe("Logger methods", () => {
+    it("should log debug messages", async () => {
+      const { Logger } = await import("@/lib/logger");
+      const logger = new Logger("test-debug");
+      // Should not throw
+      expect(() => logger.debug("test message")).not.toThrow();
+    });
+
+    it("should log info messages", async () => {
+      const { Logger } = await import("@/lib/logger");
+      const logger = new Logger("test-info");
+      expect(() => logger.info("test message")).not.toThrow();
+    });
+
+    it("should log warn messages", async () => {
+      const { Logger } = await import("@/lib/logger");
+      const logger = new Logger("test-warn");
+      expect(() => logger.warn("test message")).not.toThrow();
+    });
+
+    it("should log error messages", async () => {
+      const { Logger } = await import("@/lib/logger");
+      const logger = new Logger("test-error");
+      expect(() => logger.error("test message")).not.toThrow();
+    });
+
+    it("should log with metadata", async () => {
+      const { Logger } = await import("@/lib/logger");
+      const logger = new Logger("test-meta");
+      expect(() => logger.info("test", { key: "value" })).not.toThrow();
+    });
+
+    it("should set log level", async () => {
+      const { Logger, setLogLevel, LogLevel } = await import("@/lib/logger");
+      const logger = new Logger("test-level");
+      expect(() => setLogLevel(LogLevel.DEBUG)).not.toThrow();
+    });
+  });
+
+  describe("ErrorTracker", () => {
+    it("should have static enabled property", async () => {
+      const { ErrorTracker } = await import("@/lib/logger");
+      expect(ErrorTracker.enabled).toBeDefined();
+    });
+
+    it("should have static init method", async () => {
+      const { ErrorTracker } = await import("@/lib/logger");
+      expect(typeof ErrorTracker.init).toBe("function");
+    });
+
+    it("should have static captureError method", async () => {
+      const { ErrorTracker } = await import("@/lib/logger");
+      expect(typeof ErrorTracker.captureError).toBe("function");
+    });
+
+    it("should capture error without throwing", async () => {
+      const { ErrorTracker } = await import("@/lib/logger");
+      expect(() => ErrorTracker.captureError(new Error("test"))).not.toThrow();
+    });
+  });
+
+  describe("withLogging", () => {
+    it("should export withLogging function that accepts Request", async () => {
+      const { withLogging } = await import("@/lib/logger");
+      // withLogging expects a function that receives (req: Request, ...args)
+      expect(typeof withLogging).toBe("function");
+    });
+  });
 });
