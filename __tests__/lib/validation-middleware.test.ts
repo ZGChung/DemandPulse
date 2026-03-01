@@ -2,6 +2,9 @@ import {
   validateRequirementSubmission,
   validateQueryParams,
   requirementQuerySchema,
+  claudeCodeContextSchema,
+  userConsentSchema,
+  withValidation,
 } from "@/lib/validation-middleware";
 
 describe("validation-middleware", () => {
@@ -137,6 +140,131 @@ describe("validation-middleware", () => {
         expect(result.data.status).toBeUndefined();
         expect(result.data.limit).toBeUndefined();
       }
+    });
+
+    it("should reject negative offset", () => {
+      const searchParams = new URLSearchParams({
+        offset: "-1",
+      });
+
+      const result = validateQueryParams(searchParams, requirementQuerySchema);
+
+      expect(result.success).toBe(false);
+    });
+
+    it("should accept valid sort values", () => {
+      const searchParams = new URLSearchParams({
+        sort: "priority",
+      });
+
+      const result = validateQueryParams(searchParams, requirementQuerySchema);
+
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("claudeCodeContextSchema", () => {
+    it("should parse valid context data", () => {
+      const validContext = {
+        conversationId: "conv-123",
+        userId: "user-456",
+        workspacePath: "/test/path",
+        timestamp: "2024-01-01T00:00:00Z",
+      };
+      expect(claudeCodeContextSchema.parse(validContext)).toBeDefined();
+    });
+
+    it("should parse context with Date timestamp", () => {
+      const validContext = {
+        conversationId: "conv-123",
+        timestamp: new Date(),
+      };
+      expect(claudeCodeContextSchema.parse(validContext)).toBeDefined();
+    });
+
+    it("should reject empty conversationId", () => {
+      const invalidContext = {
+        conversationId: "",
+      };
+      expect(() => claudeCodeContextSchema.parse(invalidContext)).toThrow();
+    });
+
+    it("should accept optional fields", () => {
+      const minimalContext = {
+        conversationId: "conv-123",
+        timestamp: "2024-01-01T00:00:00Z",
+      };
+      expect(claudeCodeContextSchema.parse(minimalContext)).toBeDefined();
+    });
+  });
+
+  describe("userConsentSchema", () => {
+    it("should parse valid consent data", () => {
+      const validConsent = {
+        requirementId: "req-123",
+        consentedAt: "2024-01-01T00:00:00Z",
+        consentOptions: {
+          dataCollection: true,
+          contact: false,
+          anonymization: false,
+        },
+      };
+      expect(userConsentSchema.parse(validConsent)).toBeDefined();
+    });
+
+    it("should parse consent with Date timestamp", () => {
+      const validConsent = {
+        requirementId: "req-123",
+        consentedAt: new Date(),
+        consentOptions: {
+          dataCollection: true,
+          contact: false,
+          anonymization: false,
+        },
+      };
+      expect(userConsentSchema.parse(validConsent)).toBeDefined();
+    });
+
+    it("should accept optional userProvidedEmail", () => {
+      const consentWithEmail = {
+        requirementId: "req-123",
+        consentedAt: "2024-01-01T00:00:00Z",
+        consentOptions: {
+          dataCollection: true,
+          contact: true,
+          anonymization: false,
+        },
+        userProvidedEmail: "test@example.com",
+      };
+      expect(userConsentSchema.parse(consentWithEmail)).toBeDefined();
+    });
+
+    it("should accept empty email string", () => {
+      const consentWithEmptyEmail = {
+        requirementId: "req-123",
+        consentedAt: "2024-01-01T00:00:00Z",
+        consentOptions: {
+          dataCollection: true,
+          contact: false,
+          anonymization: false,
+        },
+        userProvidedEmail: "",
+      };
+      expect(userConsentSchema.parse(consentWithEmptyEmail)).toBeDefined();
+    });
+
+    it("should reject invalid email format", () => {
+      const invalidEmail = {
+        requirementId: "req-123",
+        consentedAt: "2024-01-01T00:00:00Z",
+        consentOptions: {
+          dataCollection: true,
+          contact: false,
+          anonymization: false,
+        },
+        userProvidedEmail: "not-an-email",
+      };
+      expect(() => userConsentSchema.parse(invalidEmail)).toThrow();
     });
   });
 });
