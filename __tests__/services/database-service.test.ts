@@ -1495,4 +1495,113 @@ describe("DatabaseService", () => {
       expect(mockPrisma.$disconnect).toHaveBeenCalled();
     });
   });
+
+  describe("error handling and edge cases", () => {
+    it("should handle getRequirement when not found", async () => {
+      mockPrisma.requirement.findUnique.mockResolvedValue(null);
+
+      const result = await service.getRequirement("non-existent-id");
+
+      expect(result).toBeNull();
+    });
+
+    it("should handle getRequirementsByStatus with error", async () => {
+      mockPrisma.requirement.findMany.mockRejectedValue(new Error("Database error"));
+
+      await expect(service.getRequirementsByStatus("PENDING", 10)).rejects.toThrow();
+    });
+
+    it("should handle getPrioritizedRequirements with error", async () => {
+      mockPrisma.requirement.findMany.mockRejectedValue(new Error("Database error"));
+
+      await expect(service.getPrioritizedRequirements(10)).rejects.toThrow();
+    });
+
+    it("should handle updateRequirementStatus with error", async () => {
+      mockPrisma.requirement.update.mockRejectedValue(new Error("Database error"));
+
+      await expect(service.updateRequirementStatus("some-id", "PROCESSED")).rejects.toThrow();
+    });
+
+    it("should handle deleteRequirement when not found", async () => {
+      mockPrisma.requirement.findUnique.mockResolvedValue(null);
+
+      await expect(service.deleteRequirement("non-existent", "test")).rejects.toThrow();
+    });
+
+    it("should handle getStatistics with error", async () => {
+      mockPrisma.requirement.count.mockRejectedValue(new Error("Database error"));
+
+      await expect(service.getStatistics()).rejects.toThrow();
+    });
+
+    it("should handle getClusters with empty result", async () => {
+      mockPrisma.requirementCluster.findMany.mockResolvedValue([]);
+
+      const clusters = await service.getClusters(10, 0);
+
+      expect(clusters).toEqual([]);
+    });
+
+    it("should handle getClustersCount with error", async () => {
+      mockPrisma.requirementCluster.count.mockRejectedValue(new Error("Database error"));
+
+      await expect(service.getClustersCount()).rejects.toThrow();
+    });
+
+    it("should handle createCluster with error", async () => {
+      mockPrisma.requirementCluster.create.mockRejectedValue(new Error("Database error"));
+
+      await expect(service.createCluster("Test", "Test")).rejects.toThrow();
+    });
+
+    it("should handle getRequirementCountForUser with error", async () => {
+      mockPrisma.requirement.count.mockRejectedValue(new Error("Database error"));
+
+      // Returns 0 on error (defensive programming)
+      const result = await service.getRequirementCountForUser("user-1");
+      expect(result).toBe(0);
+    });
+
+    it("should handle getClustersForUser with error", async () => {
+      mockPrisma.requirement.findMany.mockRejectedValue(new Error("Database error"));
+
+      const result = await service.getClustersForUser("user-1");
+
+      expect(Array.isArray(result)).toBe(true);
+    });
+
+    it("should handle getPublicStatistics with error", async () => {
+      mockPrisma.requirement.count.mockRejectedValue(new Error("Database error"));
+
+      // Returns default statistics on error (defensive programming)
+      const result = await service.getPublicStatistics();
+      expect(result).toEqual({
+        totalRequirements: 0,
+        totalClusters: 0,
+        totalUsers: 0,
+        recentRequirements: 0,
+      });
+    });
+
+    it("should handle getRequirementsForAdmin with error", async () => {
+      mockPrisma.requirement.findMany.mockRejectedValue(new Error("Database error"));
+
+      await expect(service.getRequirementsForAdmin(10, 0)).rejects.toThrow(
+        "Failed to fetch requirements for admin view"
+      );
+    });
+
+    it("should handle getRequirementsCountForAdmin with error", async () => {
+      mockPrisma.requirement.count.mockRejectedValue(new Error("Database error"));
+
+      await expect(service.getRequirementsCountForAdmin()).rejects.toThrow();
+    });
+
+    it("should handle updateRequirementEmbedding with error", async () => {
+      mockPrisma.requirement.update.mockRejectedValue(new Error("Database error"));
+
+      await expect(service.updateRequirementEmbedding("some-id", [0.1, 0.2])).rejects.toThrow();
+    });
+  });
 });
