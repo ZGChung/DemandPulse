@@ -911,4 +911,152 @@ describe("DatabaseService", () => {
       expect(mockPrisma.requirementCluster.count).toHaveBeenCalled();
     });
   });
+
+  describe("getStatistics", () => {
+    it("should return statistics with counts", async () => {
+      // Reset mocks first
+      mockPrisma.requirement.count.mockReset();
+      mockPrisma.requirementCluster.count.mockReset();
+      mockPrisma.user.count.mockReset();
+
+      // Use mockReturnValue for all calls since Promise.all runs in parallel
+      mockPrisma.requirement.count.mockResolvedValue(10);
+      mockPrisma.requirementCluster.count.mockResolvedValue(5);
+      mockPrisma.user.count.mockResolvedValue(2);
+
+      const stats = await service.getStatistics();
+
+      expect(stats).toBeDefined();
+      expect(stats.totalRequirements).toBeDefined();
+      expect(stats.totalClusters).toBeDefined();
+      expect(stats.totalUsers).toBeDefined();
+      // Verify the prisma methods were called
+      expect(mockPrisma.requirement.count).toHaveBeenCalled();
+      expect(mockPrisma.requirementCluster.count).toHaveBeenCalled();
+      expect(mockPrisma.user.count).toHaveBeenCalled();
+    });
+  });
+
+  describe("getRequirementCountForUser", () => {
+    it("should return count of requirements for a user", async () => {
+      // Reset and set specific mock
+      mockPrisma.requirement.count.mockReset();
+      mockPrisma.requirement.count.mockResolvedValue(7);
+
+      const count = await service.getRequirementCountForUser("user-123");
+
+      expect(count).toBe(7);
+      expect(mockPrisma.requirement.count).toHaveBeenCalledWith({
+        where: { userId: "user-123" },
+      });
+    });
+
+    it("should return 0 on error", async () => {
+      // Reset mock to throw error
+      mockPrisma.requirement.count.mockReset();
+      mockPrisma.requirement.count.mockRejectedValue(new Error("DB error"));
+
+      const count = await service.getRequirementCountForUser("user-456");
+
+      expect(count).toBe(0);
+    });
+  });
+
+  describe("getClustersForUser", () => {
+    it("should return clusters for a user", async () => {
+      const mockClusters = [
+        { id: "cluster-1", name: "Features", requirementCount: 5 },
+        { id: "cluster-2", name: "Bugs", requirementCount: 3 },
+      ];
+
+      mockPrisma.requirementCluster.findMany.mockResolvedValue(mockClusters);
+
+      const clusters = await service.getClustersForUser("user-123");
+
+      expect(clusters).toHaveLength(2);
+      expect(clusters[0].name).toBe("Features");
+      expect(mockPrisma.requirementCluster.findMany).toHaveBeenCalledWith({
+        where: { requirements: { some: { userId: "user-123" } } },
+        select: { id: true, name: true, requirementCount: true },
+        orderBy: { requirementCount: "desc" },
+      });
+    });
+
+    it("should return empty array when no clusters", async () => {
+      mockPrisma.requirementCluster.findMany.mockResolvedValue([]);
+
+      const clusters = await service.getClustersForUser("user-new");
+
+      expect(clusters).toHaveLength(0);
+    });
+  });
+
+  describe("processScheduledDeletions", () => {
+    it("should process scheduled deletions", async () => {
+      const mockRequirements = [
+        {
+          id: "req-1",
+          scheduledDeletionAt: new Date("2020-01-01"),
+          status: "PENDING",
+        },
+      ];
+
+      mockPrisma.requirement.findMany.mockResolvedValue(mockRequirements);
+      mockPrisma.requirement.update.mockResolvedValue({ id: "req-1" });
+
+      const deletedCount = await service.processScheduledDeletions();
+
+      expect(deletedCount).toBe(1);
+      expect(mockPrisma.requirement.update).toHaveBeenCalled();
+    });
+
+    it("should return 0 when no requirements to delete", async () => {
+      mockPrisma.requirement.findMany.mockResolvedValue([]);
+
+      const deletedCount = await service.processScheduledDeletions();
+
+      expect(deletedCount).toBe(0);
+    });
+
+    it("should throw error on failure", async () => {
+      mockPrisma.requirement.findMany.mockRejectedValue(new Error("DB error"));
+
+      await expect(service.processScheduledDeletions()).rejects.toThrow(
+        "Failed to process scheduled deletions"
+      );
+    });
+  });
+
+  describe("getRequirementsCountForAdmin", () => {
+    it("should return count with status filter", async () => {
+      mockPrisma.requirement.count.mockResolvedValue(10);
+
+      const count = await service.getRequirementsCountForAdmin({ status: "PENDING" });
+
+      expect(count).toBe(10);
+      expect(mockPrisma.requirement.count).toHaveBeenCalledWith({
+        where: { status: "PENDING" },
+      });
+    });
+
+    it("should return count with userId filter", async () => {
+      mockPrisma.requirement.count.mockResolvedValue(5);
+
+      const count = await service.getRequirementsCountForAdmin({ userId: "user-123" });
+
+      expect(count).toBe(5);
+      expect(mockPrisma.requirement.count).toHaveBeenCalledWith({
+        where: { userId: "user-123" },
+      });
+    });
+
+    it("should return total count without filters", async () => {
+      mockPrisma.requirement.count.mockResolvedValue(100);
+
+      const count = await service.getRequirementsCountForAdmin();
+
+      expect(count).toBe(100);
+      expect(mockPrisma.requirement.count).toHaveBeenCalledWith({ where: {} });
+    });
+  });
 });
