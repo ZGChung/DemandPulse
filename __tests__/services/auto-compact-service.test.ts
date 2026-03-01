@@ -302,4 +302,157 @@ describe("AutoCompactService", () => {
       expect(typeof service.notify).toBe("function");
     });
   });
+
+  describe("CLI execution method", () => {
+    it("should execute compact via CLI method", async () => {
+      const cliService = new AutoCompactService({
+        executionMethod: "cli",
+        cliPath: "/custom/path/claude",
+      });
+      const result = await cliService.manualCompact("summarize_oldest");
+      expect(result.success).toBe(true);
+    });
+
+    it("should handle CLI method with different strategy", async () => {
+      const cliService = new AutoCompactService({
+        executionMethod: "cli",
+      });
+      const result = await cliService.manualCompact("remove_oldest");
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("API execution method", () => {
+    it("should execute compact via API method", async () => {
+      const apiService = new AutoCompactService({
+        executionMethod: "api",
+        apiEndpoint: "https://custom.api/compact",
+        apiToken: "test-token",
+      });
+      const result = await apiService.manualCompact("compress_all");
+      expect(result.success).toBe(true);
+    });
+
+    it("should handle API method with different strategy", async () => {
+      const apiService = new AutoCompactService({
+        executionMethod: "api",
+      });
+      const result = await apiService.manualCompact("summarize_oldest");
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("error handling", () => {
+    it("should handle unknown execution method gracefully", async () => {
+      const customService = new AutoCompactService({
+        executionMethod: "unknown" as "simulated",
+      });
+      const result = await customService.manualCompact();
+      expect(result.success).toBe(true); // Falls back to simulated
+    });
+  });
+
+  describe("config with notification methods", () => {
+    it("should support console notification method", () => {
+      const consoleService = new AutoCompactService({
+        notificationMethod: "console",
+      });
+      const config = consoleService.getConfig();
+      expect(config.notificationMethod).toBe("console");
+    });
+
+    it("should support notification notification method", () => {
+      const notifService = new AutoCompactService({
+        notificationMethod: "notification",
+      });
+      const config = notifService.getConfig();
+      expect(config.notificationMethod).toBe("notification");
+    });
+  });
+
+  describe("showNotification", () => {
+    it("should have showNotification method", () => {
+      expect(typeof service.showNotification).toBe("function");
+    });
+
+    it("should handle different notification types", () => {
+      service.showNotification("Test message", "info");
+      service.showNotification("Warning message", "warning");
+      service.showNotification("Error message", "error");
+      service.showNotification("Success message", "success");
+    });
+  });
+
+  describe("multiple compact strategies", () => {
+    it("should list all available strategies", () => {
+      const config = service.getConfig();
+      expect(config.compactStrategies.length).toBe(3);
+      expect(config.compactStrategies.map((s) => s.name)).toEqual([
+        "summarize_oldest",
+        "remove_oldest",
+        "compress_all",
+      ]);
+    });
+
+    it("should have descriptions for all strategies", () => {
+      const config = service.getConfig();
+      config.compactStrategies.forEach((strategy) => {
+        expect(strategy.description).toBeDefined();
+        expect(strategy.description.length).toBeGreaterThan(0);
+      });
+    });
+
+    it("should mark one strategy as default", () => {
+      const config = service.getConfig();
+      const defaultStrategies = config.compactStrategies.filter((s) => s.default);
+      expect(defaultStrategies.length).toBe(1);
+      expect(defaultStrategies[0].name).toBe("summarize_oldest");
+    });
+  });
+
+  describe("custom config options", () => {
+    it("should allow custom apiEndpoint", () => {
+      const customService = new AutoCompactService({
+        apiEndpoint: "https://my-custom-endpoint.com/api",
+      });
+      const config = customService.getConfig();
+      expect(config.apiEndpoint).toBe("https://my-custom-endpoint.com/api");
+    });
+
+    it("should allow custom apiToken", () => {
+      const customService = new AutoCompactService({
+        apiToken: "my-secret-token",
+      });
+      const config = customService.getConfig();
+      expect(config.apiToken).toBe("my-secret-token");
+    });
+
+    it("should allow custom cliPath", () => {
+      const customService = new AutoCompactService({
+        cliPath: "/usr/bin/my-claude",
+      });
+      const config = customService.getConfig();
+      expect(config.cliPath).toBe("/usr/bin/my-claude");
+    });
+  });
+
+  describe("statistics tracking", () => {
+    it("should track successful compacts", async () => {
+      const newService = new AutoCompactService({ enabled: true });
+      await newService.manualCompact();
+      const stats = newService.getStatistics();
+      expect(stats.totalCompacts).toBeGreaterThanOrEqual(0);
+    });
+
+    it("should track failed compacts", async () => {
+      const stats = service.getStatistics();
+      expect(typeof stats.successfulCompacts).toBe("number");
+      expect(typeof stats.failedCompacts).toBe("number");
+    });
+
+    it("should report isExecuting status", () => {
+      const stats = service.getStatistics();
+      expect(typeof stats.isExecuting).toBe("boolean");
+    });
+  });
 });

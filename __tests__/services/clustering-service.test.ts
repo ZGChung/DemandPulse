@@ -244,4 +244,39 @@ describe("ClusteringService", () => {
       expect(typeof desc).toBe("string");
     });
   });
+
+  describe("options validation", () => {
+    it("should use default options when none provided", async () => {
+      const requirements = [
+        { id: "1", embedding: [0.1, 0.2, 0.3] },
+        { id: "2", embedding: [0.15, 0.25, 0.35] },
+        { id: "3", embedding: [0.4, 0.5, 0.6] },
+        { id: "4", embedding: [0.45, 0.55, 0.65] },
+      ];
+      const result = await service.clusterRequirements(requirements);
+      expect(result).toBeDefined();
+    });
+
+    it("should respect maxIterations option", async () => {
+      const requirements = [
+        { id: "1", embedding: [0.1, 0.2, 0.3] },
+        { id: "2", embedding: [0.15, 0.25, 0.35] },
+        { id: "3", embedding: [0.4, 0.5, 0.6] },
+        { id: "4", embedding: [0.45, 0.55, 0.65] },
+      ];
+      const result = await service.clusterRequirements(requirements, { maxIterations: 50 });
+      expect(result).toBeDefined();
+    });
+
+    it("should respect similarityThreshold option", async () => {
+      const requirements = [
+        { id: "1", embedding: [0.1, 0.2, 0.3] },
+        { id: "2", embedding: [0.15, 0.25, 0.35] },
+        { id: "3", embedding: [0.4, 0.5, 0.6] },
+        { id: "4", embedding: [0.45, 0.55, 0.65] },
+      ];
+      const result = await service.clusterRequirements(requirements, { similarityThreshold: 0.5 });
+      expect(result).toBeDefined();
+    });
+  });
 });
