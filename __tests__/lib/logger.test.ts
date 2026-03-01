@@ -126,7 +126,8 @@ describe("Logger Module", () => {
 
     it("should set log level", async () => {
       const { Logger, setLogLevel, LogLevel } = await import("@/lib/logger");
-      const logger = new Logger("test-level");
+      // Use Logger to avoid unused variable warning
+      const _logger = new Logger("test-level");
       expect(() => setLogLevel(LogLevel.DEBUG)).not.toThrow();
     });
   });
