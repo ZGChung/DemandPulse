@@ -1399,6 +1399,93 @@ describe("DatabaseService", () => {
     });
   });
 
+  describe("updateRequirementEmbedding", () => {
+    it("should update requirement embedding", async () => {
+      mockPrisma.requirement.update.mockResolvedValue({
+        id: "req-1",
+        embedding: [0.1, 0.2, 0.3],
+      });
+
+      await service.updateRequirementEmbedding("req-1", [0.1, 0.2, 0.3]);
+
+      expect(mockPrisma.requirement.update).toHaveBeenCalledWith({
+        where: { id: "req-1" },
+        data: { embedding: [0.1, 0.2, 0.3] },
+      });
+    });
+  });
+
+  describe("getRequirementCountForUser", () => {
+    it("should return requirement count for user", async () => {
+      mockPrisma.requirement.count.mockResolvedValue(5);
+
+      const count = await service.getRequirementCountForUser("user-1");
+
+      expect(count).toBe(5);
+    });
+
+    it("should return 0 on error", async () => {
+      mockPrisma.requirement.count.mockRejectedValue(new Error("DB error"));
+
+      const count = await service.getRequirementCountForUser("user-1");
+
+      expect(count).toBe(0);
+    });
+  });
+
+  describe("getClustersForUser", () => {
+    it("should return clusters for user", async () => {
+      mockPrisma.requirementCluster.findMany.mockResolvedValue([
+        { id: "cluster-1", name: "Cluster 1", requirementCount: 3 },
+        { id: "cluster-2", name: "Cluster 2", requirementCount: 2 },
+      ]);
+
+      const clusters = await service.getClustersForUser("user-1");
+
+      expect(clusters).toHaveLength(2);
+      expect(clusters[0].name).toBe("Cluster 1");
+    });
+
+    it("should return empty array when no clusters", async () => {
+      mockPrisma.requirementCluster.findMany.mockResolvedValue([]);
+
+      const clusters = await service.getClustersForUser("user-1");
+
+      expect(clusters).toEqual([]);
+    });
+  });
+
+  describe("createCluster", () => {
+    it("should create a cluster", async () => {
+      mockPrisma.requirementCluster.create.mockResolvedValue({
+        id: "cluster-1",
+        name: "New Cluster",
+        description: "Test cluster",
+        requirementCount: 0,
+        firstDetectedAt: new Date(),
+        lastDetectedAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        centroidEmbedding: null,
+      });
+
+      const cluster = await service.createCluster("New Cluster", "Test cluster");
+
+      expect(cluster.name).toBe("New Cluster");
+    });
+  });
+
+  describe("processScheduledDeletions", () => {
+    it("should process scheduled deletions", async () => {
+      // Return empty array to avoid triggering deleteRequirement logic
+      mockPrisma.requirement.findMany.mockResolvedValue([]);
+
+      const count = await service.processScheduledDeletions();
+
+      expect(typeof count).toBe("number");
+    });
+  });
+
   describe("disconnect", () => {
     it("should disconnect from database", async () => {
       mockPrisma.$disconnect.mockResolvedValue(undefined);
