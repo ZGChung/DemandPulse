@@ -152,5 +152,71 @@ describe("Encryption Module", () => {
       expect(defaultEncryptionConfig).toBeDefined();
       expect(typeof defaultEncryptionConfig.enabled).toBe("boolean");
     });
+
+    it("should handle long text encryption", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const service = new EncryptionService({ key: "test-key-12345678901234567890123456789012" });
+      const plaintext = "A".repeat(10000);
+      const encrypted = await service.encrypt(plaintext);
+      const decrypted = await service.decrypt(encrypted);
+      expect(decrypted).toBe(plaintext);
+    });
+
+    it("should handle special characters", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const service = new EncryptionService({ key: "test-key-12345678901234567890123456789012" });
+      const plaintext = "!@#$%^&*()_+-=[]{}|;':\",./<>?`~";
+      const encrypted = await service.encrypt(plaintext);
+      const decrypted = await service.decrypt(encrypted);
+      expect(decrypted).toBe(plaintext);
+    });
+
+    it("should encrypt different plaintexts to different ciphertexts", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const service = new EncryptionService({ key: "test-key-12345678901234567890123456789012" });
+      const encrypted1 = await service.encrypt("text1");
+      const encrypted2 = await service.encrypt("text2");
+      expect(encrypted1).not.toBe(encrypted2);
+    });
+
+    it("should handle base64 special characters in plaintext", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const service = new EncryptionService({ key: "test-key-12345678901234567890123456789012" });
+      // This could cause issues if not handled properly
+      const plaintext = "a+b/c=d==";
+      const encrypted = await service.encrypt(plaintext);
+      const decrypted = await service.decrypt(encrypted);
+      expect(decrypted).toBe(plaintext);
+    });
+  });
+
+  describe("EncryptionService errors", () => {
+    it("should return plaintext when encrypting without key and disabled", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const service = new EncryptionService({ key: "", enabled: false });
+      const result = await service.encrypt("test");
+      expect(result).toBe("test");
+    });
+
+    it("should return ciphertext when decrypting without key and disabled", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const service = new EncryptionService({ key: "", enabled: false });
+      const result = await service.decrypt("test");
+      expect(result).toBe("test");
+    });
+
+    it("should handle decryptJSON with invalid JSON", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const service = new EncryptionService({ key: "test-key-12345678901234567890123456789012" });
+      const encrypted = await service.encrypt("not-valid-json");
+      await expect(service.decryptJSON(encrypted)).rejects.toThrow();
+    });
+
+    it("should handle decryptJSON with corrupted data", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const service = new EncryptionService({ key: "test-key-12345678901234567890123456789012" });
+      // Create a corrupted encrypted string (valid base64 but not our encrypted format)
+      await expect(service.decryptJSON("corrupted:data")).rejects.toThrow();
+    });
   });
 });
