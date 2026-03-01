@@ -1,4 +1,4 @@
-import { describe, it, expect } from "@jest/globals";
+import { describe, it, expect, jest } from "@jest/globals";
 
 describe("Logger Module", () => {
   describe("LogLevel", () => {
@@ -83,6 +83,26 @@ describe("Logger Module", () => {
       const { ErrorTracker } = await import("@/lib/logger");
       expect(ErrorTracker).toBeDefined();
     });
+
+    it("should have static enabled property", async () => {
+      const { ErrorTracker } = await import("@/lib/logger");
+      expect(ErrorTracker.enabled).toBeDefined();
+    });
+
+    it("should have static init method", async () => {
+      const { ErrorTracker } = await import("@/lib/logger");
+      expect(typeof ErrorTracker.init).toBe("function");
+    });
+
+    it("should have static captureError method", async () => {
+      const { ErrorTracker } = await import("@/lib/logger");
+      expect(typeof ErrorTracker.captureError).toBe("function");
+    });
+
+    it("should have static captureMessage method", async () => {
+      const { ErrorTracker } = await import("@/lib/logger");
+      expect(typeof ErrorTracker.captureMessage).toBe("function");
+    });
   });
 
   describe("withLogging", () => {
@@ -96,7 +116,6 @@ describe("Logger Module", () => {
     it("should log debug messages", async () => {
       const { Logger } = await import("@/lib/logger");
       const logger = new Logger("test-debug");
-      // Should not throw
       expect(() => logger.debug("test message")).not.toThrow();
     });
 
@@ -125,40 +144,73 @@ describe("Logger Module", () => {
     });
 
     it("should set log level", async () => {
-      const { Logger, setLogLevel, LogLevel } = await import("@/lib/logger");
-      // Use Logger to avoid unused variable warning
-      const _logger = new Logger("test-level");
+      const { setLogLevel, LogLevel } = await import("@/lib/logger");
       expect(() => setLogLevel(LogLevel.DEBUG)).not.toThrow();
     });
   });
 
-  describe("ErrorTracker", () => {
-    it("should have static enabled property", async () => {
-      const { ErrorTracker } = await import("@/lib/logger");
-      expect(ErrorTracker.enabled).toBeDefined();
+  describe("Logger logRequest", () => {
+    it("should log API request with all parameters", async () => {
+      const { Logger } = await import("@/lib/logger");
+      const logger = new Logger("test-api");
+      expect(() => logger.logRequest("GET", "/api/test", 200, 100)).not.toThrow();
     });
 
-    it("should have static init method", async () => {
-      const { ErrorTracker } = await import("@/lib/logger");
-      expect(typeof ErrorTracker.init).toBe("function");
+    it("should log API request with userId", async () => {
+      const { Logger } = await import("@/lib/logger");
+      const logger = new Logger("test-api-user");
+      expect(() => logger.logRequest("POST", "/api/data", 201, 50, "user-123")).not.toThrow();
+    });
+  });
+
+  describe("Logger logDatabaseOperation", () => {
+    it("should log successful database operation", async () => {
+      const { Logger } = await import("@/lib/logger");
+      const logger = new Logger("test-db");
+      expect(() => logger.logDatabaseOperation("findMany", "User", 25, true)).not.toThrow();
     });
 
-    it("should have static captureError method", async () => {
-      const { ErrorTracker } = await import("@/lib/logger");
-      expect(typeof ErrorTracker.captureError).toBe("function");
+    it("should log failed database operation with error", async () => {
+      const { Logger } = await import("@/lib/logger");
+      const logger = new Logger("test-db-error");
+      const error = new Error("Database connection failed");
+      expect(() =>
+        logger.logDatabaseOperation("connect", "Prisma", 5000, false, error)
+      ).not.toThrow();
+    });
+  });
+
+  describe("withLogging function", () => {
+    it("should export withLogging function", async () => {
+      const { withLogging } = await import("@/lib/logger");
+      expect(typeof withLogging).toBe("function");
+    });
+  });
+
+  describe("Logger with context", () => {
+    it("should log with context object", async () => {
+      const { Logger } = await import("@/lib/logger");
+      const logger = new Logger("test-context");
+      expect(() => logger.info("message", { userId: "123", action: "login" })).not.toThrow();
     });
 
+    it("should log error with error object", async () => {
+      const { Logger } = await import("@/lib/logger");
+      const logger = new Logger("test-error-obj");
+      const error = new Error("Test error");
+      expect(() => logger.error("operation failed", { extra: "data" }, error)).not.toThrow();
+    });
+  });
+
+  describe("ErrorTracker static methods", () => {
     it("should capture error without throwing", async () => {
       const { ErrorTracker } = await import("@/lib/logger");
       expect(() => ErrorTracker.captureError(new Error("test"))).not.toThrow();
     });
-  });
 
-  describe("withLogging", () => {
-    it("should export withLogging function that accepts Request", async () => {
-      const { withLogging } = await import("@/lib/logger");
-      // withLogging expects a function that receives (req: Request, ...args)
-      expect(typeof withLogging).toBe("function");
+    it("should capture message without throwing", async () => {
+      const { ErrorTracker } = await import("@/lib/logger");
+      expect(() => ErrorTracker.captureMessage("test message")).not.toThrow();
     });
   });
 });
