@@ -1,4 +1,5 @@
 import { describe, it, expect, jest } from "@jest/globals";
+import { NextRequest } from "next/server";
 
 describe("withRequestLogging", () => {
   it("should export withRequestLogging function", async () => {
@@ -37,7 +38,7 @@ describe("withRequestLogging", () => {
       nextUrl: { pathname: "/api/test" },
       method: "GET",
       headers: { get: () => null },
-    } as any;
+    } as unknown as NextRequest;
 
     await wrapped(mockRequest);
 
@@ -60,7 +61,7 @@ describe("withRequestLogging", () => {
         nextUrl: { pathname: "/api/test" },
         method,
         headers: { get: () => null },
-      } as any;
+      } as unknown as NextRequest;
 
       await wrapped(mockRequest);
 
@@ -78,7 +79,7 @@ describe("withRequestLogging", () => {
       nextUrl: { pathname: "/api/test" },
       method: "GET",
       headers: { get: () => null },
-    } as any;
+    } as unknown as NextRequest;
 
     // Should not throw, should return error response
     const response = await wrapped(mockRequest);
