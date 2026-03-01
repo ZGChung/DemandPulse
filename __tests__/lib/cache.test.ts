@@ -32,6 +32,12 @@ describe("Cache Utilities", () => {
       cacheSet("ttl-key", "value", 100); // 100ms TTL
       expect(cacheGet("ttl-key")).toBe("value");
     });
+
+    it("should return undefined after TTL expires", async () => {
+      cacheSet("expire-key", "value", 50); // 50ms TTL
+      await new Promise((resolve) => setTimeout(resolve, 60));
+      expect(cacheGet("expire-key")).toBeUndefined();
+    });
   });
 
   describe("cacheDelete", () => {
