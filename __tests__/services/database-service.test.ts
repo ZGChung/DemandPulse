@@ -1250,4 +1250,162 @@ describe("DatabaseService", () => {
       expect(requirements).toHaveLength(2);
     });
   });
+
+  describe("storeRequirement with privacy controls", () => {
+    it("should store requirement with anonymization consent", async () => {
+      const mockRequirement = { id: "req-anon", status: "PENDING" };
+      mockPrisma.requirement.create.mockResolvedValue(mockRequirement);
+      mockPrisma.privacyAuditLog.create.mockResolvedValue({ id: "log-1" });
+
+      const requirement: CollectedRequirement = {
+        originalRequirement: "Test requirement with sensitive data",
+        summarizedRequirement: "Test",
+        context: {
+          conversationId: "conv-1",
+          workspacePath: "/test/workspace",
+          timestamp: new Date(),
+        },
+        consent: {
+          consentOptions: {
+            dataCollection: true,
+            contact: false,
+            anonymization: true,
+          },
+          consentedAt: new Date(),
+        },
+      };
+
+      const id = await service.storeRequirement(requirement);
+      expect(id).toBe("req-anon");
+      expect(mockPrisma.privacyAuditLog.create).toHaveBeenCalled();
+    });
+
+    it("should store requirement with contact consent", async () => {
+      const mockRequirement = { id: "req-contact", status: "PENDING" };
+      mockPrisma.requirement.create.mockResolvedValue(mockRequirement);
+      mockPrisma.privacyAuditLog.create.mockResolvedValue({ id: "log-1" });
+
+      const requirement: CollectedRequirement = {
+        originalRequirement: "Test with contact",
+        summarizedRequirement: "Test contact",
+        context: {
+          conversationId: "conv-2",
+          workspacePath: "/test/workspace",
+          timestamp: new Date(),
+        },
+        consent: {
+          consentOptions: {
+            dataCollection: true,
+            contact: true,
+            anonymization: false,
+          },
+          consentedAt: new Date(),
+        },
+      };
+
+      const id = await service.storeRequirement(requirement);
+      expect(id).toBe("req-contact");
+    });
+
+    it("should store requirement with user provided email", async () => {
+      const mockRequirement = { id: "req-email", status: "PENDING" };
+      mockPrisma.requirement.create.mockResolvedValue(mockRequirement);
+      mockPrisma.privacyAuditLog.create.mockResolvedValue({ id: "log-1" });
+
+      const requirement: CollectedRequirement = {
+        originalRequirement: "Test with email",
+        summarizedRequirement: "Test email",
+        context: {
+          conversationId: "conv-3",
+          workspacePath: "/test/workspace",
+          timestamp: new Date(),
+        },
+        consent: {
+          consentOptions: {
+            dataCollection: true,
+            contact: true,
+            anonymization: false,
+          },
+          consentedAt: new Date(),
+        },
+        userProvidedEmail: "user@example.com",
+      };
+
+      const id = await service.storeRequirement(requirement);
+      expect(id).toBe("req-email");
+    });
+  });
+
+  describe("getRequirement with privacy controls", () => {
+    it("should apply privacy controls for anonymized requirement", async () => {
+      const mockRequirement = {
+        id: "req-1",
+        originalRequirement: "encrypted-data",
+        summarizedRequirement: "Test",
+        conversationId: "conv-1",
+        anonymizationConsent: true,
+        anonymizedData: { summarizedRequirement: "Test" },
+        contactConsent: false,
+        userProvidedEmail: null,
+        status: "PENDING" as const,
+      };
+
+      mockPrisma.requirement.findUnique.mockResolvedValue(mockRequirement);
+
+      const result = await service.getRequirement("req-1", false);
+
+      expect(result).toBeDefined();
+    });
+
+    it("should include anonymized data when requested", async () => {
+      const mockRequirement = {
+        id: "req-2",
+        originalRequirement: "encrypted",
+        summarizedRequirement: "Test",
+        conversationId: "conv-1",
+        anonymizationConsent: true,
+        anonymizedData: { categories: ["test"] },
+        contactConsent: true,
+        userProvidedEmail: "test@example.com",
+        status: "PENDING" as const,
+      };
+
+      mockPrisma.requirement.findUnique.mockResolvedValue(mockRequirement);
+
+      const result = await service.getRequirement("req-2", true);
+
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe("updateRequirementStatus", () => {
+    it("should log privacy action on status update", async () => {
+      mockPrisma.requirement.update.mockResolvedValue({
+        id: "req-1",
+        status: "PROCESSED",
+      });
+      mockPrisma.privacyAuditLog.create.mockResolvedValue({ id: "log-1" });
+
+      await service.updateRequirementStatus("req-1", "PROCESSED");
+
+      expect(mockPrisma.privacyAuditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            action: "UPDATE",
+            entityType: "Requirement",
+          }),
+        })
+      );
+    });
+  });
+
+  describe("disconnect", () => {
+    it("should disconnect from database", async () => {
+      mockPrisma.$disconnect.mockResolvedValue(undefined);
+
+      await service.disconnect();
+
+      expect(mockPrisma.$disconnect).toHaveBeenCalled();
+    });
+  });
 });
