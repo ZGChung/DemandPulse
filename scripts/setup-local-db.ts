@@ -1,4 +1,5 @@
 #!/usr/bin/env ts-node
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Setup script for local PostgreSQL database
  * This creates a local database for testing if Neon is not available

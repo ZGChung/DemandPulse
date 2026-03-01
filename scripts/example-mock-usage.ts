@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Example: How to use the mock Claude Code service programmatically
  * This shows how to integrate the mock service into tests or other scripts

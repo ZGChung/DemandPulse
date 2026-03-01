@@ -1,4 +1,5 @@
 // AutoCompactService tests
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AutoCompactService } from "../../services/auto-compact-service";
 import { hookManager } from "../../services/hook-manager";
 

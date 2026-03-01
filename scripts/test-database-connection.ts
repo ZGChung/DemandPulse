@@ -1,4 +1,5 @@
 #!/usr/bin/env ts-node
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Test script to verify database connection
  * Usage: npx ts-node scripts/test-database-connection.ts
