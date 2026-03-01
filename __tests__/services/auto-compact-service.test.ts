@@ -212,4 +212,46 @@ describe("AutoCompactService", () => {
       expect(Array.isArray(history)).toBe(true);
     });
   });
+
+  describe("getStatistics", () => {
+    it("should return statistics object", () => {
+      const stats = service.getStatistics();
+      expect(stats).toBeDefined();
+      expect(stats.totalCompacts).toBeDefined();
+      expect(stats.successfulCompacts).toBeDefined();
+      expect(stats.failedCompacts).toBeDefined();
+      expect(stats.isExecuting).toBeDefined();
+      expect(stats.config).toBeDefined();
+    });
+  });
+
+  describe("enable/disable", () => {
+    it("should enable the service", () => {
+      service.disable();
+      expect(service.getConfig().enabled).toBe(false);
+      service.enable();
+      expect(service.getConfig().enabled).toBe(true);
+    });
+
+    it("should disable the service", () => {
+      service.enable();
+      expect(service.getConfig().enabled).toBe(true);
+      service.disable();
+      expect(service.getConfig().enabled).toBe(false);
+    });
+  });
+
+  describe("manualCompact", () => {
+    it("should execute manual compact with default strategy", async () => {
+      const result = await service.manualCompact();
+      expect(result).toBeDefined();
+      expect(typeof result.success).toBe("boolean");
+    });
+
+    it("should execute manual compact with custom strategy", async () => {
+      const result = await service.manualCompact("compress_all");
+      expect(result).toBeDefined();
+      expect(typeof result.success).toBe("boolean");
+    });
+  });
 });
