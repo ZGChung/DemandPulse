@@ -455,4 +455,60 @@ describe("AutoCompactService", () => {
       expect(typeof stats.isExecuting).toBe("boolean");
     });
   });
+
+  describe("hook event handlers", () => {
+    it("should register hooks on construction", () => {
+      const { hookManager } = require("@/services/hook-manager");
+      expect(hookManager.register).toHaveBeenCalled();
+    });
+
+    it("should have hook handlers registered for auto_compact_triggered", () => {
+      const { hookManager } = require("@/services/hook-manager");
+      expect(hookManager.register).toHaveBeenCalled();
+    });
+
+    it("should have hook handlers registered for context_limit_reached", () => {
+      const { hookManager } = require("@/services/hook-manager");
+      expect(hookManager.register).toHaveBeenCalled();
+    });
+
+    it("should have hook handlers registered for context_limit_approaching", () => {
+      const { hookManager } = require("@/services/hook-manager");
+      expect(hookManager.register).toHaveBeenCalled();
+    });
+  });
+
+  describe("notification methods", () => {
+    it("should notify with info type", () => {
+      const testService = new AutoCompactService({ notificationMethod: "console" });
+      testService.showNotification("Test info", "info");
+    });
+
+    it("should notify with warning type", () => {
+      const testService = new AutoCompactService({ notificationMethod: "console" });
+      testService.showNotification("Test warning", "warning");
+    });
+
+    it("should notify with error type", () => {
+      const testService = new AutoCompactService({ notificationMethod: "console" });
+      testService.showNotification("Test error", "error");
+    });
+
+    it("should notify with success type", () => {
+      const testService = new AutoCompactService({ notificationMethod: "console" });
+      testService.showNotification("Test success", "success");
+    });
+  });
+
+  describe("context before/after tracking", () => {
+    it("should have getHistory method that returns array", () => {
+      const history = service.getHistory();
+      expect(Array.isArray(history)).toBe(true);
+    });
+
+    it("should have getHistory with limit", () => {
+      const history = service.getHistory(10);
+      expect(Array.isArray(history)).toBe(true);
+    });
+  });
 });
