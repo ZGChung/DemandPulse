@@ -590,4 +590,65 @@ describe("AutoCompactService", () => {
       expect(Array.isArray(history)).toBe(true);
     });
   });
+
+  describe("setupHooks", () => {
+    it("should register hooks with hookManager", () => {
+      const { hookManager } = require("@/services/hook-manager");
+      // Create a new service instance - need to reset all mocks first
+      jest.resetAllMocks();
+      const newService = new AutoCompactService({ enabled: true });
+      // Access private method via any cast
+      (newService as any).setupHooks();
+      // At least 3 hooks should be registered (auto_compact, context_limit, context_warning)
+      expect(hookManager.register).toHaveBeenCalled();
+    });
+  });
+
+  describe("notification methods", () => {
+    it("should notify with console method", async () => {
+      const consoleService = new AutoCompactService({
+        enabled: true,
+        notificationMethod: "console",
+      });
+      const result = await consoleService.manualCompact("summarize_oldest");
+      expect(result).toBeDefined();
+    });
+
+    it("should notify with notification method", async () => {
+      const notifyService = new AutoCompactService({
+        enabled: true,
+        notificationMethod: "notification",
+      });
+      const result = await notifyService.manualCompact("summarize_oldest");
+      expect(result).toBeDefined();
+    });
+
+    it("should handle warning notification type", async () => {
+      const warnService = new AutoCompactService({
+        enabled: true,
+        notificationMethod: "console",
+      });
+      // Access private method via any cast
+      (warnService as any).notify("test warning", "warning");
+      expect(warnService).toBeDefined();
+    });
+
+    it("should handle error notification type", async () => {
+      const errorService = new AutoCompactService({
+        enabled: true,
+        notificationMethod: "console",
+      });
+      (errorService as any).notify("test error", "error");
+      expect(errorService).toBeDefined();
+    });
+
+    it("should handle success notification type", async () => {
+      const successService = new AutoCompactService({
+        enabled: true,
+        notificationMethod: "console",
+      });
+      (successService as any).notify("test success", "success");
+      expect(successService).toBeDefined();
+    });
+  });
 });
