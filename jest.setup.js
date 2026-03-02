@@ -11,6 +11,11 @@ if (!global.TextDecoder) {
   global.TextDecoder = TextDecoder;
 }
 
+// Polyfill crypto for Node.js test environment (jsdom should provide it, but ensure it's available)
+if (!global.crypto) {
+  global.crypto = require("crypto").webcrypto;
+}
+
 // Polyfill Response and Request for tests
 if (!global.Response) {
   global.Response = class Response {
