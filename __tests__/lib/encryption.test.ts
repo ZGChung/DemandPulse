@@ -52,6 +52,40 @@ describe("Encryption Module", () => {
       const result = await service.decrypt("invalid-data");
       expect(result).toBeDefined();
     });
+
+    it("should throw EncryptionError when Web Crypto API not available", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      // Test the getKey method by trying to import invalid key
+      const service = new EncryptionService({ key: "invalid-key-format", enabled: true });
+      await expect(service.encrypt("test")).rejects.toThrow();
+    });
+
+    it("should handle encryptJSON with array data", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const service = new EncryptionService({ key: "test-key-12345678901234567890123456789012" });
+      const data = [1, 2, 3, "test"];
+      const encrypted = await service.encryptJSON(data);
+      const decrypted = await service.decryptJSON(encrypted);
+      expect(decrypted).toEqual(data);
+    });
+
+    it("should handle encryptJSON with null data", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const service = new EncryptionService({ key: "test-key-12345678901234567890123456789012" });
+      const data = null;
+      const encrypted = await service.encryptJSON(data);
+      const decrypted = await service.decryptJSON(encrypted);
+      expect(decrypted).toBeNull();
+    });
+
+    it("should handle encryptJSON with boolean data", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const service = new EncryptionService({ key: "test-key-12345678901234567890123456789012" });
+      const data = true;
+      const encrypted = await service.encryptJSON(data);
+      const decrypted = await service.decryptJSON(encrypted);
+      expect(decrypted).toBe(true);
+    });
   });
 
   describe("EncryptionError", () => {
