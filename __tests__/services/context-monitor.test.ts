@@ -1,5 +1,4 @@
 // ContextMonitorService tests
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ContextMonitorService } from "../../services/context-monitor";
 
 describe("ContextMonitorService", () => {

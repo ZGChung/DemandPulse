@@ -81,6 +81,9 @@ export default [
         ...globals.jest,
       },
     },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+    },
   },
   {
     files: ["**/__mocks__/**/*.js", "jest.setup.js", "jest.config.js"],

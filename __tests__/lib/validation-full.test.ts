@@ -147,7 +147,6 @@ describe("Lib - Validation", () => {
 
     it("should reject non-object consent", async () => {
       const { validateConsent } = await import("@/lib/validation");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result = validateConsent(null as any);
       expect(result.valid).toBe(false);
       expect(result.errors).toContain("Consent object is required");

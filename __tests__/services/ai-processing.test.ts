@@ -347,11 +347,6 @@ describe("AIProcessingService", () => {
         { id: "req-2", text: "Test2", embeddings: [] },
       ];
 
-      // Mock the clustering service to return empty results
-      const mockClusteringService = {
-        clusterRequirements: jest.fn().mockResolvedValue([]),
-      };
-
       // Test keyword-based clustering fallback path
       (fetch as jest.Mock)
         .mockResolvedValueOnce({

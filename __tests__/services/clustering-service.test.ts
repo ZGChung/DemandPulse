@@ -1,6 +1,4 @@
 // ClusteringService tests
-import { Prisma, PrismaClient } from "@prisma/client";
-
 import { ClusteringService } from "../../services/clustering-service";
 
 // Mock dependencies
