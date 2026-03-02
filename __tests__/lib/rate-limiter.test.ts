@@ -210,4 +210,18 @@ describe("Rate Limiter Module", () => {
       expect(typeof defaultRateLimiter.check).toBe("function");
     });
   });
+
+  describe("RateLimiter with custom configuration", () => {
+    it("should use custom keyPrefix", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({
+        maxRequests: 10,
+        windowMs: 60000,
+        keyPrefix: "custom:",
+      });
+
+      const result = await limiter.check("custom-key");
+      expect(result.allowed).toBe(true);
+    });
+  });
 });
