@@ -1837,4 +1837,70 @@ describe("DatabaseService", () => {
       await expect(service.getStatistics()).rejects.toThrow("Failed to fetch statistics");
     });
   });
+
+  describe("getRequirement with pre-decrypted anonymizedData", () => {
+    it("should handle anonymizedData as object instead of encrypted string", async () => {
+      // Test the branch where anonymizedData is already decrypted (object) not a string
+      const mockReqWithObjectAnonData = {
+        id: "req-obj-anon",
+        originalRequirement: "encrypted:abc123", // Contains dot separator like encrypted data
+        summarizedRequirement: "encrypted:xyz789",
+        userId: "user-1",
+        conversationId: "conv-1",
+        workspacePath: "/test",
+        dataCollectionConsent: true,
+        contactConsent: false,
+        anonymizationConsent: true,
+        userProvidedEmail: null,
+        anonymizedData: {
+          // Already decrypted object, not encrypted string
+          summarizedRequirement: "Test summary",
+          categories: ["test"],
+          wordCount: 2,
+        },
+        status: "PROCESSED" as RequirementStatus,
+        embedding: null,
+        processedAt: new Date(),
+        deletedAt: null,
+        deletionReason: null,
+        deletedBy: null,
+        anonymizedAt: new Date(),
+        detectedAt: new Date(),
+      };
+
+      mockPrisma.requirement.findUnique.mockResolvedValue(mockReqWithObjectAnonData);
+
+      const result = await service.getRequirement("req-obj-anon");
+
+      // Should handle object anonymizedData correctly
+      expect(result).toBeDefined();
+      expect(result.anonymizedData).toBeDefined();
+    });
+  });
+
+  describe("updateRequirementEmbedding error handling", () => {
+    it("should throw error when Prisma update fails", async () => {
+      mockPrisma.requirement.update.mockRejectedValue(new Error("Update failed"));
+
+      await expect(service.updateRequirementEmbedding("req-123", [0.1, 0.2, 0.3])).rejects.toThrow(
+        "Failed to update requirement embedding"
+      );
+    });
+  });
+
+  describe("disconnect", () => {
+    it("should disconnect prisma client", async () => {
+      mockPrisma.$disconnect.mockResolvedValue(undefined);
+
+      await expect(service.disconnect()).resolves.toBeUndefined();
+      expect(mockPrisma.$disconnect).toHaveBeenCalled();
+    });
+
+    it("should handle disconnect when prisma is null", async () => {
+      const mockService = new DatabaseService(null as any);
+
+      // Should not throw when prisma is null
+      await expect(mockService.disconnect()).resolves.toBeUndefined();
+    });
+  });
 });
