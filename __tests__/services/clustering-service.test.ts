@@ -721,4 +721,77 @@ describe("ClusteringService", () => {
       expect(Array.isArray(result)).toBe(true);
     });
   });
+
+  describe("calculateWeightedCentroid", () => {
+    it("should calculate weighted centroid", () => {
+      const centroids = [
+        [1, 2, 3],
+        [4, 5, 6],
+      ];
+      const weights = [0.5, 0.5];
+      const result = service.calculateWeightedCentroid(centroids, weights);
+      expect(result).toEqual([2.5, 3.5, 4.5]);
+    });
+
+    it("should handle single centroid", () => {
+      const centroids = [[1, 2, 3]];
+      const weights = [1];
+      const result = service.calculateWeightedCentroid(centroids, weights);
+      expect(result).toEqual([1, 2, 3]);
+    });
+  });
+
+  describe("calculateCentroid", () => {
+    it("should calculate centroid of embeddings", () => {
+      const embeddings = [
+        [1, 2, 3],
+        [4, 5, 6],
+      ];
+      const result = service.calculateCentroid(embeddings);
+      expect(result).toEqual([2.5, 3.5, 4.5]);
+    });
+
+    it("should handle empty embeddings array", () => {
+      const result = service.calculateCentroid([]);
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("clusterRequirements - error handling", () => {
+    it("should handle K-means error gracefully", async () => {
+      const kmeansMock = require("ml-kmeans");
+      kmeansMock.kmeans.mockImplementationOnce(() => {
+        throw new Error("K-means computation failed");
+      });
+
+      const requirements = [
+        { id: "1", embedding: [0.1, 0.2, 0.3] },
+        { id: "2", embedding: [0.15, 0.25, 0.35] },
+        { id: "3", embedding: [0.4, 0.5, 0.6] },
+        { id: "4", embedding: [0.45, 0.55, 0.65] },
+      ];
+
+      // Should not throw
+      await expect(
+        service.clusterRequirements(requirements, { minClusterSize: 2 })
+      ).resolves.not.toThrow();
+    });
+  });
+
+  describe("generateClusterDescription", () => {
+    it("should generate description for cluster", () => {
+      const requirementIds = ["req-1", "req-2"];
+      const requirements = [
+        { id: "req-1", title: "User login feature", content: "Need login" },
+        { id: "req-2", title: "User authentication", content: "OAuth support" },
+      ];
+      const centroid = [0.5, 0.5, 0.5];
+      const description = service.generateClusterDescription(
+        requirementIds,
+        requirements,
+        centroid
+      );
+      expect(typeof description).toBe("string");
+    });
+  });
 });
