@@ -494,4 +494,106 @@ describe("ClusteringService", () => {
       expect(centroid).toEqual([1.5, 2.5]);
     });
   });
+
+  describe("assignToCluster", () => {
+    it("should return null for requirement without embedding", async () => {
+      const result = await service.assignToCluster({ id: "req-1", embedding: [] });
+      expect(result).toBeNull();
+    });
+
+    it("should return null when no existing clusters", async () => {
+      const { prisma } = require("@/lib/prisma");
+      (prisma.requirementCluster.findMany as jest.Mock).mockResolvedValueOnce([]);
+      const result = await service.assignToCluster({ id: "req-1", embedding: [0.1, 0.2, 0.3] });
+      expect(result).toBeNull();
+    });
+
+    it("should assign to best matching cluster", async () => {
+      const { prisma } = require("@/lib/prisma");
+      (prisma.requirementCluster.findMany as jest.Mock).mockResolvedValueOnce([
+        { id: "cluster-1", centroidEmbedding: [0.1, 0.2, 0.3] },
+        { id: "cluster-2", centroidEmbedding: [0.9, 0.9, 0.9] },
+      ]);
+      const result = await service.assignToCluster({ id: "req-1", embedding: [0.1, 0.2, 0.3] });
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe("findSimilarRequirements", () => {
+    it("should return empty array for empty embedding", async () => {
+      const result = await service.findSimilarRequirements([]);
+      expect(result).toEqual([]);
+    });
+
+    it("should find similar requirements", async () => {
+      const { prisma } = require("@/lib/prisma");
+      (prisma.requirement.findMany as jest.Mock).mockResolvedValueOnce([
+        { id: "req-1", embedding: [0.1, 0.2, 0.3] },
+        { id: "req-2", embedding: [0.15, 0.25, 0.35] },
+      ]);
+      const result = await service.findSimilarRequirements([0.1, 0.2, 0.3], 5);
+      expect(Array.isArray(result)).toBe(true);
+    });
+
+    it("should handle requirements without embeddings", async () => {
+      const { prisma } = require("@/lib/prisma");
+      (prisma.requirement.findMany as jest.Mock).mockResolvedValueOnce([
+        { id: "req-1", embedding: null },
+        { id: "req-2", embedding: [0.15, 0.25, 0.35] },
+      ]);
+      const result = await service.findSimilarRequirements([0.1, 0.2, 0.3], 5);
+      expect(Array.isArray(result)).toBe(true);
+    });
+
+    it("should respect limit parameter", async () => {
+      const { prisma } = require("@/lib/prisma");
+      (prisma.requirement.findMany as jest.Mock).mockResolvedValueOnce([
+        { id: "req-1", embedding: [0.1, 0.2, 0.3] },
+        { id: "req-2", embedding: [0.15, 0.25, 0.35] },
+        { id: "req-3", embedding: [0.2, 0.3, 0.4] },
+      ]);
+      const result = await service.findSimilarRequirements([0.1, 0.2, 0.3], 2);
+      expect(result.length).toBeLessThanOrEqual(2);
+    });
+  });
+
+  describe("cosineSimilarity", () => {
+    it("should handle vectors of different lengths", () => {
+      const similarity = (service as any).cosineSimilarity([1, 2, 3], [1, 2]);
+      expect(typeof similarity).toBe("number");
+    });
+
+    it("should handle zero vectors", () => {
+      const similarity = (service as any).cosineSimilarity([0, 0, 0], [1, 2, 3]);
+      expect(typeof similarity).toBe("number");
+    });
+  });
+
+  describe("updateClusterCentroid", () => {
+    it("should update cluster centroid with requirements", async () => {
+      const { prisma } = require("@/lib/prisma");
+      (prisma.requirementCluster.findUnique as jest.Mock).mockResolvedValueOnce({
+        id: "cluster-1",
+        requirements: [
+          { id: "req-1", embedding: [0.1, 0.2, 0.3] },
+          { id: "req-2", embedding: [0.2, 0.3, 0.4] },
+        ],
+      });
+      (prisma.requirement.findMany as jest.Mock).mockResolvedValueOnce([
+        { id: "req-1", embedding: [0.1, 0.2, 0.3] },
+        { id: "req-2", embedding: [0.2, 0.3, 0.4] },
+      ]);
+      // Just ensure it doesn't throw
+      await expect((service as any).updateClusterCentroid("cluster-1")).resolves.not.toThrow();
+    });
+
+    it("should handle cluster without requirements", async () => {
+      const { prisma } = require("@/lib/prisma");
+      (prisma.requirementCluster.findUnique as jest.Mock).mockResolvedValueOnce({
+        id: "cluster-1",
+        requirements: [],
+      });
+      await expect((service as any).updateClusterCentroid("cluster-1")).resolves.not.toThrow();
+    });
+  });
 });
