@@ -165,10 +165,9 @@ describe("Lib - Validation", () => {
         consentOptions: {
           contact: false,
           anonymization: false,
-          // @ts-expect-error - intentionally testing missing dataCollection
         },
         consentedAt: "2024-01-01T00:00:00Z",
-      });
+      } as any);
       expect(result.valid).toBe(false);
       expect(result.errors).toContain("dataCollection must be a boolean");
     });
@@ -179,10 +178,9 @@ describe("Lib - Validation", () => {
         consentOptions: {
           dataCollection: true,
           anonymization: false,
-          // @ts-expect-error - intentionally testing missing contact
         },
         consentedAt: "2024-01-01T00:00:00Z",
-      });
+      } as any);
       expect(result.valid).toBe(false);
       expect(result.errors).toContain("contact must be a boolean");
     });
@@ -193,10 +191,9 @@ describe("Lib - Validation", () => {
         consentOptions: {
           dataCollection: true,
           contact: false,
-          // @ts-expect-error - intentionally testing missing anonymization
         },
         consentedAt: "2024-01-01T00:00:00Z",
-      });
+      } as any);
       expect(result.valid).toBe(false);
       expect(result.errors).toContain("anonymization must be a boolean");
     });

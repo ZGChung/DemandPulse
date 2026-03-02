@@ -175,7 +175,7 @@ describe("validateConsent", () => {
   });
 
   it("should return error when consent is not an object", () => {
-    const result = validateConsent(null);
+    const result = validateConsent(null as any);
     expect(result.valid).toBe(false);
     expect(result.errors).toContain("Consent object is required");
   });

@@ -89,17 +89,17 @@ describe("Masking", () => {
     it("should deny non-admin in production", async () => {
       const { canViewUnmaskedData } = await import("@/lib/masking");
       const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = "production";
+      Object.defineProperty(process.env, "NODE_ENV", { value: "production" });
       expect(canViewUnmaskedData("analyst", "admin")).toBe(false);
-      process.env.NODE_ENV = originalEnv;
+      Object.defineProperty(process.env, "NODE_ENV", { value: originalEnv });
     });
 
     it("should allow analyst in development", async () => {
       const { canViewUnmaskedData } = await import("@/lib/masking");
       const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = "development";
+      Object.defineProperty(process.env, "NODE_ENV", { value: "development" });
       expect(canViewUnmaskedData("analyst", "viewer")).toBe(true);
-      process.env.NODE_ENV = originalEnv;
+      Object.defineProperty(process.env, "NODE_ENV", { value: originalEnv });
     });
   });
 

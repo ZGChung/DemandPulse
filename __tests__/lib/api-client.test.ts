@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, jest } from "@jest/globals";
 
 // Mock fetch globally
-const mockFetch = jest.fn() as jest.Mock;
-global.fetch = mockFetch as typeof fetch;
+const mockFetch = jest.fn();
+(global as any).fetch = mockFetch;
 
 import { apiClient, RequirementsResponse } from "@/lib/api-client";
 

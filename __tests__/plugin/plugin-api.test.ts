@@ -123,7 +123,7 @@ describe("Plugin API Endpoint", () => {
         },
       });
 
-      const response = await POST(request);
+      const response = await POST(request as any);
       expect(response.status).toBe(401);
       const data = await response.json();
       expect(data.error).toContain("API key");
@@ -158,7 +158,7 @@ describe("Plugin API Endpoint", () => {
         },
       });
 
-      const response = await POST(request);
+      const response = await POST(request as any);
       expect(response.status).toBe(401);
       const data = await response.json();
       expect(data.error).toContain("API key");
@@ -193,7 +193,7 @@ describe("Plugin API Endpoint", () => {
         },
       });
 
-      const response = await POST(request);
+      const response = await POST(request as any);
       expect(response.status).toBe(201);
       const data = await response.json();
       expect(data.success).toBe(true);
@@ -212,7 +212,7 @@ describe("Plugin API Endpoint", () => {
         body: {},
       });
 
-      const response = await POST(request);
+      const response = await POST(request as any);
       expect(response.status).toBe(400);
       const data = await response.json();
       expect(data.error).toContain("Validation");
@@ -226,7 +226,7 @@ describe("Plugin API Endpoint", () => {
         url: "http://localhost:3000/api/plugin/requirements",
       });
 
-      const response = await GET(request);
+      const response = await GET(request as any);
       expect(response.status).toBe(401);
     });
 
@@ -239,7 +239,7 @@ describe("Plugin API Endpoint", () => {
         },
       });
 
-      const response = await GET(request);
+      const response = await GET(request as any);
       expect(response.status).toBe(200);
       const data = await response.json();
       expect(data.success).toBe(true);
@@ -256,7 +256,7 @@ describe("Plugin API Endpoint", () => {
         },
       });
 
-      const response = await GET(request);
+      const response = await GET(request as any);
       expect(response.status).toBe(200);
       const data = await response.json();
       expect(data.count).toBe(3);

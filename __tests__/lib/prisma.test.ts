@@ -56,7 +56,7 @@ describe("prisma configuration - PostgreSQL", () => {
 
   it("should handle PostgreSQL URL configuration", async () => {
     process.env.DATABASE_URL = "postgresql://user:pass@localhost:5432/db";
-    process.env.NODE_ENV = "development";
+    Object.defineProperty(process.env, "NODE_ENV", { value: "development" });
 
     // Clear the global prisma instance to force re-initialization
     const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null | undefined };
@@ -69,7 +69,7 @@ describe("prisma configuration - PostgreSQL", () => {
   it("should handle Prisma Data Platform URL", async () => {
     process.env.DATABASE_URL =
       "prisma+postgres://abcd1234@aws.connect.prisma-data.com/?api_key=your_api_key";
-    process.env.NODE_ENV = "development";
+    Object.defineProperty(process.env, "NODE_ENV", { value: "development" });
 
     // Clear the global prisma instance to force re-initialization
     const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null | undefined };
@@ -96,9 +96,9 @@ describe("prisma build-time initialization", () => {
     }
   });
 
-  it("should skip initialization during production build phase", () => {
+  it("should skip initialization during production build phase", async () => {
     process.env.NEXT_PHASE = "phase-production-build";
-    process.env.NODE_ENV = "production";
+    Object.defineProperty(process.env, "NODE_ENV", { value: "production" });
     process.env.DATABASE_URL = "postgresql://user:pass@localhost:5432/db";
 
     // Clear the global prisma instance to force re-initialization

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, jest } from "@jest/globals";
 
 // Mock process.env before importing
 const mockEnv: Record<string, string | undefined> = {
+  NODE_ENV: "test",
   DEEPSEEK_API_KEY: "sk-test-key-123",
   NEXT_PUBLIC_APP_URL: "https://example.com",
   DATABASE_URL: "postgresql://localhost:5432/test",
@@ -17,7 +18,7 @@ const mockEnv: Record<string, string | undefined> = {
 describe("Env Module", () => {
   beforeEach(() => {
     jest.resetModules();
-    process.env = { ...mockEnv };
+    process.env = { ...mockEnv } as NodeJS.ProcessEnv;
   });
 
   describe("validateEnv", () => {

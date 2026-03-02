@@ -45,9 +45,9 @@ describe("auth-utils", () => {
 
       expect(getServerSession).toHaveBeenCalledWith(authOptions);
       // Result is a NextResponse.json() object
-      expect(result.status).toBe(401);
+      expect((result as Response).status).toBe(401);
 
-      const json = await result.json();
+      const json = await (result as Response).json();
       expect(json).toEqual({ error: "Authentication required" });
     });
   });
