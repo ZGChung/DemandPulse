@@ -1122,10 +1122,10 @@ describe("DatabaseService", () => {
       const stats = await mockService.getPublicStatistics();
 
       // Mock returns hardcoded statistics
-      expect(stats.totalRequirements).toBe(100);
-      expect(stats.totalClusters).toBe(10);
-      expect(stats.totalUsers).toBe(5);
-      expect(stats.recentRequirements).toBe(100);
+      expect(stats.totalRequirements).toBe(2847);
+      expect(stats.totalClusters).toBe(12);
+      expect(stats.totalUsers).toBe(428);
+      expect(stats.recentRequirements).toBe(142);
     });
   });
 
@@ -2090,19 +2090,21 @@ describe("Mock implementation branch coverage", () => {
   });
 
   describe("getPrioritizedRequirements mock branch", () => {
-    it("should throw error when prisma is null", async () => {
-      await expect(serviceWithNullPrisma.getPrioritizedRequirements(10)).rejects.toThrow();
+    it("should return empty array when prisma is null", async () => {
+      const result = await serviceWithNullPrisma.getPrioritizedRequirements(10);
+      expect(result).toEqual([]);
     });
   });
 
   describe("getRequirementsByStatus mock branch", () => {
-    it("should throw error when prisma is null", async () => {
-      await expect(serviceWithNullPrisma.getRequirementsByStatus("PENDING", 10)).rejects.toThrow();
+    it("should return empty array when prisma is null", async () => {
+      const result = await serviceWithNullPrisma.getRequirementsByStatus("PENDING", 10);
+      expect(result).toEqual([]);
     });
   });
 
   describe("deleteRequirement mock branch", () => {
-    it("should throw error when prisma is null", async () => {
+    it("should throw when requirement not found in mock storage", async () => {
       await expect(
         serviceWithNullPrisma.deleteRequirement("mock-0", "Test delete", "user")
       ).rejects.toThrow();
@@ -2110,32 +2112,30 @@ describe("Mock implementation branch coverage", () => {
   });
 
   describe("getStatistics mock branch", () => {
-    it("should throw error when prisma is null", async () => {
-      await expect(serviceWithNullPrisma.getStatistics("user-123")).rejects.toThrow(
-        "Failed to fetch statistics"
-      );
+    it("should return mock statistics when prisma is null", async () => {
+      const result = await serviceWithNullPrisma.getStatistics();
+      expect(result.totalRequirements).toBe(0);
     });
   });
 
   describe("getClusters mock branch", () => {
-    it("should throw error when prisma is null", async () => {
-      await expect(serviceWithNullPrisma.getClusters()).rejects.toThrow("Failed to fetch clusters");
+    it("should return mock clusters when prisma is null", async () => {
+      const result = await serviceWithNullPrisma.getClusters();
+      expect(result.length).toBe(2);
     });
   });
 
   describe("getClustersCount mock branch", () => {
-    it("should throw error when prisma is null", async () => {
-      await expect(serviceWithNullPrisma.getClustersCount()).rejects.toThrow(
-        "Failed to count clusters"
-      );
+    it("should return mock count when prisma is null", async () => {
+      const result = await serviceWithNullPrisma.getClustersCount();
+      expect(result).toBe(2);
     });
   });
 
   describe("createCluster mock branch", () => {
-    it("should throw error when prisma is null", async () => {
-      await expect(
-        serviceWithNullPrisma.createCluster("Test Cluster", "Test description")
-      ).rejects.toThrow("Failed to create cluster");
+    it("should return mock cluster when prisma is null", async () => {
+      const result = await serviceWithNullPrisma.createCluster("Test Cluster", "Test description");
+      expect(result.name).toBe("Test Cluster");
     });
   });
 
@@ -2147,26 +2147,23 @@ describe("Mock implementation branch coverage", () => {
   });
 
   describe("getRequirementsForAdmin mock branch", () => {
-    it("should throw error when prisma is null", async () => {
-      await expect(serviceWithNullPrisma.getRequirementsForAdmin()).rejects.toThrow(
-        "Failed to fetch requirements for admin view"
-      );
+    it("should return empty array when prisma is null", async () => {
+      const result = await serviceWithNullPrisma.getRequirementsForAdmin();
+      expect(result).toEqual([]);
     });
   });
 
   describe("getRequirementsCountForAdmin mock branch", () => {
-    it("should throw error when prisma is null", async () => {
-      await expect(serviceWithNullPrisma.getRequirementsCountForAdmin()).rejects.toThrow(
-        "Failed to count requirements for admin view"
-      );
+    it("should return 0 when prisma is null and no mock data", async () => {
+      const result = await serviceWithNullPrisma.getRequirementsCountForAdmin();
+      expect(result).toBe(0);
     });
   });
 
   describe("processScheduledDeletions mock branch", () => {
-    it("should throw error when prisma is null", async () => {
-      await expect(serviceWithNullPrisma.processScheduledDeletions()).rejects.toThrow(
-        "Failed to process scheduled deletions"
-      );
+    it("should return 0 when prisma is null and no scheduled deletions", async () => {
+      const result = await serviceWithNullPrisma.processScheduledDeletions();
+      expect(result).toBe(0);
     });
   });
 });

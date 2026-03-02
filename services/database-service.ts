@@ -64,17 +64,20 @@ export class DatabaseService {
   private mockRequirements: MockRequirement[] = [];
   private mockIdCounter = 1;
 
-  constructor() {
+  constructor(prismaClient?: PrismaClient | null) {
     try {
-      // Try to use Prisma, but fallback to mock if it fails
-      this.prisma = prisma;
-      // Test connection by accessing a property
-      if (this.prisma) {
+      // Use provided prisma client or fallback to global prisma
+      const client = prismaClient !== undefined ? prismaClient : prisma;
+      // Check if client is valid (has required methods) or use mock
+      if (client && typeof client === "object" && "requirement" in client) {
+        this.prisma = client;
         console.log("DatabaseService: Using Prisma client");
+      } else {
+        this.prisma = null;
+        console.log("DatabaseService: Using mock storage (invalid or null prisma client)");
       }
     } catch (error) {
       console.warn("DatabaseService: Prisma client failed, using mock storage", error);
-      // this.useMock = true // Unused but kept for future mock functionality
       this.prisma = null;
     }
   }
