@@ -10,7 +10,6 @@ import {
   userConsentSchema,
   withValidation,
   validateRequirementBody,
-  requirementSubmissionSchema,
 } from "@/lib/validation-middleware";
 
 describe("validation-middleware", () => {
