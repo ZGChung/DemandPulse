@@ -281,4 +281,178 @@ describe("ConsentService", () => {
       expect(service.getDataRetentionPeriod(consent)).toBe(365);
     });
   });
+
+  describe("edge cases and branch coverage", () => {
+    it("should handle missing consentOptions in validation", () => {
+      const consent = {
+        requirementId: "req-123",
+        consentedAt: new Date(),
+      };
+
+      const result = service.validateConsent(consent);
+
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain("Consent options are required");
+    });
+
+    it("should validate dataCollection consent type", () => {
+      const consent = {
+        requirementId: "req-123",
+        consentedAt: new Date(),
+        consentOptions: {
+          dataCollection: "true" as any,
+          contact: false,
+          anonymization: true,
+        },
+      };
+
+      const result = service.validateConsent(consent);
+
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain("Data collection consent must be a boolean");
+    });
+
+    it("should validate contact consent type", () => {
+      const consent = {
+        requirementId: "req-123",
+        consentedAt: new Date(),
+        consentOptions: {
+          dataCollection: true,
+          contact: "yes" as any,
+          anonymization: true,
+        },
+      };
+
+      const result = service.validateConsent(consent);
+
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain("Contact consent must be a boolean");
+    });
+
+    it("should validate anonymization consent type", () => {
+      const consent = {
+        requirementId: "req-123",
+        consentedAt: new Date(),
+        consentOptions: {
+          dataCollection: true,
+          contact: false,
+          anonymization: 1 as any,
+        },
+      };
+
+      const result = service.validateConsent(consent);
+
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain("Anonymization consent must be a boolean");
+    });
+
+    it("should validate email format when contact is true but email is missing", () => {
+      const consent = {
+        requirementId: "req-123",
+        consentedAt: new Date(),
+        consentOptions: {
+          dataCollection: true,
+          contact: true,
+          anonymization: true,
+        },
+        // No userProvidedEmail provided
+      };
+
+      const result = service.validateConsent(consent);
+
+      // This should still be valid (email is optional even if contact is true)
+      expect(result.valid).toBe(true);
+    });
+
+    it("should handle createCollectedRequirement with missing context values", () => {
+      const requirementId = "req-123";
+      const originalRequirement = "Build login system";
+      const summarizedRequirement = "Build login";
+      const context = {}; // Empty context
+      const consent = {
+        requirementId: "req-123",
+        consentedAt: new Date(),
+        consentOptions: {
+          dataCollection: true,
+          contact: false,
+          anonymization: true,
+        },
+      };
+
+      const collected = service.createCollectedRequirement(
+        requirementId,
+        originalRequirement,
+        summarizedRequirement,
+        context,
+        consent
+      );
+
+      expect(collected.context.conversationId).toBe("unknown");
+      expect(collected.context.userId).toBeUndefined();
+      expect(collected.context.workspacePath).toBeUndefined();
+      expect(collected.context.timestamp).toBeInstanceOf(Date);
+    });
+
+    it("should handle createCollectedRequirement with partial context", () => {
+      const context = {
+        conversationId: "conv-123",
+        // Missing userId and workspacePath
+      };
+
+      const collected = service.createCollectedRequirement(
+        "req-1",
+        "original",
+        "summarized",
+        context,
+        {
+          requirementId: "req-1",
+          consentedAt: new Date(),
+          consentOptions: {
+            dataCollection: true,
+            contact: false,
+            anonymization: true,
+          },
+        }
+      );
+
+      expect(collected.context.conversationId).toBe("conv-123");
+      expect(collected.context.userId).toBeUndefined();
+    });
+
+    it("should generate summary with only data collection consented", () => {
+      const consent = {
+        requirementId: "req-123",
+        consentedAt: new Date(),
+        consentOptions: {
+          dataCollection: true,
+          contact: false,
+          anonymization: false,
+        },
+      };
+
+      const summary = service.generateConsentSummary(consent);
+
+      expect(summary).toContain("✅ Data collection consented");
+      expect(summary).toContain("❌ Contact not consented");
+      expect(summary).toContain("❌ Data will not be anonymized");
+      expect(summary).not.toContain("📧");
+    });
+
+    it("should handle validateConsent with all errors", () => {
+      const consent = {
+        // Missing requirementId
+        // Missing consentedAt
+        consentOptions: {
+          // Missing dataCollection
+          contact: "invalid" as any,
+          anonymization: 123 as any,
+        },
+      };
+
+      const result = service.validateConsent(consent);
+
+      expect(result.valid).toBe(false);
+      expect(result.errors.length).toBeGreaterThan(1);
+    });
+  });
 });

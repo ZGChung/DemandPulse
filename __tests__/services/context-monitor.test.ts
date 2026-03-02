@@ -554,4 +554,290 @@ describe("ContextMonitorService", () => {
       expect(status.recommendations.length).toBeGreaterThan(0);
     });
   });
+
+  describe("additional edge cases", () => {
+    let edgeCaseService: ContextMonitorService;
+
+    beforeEach(() => {
+      edgeCaseService = new ContextMonitorService({
+        contextWindowSize: 1000,
+        warningThreshold: 0.5,
+        compactThreshold: 0.7,
+        criticalThreshold: 0.9,
+        tokensPerChar: 0.25,
+      });
+    });
+
+    it("should handle isImportantMessage correctly", () => {
+      // Test requirement pattern
+      const req1 = edgeCaseService.isImportantMessage("I need to build a new feature");
+      expect(req1).toBe(true);
+
+      // Test "I want" pattern
+      const req2 = edgeCaseService.isImportantMessage("I want to create a dashboard");
+      expect(req2).toBe(true);
+
+      // Test important keywords
+      const req3 = edgeCaseService.isImportantMessage("This is critical for the project");
+      expect(req3).toBe(true);
+
+      // Test non-important message
+      const req4 = edgeCaseService.isImportantMessage("Hello, how are you?");
+      expect(req4).toBe(false);
+    });
+
+    it("should extract message metadata correctly", () => {
+      // Test containsRequirements
+      const msg1 = edgeCaseService.extractMessageMetadata("I need a feature that does X");
+      expect(msg1.containsRequirements).toBe(true);
+
+      // Test containsCode
+      const msg2 = edgeCaseService.extractMessageMetadata("Here is a function: function test() {}");
+      expect(msg2.containsCode).toBe(true);
+
+      // Test plain message (instructions might not match pattern exactly)
+      const msg3 = edgeCaseService.extractMessageMetadata("Hello world");
+      expect(msg3.containsRequirements).toBe(false);
+      expect(msg3.containsCode).toBe(false);
+    });
+
+    it("should handle removeOldestMessages strategy with preserveImportantMessages", async () => {
+      const compactService = new ContextMonitorService({
+        contextWindowSize: 1000,
+        autoCompactEnabled: true,
+        compactStrategy: "remove_oldest",
+        preserveImportantMessages: true,
+        maxPreservedMessages: 2,
+        tokensPerChar: 0.25,
+      });
+
+      // Add important and non-important messages
+      (compactService as any).conversation = [
+        {
+          id: "1",
+          role: "user",
+          content: "Important message 1",
+          timestamp: new Date(),
+          estimatedTokens: 50,
+          important: true,
+        },
+        {
+          id: "2",
+          role: "user",
+          content: "Important message 2",
+          timestamp: new Date(),
+          estimatedTokens: 50,
+          important: true,
+        },
+        {
+          id: "3",
+          role: "user",
+          content: "Old message 1",
+          timestamp: new Date(),
+          estimatedTokens: 50,
+          important: false,
+        },
+        {
+          id: "4",
+          role: "user",
+          content: "Old message 2",
+          timestamp: new Date(),
+          estimatedTokens: 50,
+          important: false,
+        },
+        {
+          id: "5",
+          role: "user",
+          content: "Old message 3",
+          timestamp: new Date(),
+          estimatedTokens: 50,
+          important: false,
+        },
+      ];
+
+      await (compactService as any).executeCompact();
+
+      // Should preserve important messages and some recent non-important
+      const conv = (compactService as any).conversation;
+      expect(conv.some((m) => m.important)).toBe(true);
+    });
+
+    it("should handle removeOldestMessages without preserving important", async () => {
+      const compactService = new ContextMonitorService({
+        contextWindowSize: 1000,
+        autoCompactEnabled: true,
+        compactStrategy: "remove_oldest",
+        preserveImportantMessages: false,
+        maxPreservedMessages: 2,
+        tokensPerChar: 0.25,
+      });
+
+      (compactService as any).conversation = [
+        {
+          id: "1",
+          role: "user",
+          content: "Message 1",
+          timestamp: new Date(),
+          estimatedTokens: 50,
+          important: true,
+        },
+        {
+          id: "2",
+          role: "user",
+          content: "Message 2",
+          timestamp: new Date(),
+          estimatedTokens: 50,
+          important: false,
+        },
+        {
+          id: "3",
+          role: "user",
+          content: "Message 3",
+          timestamp: new Date(),
+          estimatedTokens: 50,
+          important: false,
+        },
+        {
+          id: "4",
+          role: "user",
+          content: "Message 4",
+          timestamp: new Date(),
+          estimatedTokens: 50,
+          important: false,
+        },
+      ];
+
+      await (compactService as any).executeCompact();
+
+      // Should only keep maxPreservedMessages
+      expect((compactService as any).conversation.length).toBeLessThanOrEqual(2);
+    });
+
+    it("should handle summarizeOldestMessages strategy", async () => {
+      const summarizeService = new ContextMonitorService({
+        contextWindowSize: 1000,
+        autoCompactEnabled: true,
+        compactStrategy: "summarize_oldest",
+        preserveImportantMessages: true,
+        maxPreservedMessages: 3,
+        tokensPerChar: 0.25,
+      });
+
+      (summarizeService as any).conversation = [
+        {
+          id: "1",
+          role: "user",
+          content: "First very old message content here",
+          timestamp: new Date(),
+          estimatedTokens: 50,
+          important: false,
+        },
+        {
+          id: "2",
+          role: "user",
+          content: "Second old message content",
+          timestamp: new Date(),
+          estimatedTokens: 50,
+          important: false,
+        },
+        {
+          id: "3",
+          role: "user",
+          content: "Recent message",
+          timestamp: new Date(),
+          estimatedTokens: 50,
+          important: false,
+        },
+        {
+          id: "4",
+          role: "user",
+          content: "Most recent message",
+          timestamp: new Date(),
+          estimatedTokens: 50,
+          important: false,
+        },
+      ];
+
+      await (summarizeService as any).executeCompact();
+
+      // Old messages should be summarized (content changed) - only first message is before cutoff
+      const conv = (summarizeService as any).conversation;
+      expect(conv[0].content).toContain("[Summarized:");
+      // Recent messages should be unchanged
+      expect(conv[3].content).toBe("Most recent message");
+    });
+
+    it("should handle unknown compact strategy", async () => {
+      const unknownService = new ContextMonitorService({
+        contextWindowSize: 1000,
+        autoCompactEnabled: true,
+        compactStrategy: "unknown_strategy" as any,
+        preserveImportantMessages: false,
+        maxPreservedMessages: 2,
+        tokensPerChar: 0.25,
+      });
+
+      (unknownService as any).conversation = [
+        {
+          id: "1",
+          role: "user",
+          content: "Test",
+          timestamp: new Date(),
+          estimatedTokens: 50,
+          important: false,
+        },
+      ];
+
+      await expect((unknownService as any).executeCompact()).resolves.not.toThrow();
+    });
+
+    it("should handle getContextStatus at exact thresholds", () => {
+      // At exactly 50%
+      (edgeCaseService as any).conversation = [
+        {
+          id: "1",
+          role: "user",
+          content: "a".repeat(2000),
+          timestamp: new Date(),
+          estimatedTokens: 500,
+          important: false,
+        },
+      ];
+
+      const status = edgeCaseService.getContextStatus();
+      // 500/1000 = 0.5 = warningThreshold, so should be warning
+      expect(status.status).toBe("warning");
+      expect(status.usagePercentage).toBe(0.5);
+
+      // At exactly 70%
+      (edgeCaseService as any).conversation = [
+        {
+          id: "1",
+          role: "user",
+          content: "a".repeat(2800),
+          timestamp: new Date(),
+          estimatedTokens: 700,
+          important: false,
+        },
+      ];
+
+      const status2 = edgeCaseService.getContextStatus();
+      expect(status2.status).toBe("critical");
+
+      // At exactly 90%
+      (edgeCaseService as any).conversation = [
+        {
+          id: "1",
+          role: "user",
+          content: "a".repeat(3600),
+          timestamp: new Date(),
+          estimatedTokens: 900,
+          important: false,
+        },
+      ];
+
+      const status3 = edgeCaseService.getContextStatus();
+      expect(status3.status).toBe("limit_reached");
+    });
+  });
 });

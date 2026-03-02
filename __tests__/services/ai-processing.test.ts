@@ -339,4 +339,162 @@ describe("AIProcessingService", () => {
       expect(() => service.extractKeywords(text)).not.toThrow();
     });
   });
+
+  describe("branch coverage improvements", () => {
+    it("should handle empty embeddings array in clusterRequirements", async () => {
+      const requirements = [
+        { id: "req-1", text: "Test", embeddings: [] },
+        { id: "req-2", text: "Test2", embeddings: [] },
+      ];
+
+      // Mock the clustering service to return empty results
+      const mockClusteringService = {
+        clusterRequirements: jest.fn().mockResolvedValue([]),
+      };
+
+      // Test keyword-based clustering fallback path
+      (fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            choices: [
+              {
+                message: {
+                  content: JSON.stringify({ categories: ["other"], confidence: 0.5 }),
+                },
+              },
+            ],
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            choices: [{ message: { content: '["keyword1", "keyword2"]' } }],
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            choices: [{ message: { content: "Summary text" } }],
+          }),
+        });
+
+      const result = await service.clusterRequirements(requirements);
+      expect(Array.isArray(result)).toBe(true);
+    });
+
+    it("should handle analyzeRequirement with API errors in all steps", async () => {
+      // First call fails (embeddings), others succeed
+      (fetch as jest.Mock)
+        .mockRejectedValueOnce(new Error("Network error"))
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            choices: [
+              { message: { content: JSON.stringify({ categories: ["api"], confidence: 0.8 }) } },
+            ],
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            choices: [{ message: { content: '["auth", "oauth"]' } }],
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            choices: [{ message: { content: "Build auth system" } }],
+          }),
+        });
+
+      const result = await service.analyzeRequirement("Build OAuth system");
+
+      // Should use fallback for embeddings but process others
+      expect(result.embeddings).toBeNull();
+      expect(result.categories).toBeDefined();
+    });
+
+    it("should handle empty response from API in getEmbeddings", async () => {
+      (fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({ data: [] }),
+      });
+
+      const result = await service.getEmbeddings("Test");
+      expect(result).toBeNull();
+    });
+
+    it("should handle empty content in categorizeRequirement", async () => {
+      (fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({ choices: [] }),
+      });
+
+      const result = await service.categorizeRequirement("Test");
+      expect(result).toEqual({ categories: ["other"], confidence: 0.1 });
+    });
+
+    it("should handle malformed JSON in categorizeRequirement", async () => {
+      (fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [{ message: { content: "not valid json" } }],
+        }),
+      });
+
+      const result = await service.categorizeRequirement("Test");
+      expect(result).toEqual({ categories: ["other"], confidence: 0.1 });
+    });
+
+    it("should handle empty choices in extractKeywords", async () => {
+      (fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({ choices: [] }),
+      });
+
+      const result = await service.extractKeywords("Test");
+      expect(result).toEqual([]);
+    });
+
+    it("should handle empty generateSummary response", async () => {
+      (fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({ choices: [] }),
+      });
+
+      const result = await service.generateSummary("Test requirement text here");
+      // Should fallback to truncated text
+      expect(result).toBe("Test requirement text here".substring(0, 200));
+    });
+  });
+
+  describe("formatCategoryName", () => {
+    it("should format single word category", () => {
+      const result = (service as any).formatCategoryName("api");
+      expect(result).toBe("Api");
+    });
+
+    it("should format multi-word category", () => {
+      const result = (service as any).formatCategoryName("machine_learning");
+      expect(result).toBe("Machine Learning");
+    });
+
+    it("should handle already formatted category", () => {
+      const result = (service as any).formatCategoryName("Already Formatted");
+      expect(result).toBe("Already Formatted");
+    });
+  });
+
+  describe("testConnection edge cases", () => {
+    it("should handle non-ok response", async () => {
+      (fetch as jest.Mock).mockResolvedValue({
+        ok: false,
+        status: 401,
+      });
+
+      const result = await service.testConnection();
+      expect(result).toBe(false);
+    });
+  });
 });

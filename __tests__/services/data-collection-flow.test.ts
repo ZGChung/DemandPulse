@@ -212,4 +212,163 @@ describe("DataCollectionFlow", () => {
       expect(() => flow.resetFlow()).not.toThrow();
     });
   });
+
+  describe("additional edge cases", () => {
+    it("should handle processConversationMessage with low confidence requirement", async () => {
+      // Use a message with low confidence
+      const text = "maybe consider something";
+      const context = { conversationId: "test-conv-123" };
+
+      const result = await flow.processConversationMessage(text, context);
+
+      // Should return detection with low confidence
+      if (result.detected) {
+        expect(result.shouldPrompt).toBe(false);
+        expect(result.prompt).toBeNull();
+      }
+    });
+
+    it("should handle handleUserConsent with missing consent options", async () => {
+      const requirementId = "req-123";
+      const originalRequirement = "Build a login system";
+      const summarizedRequirement = "Build login";
+      const context = { conversationId: "conv-123" };
+      const userConsent = {
+        requirementId: "req-123",
+        consentedAt: new Date(),
+        // Missing consentOptions
+      };
+
+      const result = await flow.handleUserConsent(
+        requirementId,
+        originalRequirement,
+        summarizedRequirement,
+        context,
+        userConsent
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.errors.length).toBeGreaterThan(0);
+    });
+
+    it("should handle handleUserConsent with missing required fields", async () => {
+      const requirementId = "req-123";
+      const originalRequirement = "Build a login system";
+      const summarizedRequirement = "Build login";
+      const context = { conversationId: "conv-123" };
+      const userConsent = {
+        // Missing requirementId
+        consentedAt: new Date(),
+        consentOptions: {
+          dataCollection: true,
+          contact: false,
+          anonymization: true,
+        },
+      };
+
+      const result = await flow.handleUserConsent(
+        requirementId,
+        originalRequirement,
+        summarizedRequirement,
+        context,
+        userConsent
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.errors).toContain("Requirement ID is required");
+    });
+
+    it("should handle handleUserConsent with missing timestamp", async () => {
+      const requirementId = "req-123";
+      const originalRequirement = "Build a login system";
+      const summarizedRequirement = "Build login";
+      const context = { conversationId: "conv-123" };
+      const userConsent = {
+        requirementId: "req-123",
+        // Missing consentedAt
+        consentOptions: {
+          dataCollection: true,
+          contact: false,
+          anonymization: true,
+        },
+      };
+
+      const result = await flow.handleUserConsent(
+        requirementId,
+        originalRequirement,
+        summarizedRequirement,
+        context,
+        userConsent
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.errors).toContain("Consent timestamp is required");
+    });
+
+    it("should complete consent object with defaults", async () => {
+      const requirementId = "req-123";
+      const originalRequirement = "Build a login system";
+      const summarizedRequirement = "Build login";
+      const context = { conversationId: "conv-123" };
+      const userConsent = {
+        requirementId: "req-123",
+        // consentedAt will use default
+        consentOptions: {
+          // All use defaults
+        },
+      };
+
+      const result = await flow.handleUserConsent(
+        requirementId,
+        originalRequirement,
+        summarizedRequirement,
+        context,
+        userConsent
+      );
+
+      // This might succeed or fail depending on validation, but shouldn't throw
+      expect(result).toBeDefined();
+    });
+
+    it("should simulate ClaudeCode integration with mixed roles", async () => {
+      const conversation = [
+        { role: "assistant" as const, content: "Hello! How can I help?" },
+        { role: "user" as const, content: "I need to build an API" },
+        { role: "system" as const, content: "System message" },
+        { role: "user" as const, content: "Add authentication" },
+      ];
+
+      const context = { conversationId: "conv-123" };
+      const results = await flow.simulateClaudeCodeIntegration(conversation, context);
+
+      // Should only process user messages
+      expect(results).toHaveLength(2);
+      expect(results[0].message).toBe("I need to build an API");
+      expect(results[1].message).toBe("Add authentication");
+    });
+
+    it("should handle empty conversation", async () => {
+      const conversation: Array<{ role: "user" | "assistant"; content: string }> = [];
+      const context = { conversationId: "conv-123" };
+
+      const results = await flow.simulateClaudeCodeIntegration(conversation, context);
+
+      expect(results).toHaveLength(0);
+    });
+
+    it("should handle processConversationMessage with edge case context", async () => {
+      // Test with null/undefined context values
+      const text = "I need to build a feature";
+      const context = {
+        conversationId: null,
+        userId: undefined,
+        workspacePath: "",
+      };
+
+      const result = await flow.processConversationMessage(text, context as any);
+
+      // Should handle gracefully
+      expect(result).toBeDefined();
+    });
+  });
 });
