@@ -681,7 +681,7 @@ describe("AutoCompactService", () => {
       // Try to trigger again
       try {
         await (service as any).handleAutoCompactTrigger?.({});
-      } catch (e) {
+      } catch {
         // May throw or not depending on implementation
       }
       // Reset for other tests
@@ -691,7 +691,7 @@ describe("AutoCompactService", () => {
     it("should record failed compact in history", async () => {
       const newService = new AutoCompactService({ enabled: true });
       // Force a failure scenario by using unknown strategy
-      const result = await (newService as any).executeCompact?.("invalid_strategy_xyz");
+      await (newService as any).executeCompact?.("invalid_strategy_xyz");
       // History should be accessible
       const history = newService.getHistory();
       expect(Array.isArray(history)).toBe(true);
