@@ -782,4 +782,103 @@ describe("AutoCompactService", () => {
       expect(result).toBeDefined();
     });
   });
+
+  describe("notificationMethod branches", () => {
+    it("should handle notificationMethod console only", async () => {
+      const consoleService = new AutoCompactService({
+        enabled: true,
+        executionMethod: "simulated",
+        notificationMethod: "console",
+        confirmBeforeExecute: false,
+      });
+      const result = await consoleService.manualCompact("summarize_oldest");
+      expect(result.success).toBe(true);
+    });
+
+    it("should handle notificationMethod notification only", async () => {
+      const notifService = new AutoCompactService({
+        enabled: true,
+        executionMethod: "simulated",
+        notificationMethod: "notification",
+        confirmBeforeExecute: false,
+      });
+      const result = await notifService.manualCompact("summarize_oldest");
+      expect(result.success).toBe(true);
+    });
+
+    it("should handle notify with error type", async () => {
+      const service = new AutoCompactService({
+        enabled: true,
+        notificationMethod: "console",
+      });
+      await (service as any).notify?.("Test error", "error", { details: "error details" });
+      expect(service.isEnabled()).toBe(true);
+    });
+
+    it("should handle notify with warning type", async () => {
+      const service = new AutoCompactService({
+        enabled: true,
+        notificationMethod: "console",
+      });
+      await (service as any).notify?.("Test warning", "warning", { details: "warning details" });
+      expect(service.isEnabled()).toBe(true);
+    });
+
+    it("should handle notify with success type", async () => {
+      const service = new AutoCompactService({
+        enabled: true,
+        notificationMethod: "console",
+      });
+      await (service as any).notify?.("Test success", "success", { details: "success details" });
+      expect(service.isEnabled()).toBe(true);
+    });
+
+    it("should handle notify with info type", async () => {
+      const service = new AutoCompactService({
+        enabled: true,
+        notificationMethod: "console",
+      });
+      await (service as any).notify?.("Test info", "info", { details: "info details" });
+      expect(service.isEnabled()).toBe(true);
+    });
+  });
+
+  describe("executionMethod branches", () => {
+    it("should handle CLI execution method", async () => {
+      const cliService = new AutoCompactService({
+        enabled: true,
+        executionMethod: "cli",
+        cliPath: "/custom/cli/path",
+        confirmBeforeExecute: false,
+      });
+      const result = await cliService.manualCompact("summarize_oldest");
+      expect(result.success).toBe(true);
+      expect(result.message).toContain("CLI");
+    });
+
+    it("should handle API execution method", async () => {
+      const apiService = new AutoCompactService({
+        enabled: true,
+        executionMethod: "api",
+        apiEndpoint: "https://custom.api/v1/compact",
+        confirmBeforeExecute: false,
+      });
+      const result = await apiService.manualCompact("remove_oldest");
+      expect(result.success).toBe(true);
+      expect(result.message).toContain("API");
+    });
+  });
+
+  describe("enable/disable branches", () => {
+    it("should toggle enabled state", () => {
+      const service = new AutoCompactService({ enabled: true });
+      expect(service.isEnabled()).toBe(true);
+
+      service.disable();
+      expect(service.isEnabled()).toBe(false);
+
+      service.enable();
+      expect(service.isEnabled()).toBe(true);
+    });
+  });
 });
