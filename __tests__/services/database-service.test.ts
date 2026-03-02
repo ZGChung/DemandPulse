@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, RequirementStatus } from "@prisma/client";
 
 import { DatabaseService } from "@/services/database-service";
 import { CollectedRequirement } from "@/types/claude-code";
@@ -1706,6 +1706,135 @@ describe("DatabaseService", () => {
       expect(result.totalClusters).toBe(10);
       expect(result.totalUsers).toBe(50);
       expect(result.recentRequirements).toBe(100);
+    });
+  });
+
+  describe("storeRequirement edge cases", () => {
+    it("should handle requirement with all consent options", async () => {
+      const fullConsentRequirement = {
+        originalRequirement: "Full consent test requirement",
+        summarizedRequirement: "Full consent summary",
+        context: {
+          conversationId: "conv-full",
+          workspacePath: "/test/full",
+          timestamp: "2024-01-15T10:00:00Z",
+        },
+        consent: {
+          consentOptions: {
+            anonymization: true,
+            contact: true,
+            analytics: true,
+          },
+          recordedAt: "2024-01-15T10:00:00Z",
+        },
+      };
+
+      mockPrisma.requirement.create.mockResolvedValue({
+        id: "req-full",
+        ...fullConsentRequirement,
+        userId: "user-1",
+        status: "PENDING" as RequirementStatus,
+        categories: [],
+        embedding: null,
+        processedAt: null,
+        deletedAt: null,
+        deletionReason: null,
+        deletedBy: null,
+        anonymizedAt: null,
+        detectedAt: new Date("2024-01-15T10:00:00Z"),
+      });
+
+      const result = await service.storeRequirement(fullConsentRequirement as CollectedRequirement);
+
+      expect(result).toBeDefined();
+      expect(mockPrisma.requirement.create).toHaveBeenCalled();
+    });
+
+    it("should handle requirement with no consent", async () => {
+      const noConsentRequirement = {
+        originalRequirement: "No consent test",
+        summarizedRequirement: "No consent summary",
+        context: {
+          conversationId: "conv-no",
+          workspacePath: "/test/no",
+          timestamp: "2024-01-16T11:00:00Z",
+        },
+        consent: {
+          consentOptions: {
+            anonymization: false,
+            contact: false,
+            analytics: false,
+          },
+          recordedAt: "2024-01-16T11:00:00Z",
+        },
+      };
+
+      mockPrisma.requirement.create.mockResolvedValue({
+        id: "req-no",
+        ...noConsentRequirement,
+        userId: "user-1",
+        status: "PENDING" as RequirementStatus,
+        categories: [],
+        embedding: null,
+        processedAt: null,
+        deletedAt: null,
+        deletionReason: null,
+        deletedBy: null,
+        anonymizedAt: null,
+        detectedAt: new Date("2024-01-16T11:00:00Z"),
+      });
+
+      const result = await service.storeRequirement(noConsentRequirement as CollectedRequirement);
+
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe("getRequirement with includeAnonymized", () => {
+    it("should fetch requirement with anonymized data when requested", async () => {
+      const mockReq = {
+        id: "req-anon",
+        originalRequirement: "Original",
+        summarizedRequirement: "Summary",
+        userId: "user-1",
+        status: "PROCESSED" as RequirementStatus,
+        categories: ["feature"],
+        embedding: null,
+        processedAt: new Date(),
+        deletedAt: null,
+        deletionReason: null,
+        deletedBy: null,
+        anonymizedAt: null,
+        detectedAt: new Date(),
+      };
+
+      mockPrisma.requirement.findUnique.mockResolvedValue(mockReq);
+
+      const result = await service.getRequirement("req-anon", true);
+
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe("getStatistics edge cases", () => {
+    it("should return statistics with zero values", async () => {
+      mockPrisma.requirement.count.mockResolvedValue(0);
+      mockPrisma.requirementCluster.count.mockResolvedValue(0);
+      mockPrisma.user.count.mockResolvedValue(0);
+
+      const result = await service.getStatistics();
+
+      expect(result.totalRequirements).toBe(0);
+      expect(result.totalClusters).toBe(0);
+      expect(result.totalUsers).toBe(0);
+    });
+
+    it("should throw error when requirement count fails", async () => {
+      mockPrisma.requirement.count.mockRejectedValue(new Error("DB error"));
+      mockPrisma.requirementCluster.count.mockResolvedValue(5);
+      mockPrisma.user.count.mockResolvedValue(10);
+
+      await expect(service.getStatistics()).rejects.toThrow("Failed to fetch statistics");
     });
   });
 });
