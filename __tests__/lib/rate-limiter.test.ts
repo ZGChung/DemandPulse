@@ -133,6 +133,72 @@ describe("Rate Limiter Module", () => {
     });
   });
 
+  describe("RateLimiter edge cases", () => {
+    it("should handle multiple different keys independently", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({ maxRequests: 2, windowMs: 60000 });
+
+      await limiter.checkAndIncrement("key1");
+      await limiter.checkAndIncrement("key1");
+      const key1Blocked = await limiter.checkAndIncrement("key1");
+
+      // Key2 should still be allowed
+      const key2Allowed = await limiter.checkAndIncrement("key2");
+
+      expect(key1Blocked.allowed).toBe(false);
+      expect(key2Allowed.allowed).toBe(true);
+    });
+
+    it("should return correct reset time for in-memory store", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({ maxRequests: 10, windowMs: 60000 });
+
+      const result = await limiter.check("reset-time-key");
+      const expectedReset = Date.now() + 60000;
+      expect(result.reset).toBeGreaterThanOrEqual(expectedReset - 1000);
+      expect(result.reset).toBeLessThanOrEqual(expectedReset + 1000);
+    });
+
+    it("should increment count properly for in-memory", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({ maxRequests: 5, windowMs: 60000 });
+
+      const r1 = await limiter.increment("inc-test");
+      const r2 = await limiter.increment("inc-test");
+      const r3 = await limiter.increment("inc-test");
+
+      expect(r1.remaining).toBe(4);
+      expect(r2.remaining).toBe(3);
+      expect(r3.remaining).toBe(2);
+    });
+
+    it("should track remaining correctly when check doesn't increment", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({ maxRequests: 5, windowMs: 60000 });
+
+      // check() returns current state without incrementing
+      const r1 = await limiter.check("check-no-inc");
+      // Second check - count is still 1, remaining is 4
+      const r2 = await limiter.check("check-no-inc");
+
+      // check() doesn't increment, so remaining stays the same
+      expect(r1.remaining).toBe(4);
+      expect(r2.remaining).toBe(4);
+    });
+
+    it("should use keyPrefix in results", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({
+        maxRequests: 10,
+        windowMs: 60000,
+        keyPrefix: "test-prefix:",
+      });
+
+      const result = await limiter.check("prefix-test");
+      expect(result.allowed).toBe(true);
+    });
+  });
+
   describe("defaultRateLimiter", () => {
     it("should export defaultRateLimiter instance", async () => {
       const { defaultRateLimiter } = await import("@/lib/rate-limiter");
