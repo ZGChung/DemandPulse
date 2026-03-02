@@ -1660,4 +1660,52 @@ describe("DatabaseService", () => {
       await expect(service.getClustersCount()).rejects.toThrow();
     });
   });
+
+  describe("processScheduledDeletions", () => {
+    it("should process scheduled deletions successfully", async () => {
+      const pastDate = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+      mockPrisma.requirement.findMany.mockResolvedValue([
+        { id: "req-1", status: "PENDING" },
+        { id: "req-2", status: "PROCESSED" },
+      ]);
+      mockPrisma.requirement.update.mockResolvedValue({});
+      mockPrisma.privacyAuditLog.create.mockResolvedValue({});
+      mockPrisma.dataDeletionQueue.create.mockResolvedValue({});
+
+      const result = await service.processScheduledDeletions();
+
+      expect(result).toBe(2);
+      expect(mockPrisma.requirement.update).toHaveBeenCalledTimes(2);
+    });
+
+    it("should return 0 when no requirements to delete", async () => {
+      mockPrisma.requirement.findMany.mockResolvedValue([]);
+
+      const result = await service.processScheduledDeletions();
+
+      expect(result).toBe(0);
+    });
+  });
+
+  describe("getPublicStatistics", () => {
+    it("should return public statistics successfully", async () => {
+      // Clear and setup mocks
+      mockPrisma.requirement.count.mockClear();
+      mockPrisma.requirementCluster.count.mockClear();
+      mockPrisma.user.count.mockClear();
+
+      mockPrisma.requirement.count
+        .mockResolvedValueOnce(1000) // totalRequirements
+        .mockResolvedValueOnce(100); // recentRequirements
+      mockPrisma.requirementCluster.count.mockResolvedValue(10);
+      mockPrisma.user.count.mockResolvedValue(50);
+
+      const result = await service.getPublicStatistics();
+
+      expect(result.totalRequirements).toBe(1000);
+      expect(result.totalClusters).toBe(10);
+      expect(result.totalUsers).toBe(50);
+      expect(result.recentRequirements).toBe(100);
+    });
+  });
 });
