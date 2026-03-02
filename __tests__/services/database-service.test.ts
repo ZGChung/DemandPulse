@@ -1903,4 +1903,29 @@ describe("DatabaseService", () => {
       await expect(mockService.disconnect()).resolves.toBeUndefined();
     });
   });
+
+  describe("getPrioritizedRequirements edge cases", () => {
+    it("should handle zero limit", async () => {
+      mockPrisma.requirement.findMany.mockResolvedValue([]);
+
+      const result = await service.getPrioritizedRequirements(0);
+      expect(result).toEqual([]);
+    });
+
+    it("should handle very large limit", async () => {
+      mockPrisma.requirement.findMany.mockResolvedValue([]);
+
+      const result = await service.getPrioritizedRequirements(10000);
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("getRequirementsByStatus edge cases", () => {
+    it("should return empty array for non-existent status", async () => {
+      mockPrisma.requirement.findMany.mockResolvedValue([]);
+
+      const result = await service.getRequirementsByStatus("DELETED" as RequirementStatus, 10);
+      expect(result).toEqual([]);
+    });
+  });
 });
