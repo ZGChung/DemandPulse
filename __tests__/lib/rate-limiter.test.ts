@@ -224,4 +224,99 @@ describe("Rate Limiter Module", () => {
       expect(result.allowed).toBe(true);
     });
   });
+
+  describe("RateLimiter boundary conditions", () => {
+    it("should allow exactly at limit", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({ maxRequests: 3, windowMs: 60000 });
+
+      await limiter.checkAndIncrement("exact-limit");
+      await limiter.checkAndIncrement("exact-limit");
+      const result = await limiter.checkAndIncrement("exact-limit");
+
+      // At exactly maxRequests, should still be allowed
+      expect(result.allowed).toBe(true);
+      expect(result.remaining).toBe(0);
+    });
+
+    it("should block when exceeding limit by 1", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({ maxRequests: 2, windowMs: 60000 });
+
+      await limiter.checkAndIncrement("exceed-limit");
+      await limiter.checkAndIncrement("exceed-limit");
+      const result = await limiter.checkAndIncrement("exceed-limit");
+
+      // Exceeding maxRequests should be blocked
+      expect(result.allowed).toBe(false);
+    });
+
+    it("should handle check returning allowed when at limit", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({ maxRequests: 1, windowMs: 60000 });
+
+      // First check
+      const r1 = await limiter.check("check-limit");
+      expect(r1.allowed).toBe(true);
+      expect(r1.remaining).toBe(0);
+
+      // Use increment to consume the limit
+      await limiter.increment("check-limit");
+
+      // Now check again
+      const r2 = await limiter.check("check-limit");
+      expect(r2.allowed).toBe(false);
+    });
+
+    it("should handle increment when already at limit", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({ maxRequests: 1, windowMs: 60000 });
+
+      await limiter.increment("inc-at-limit");
+      const result = await limiter.increment("inc-at-limit");
+
+      // Increment still works but should show allowed=false when over
+      expect(result.allowed).toBe(false);
+    });
+
+    it("should return correct remaining after multiple increments", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({ maxRequests: 10, windowMs: 60000 });
+
+      for (let i = 0; i < 5; i++) {
+        await limiter.increment("multi-inc");
+      }
+
+      const result = await limiter.check("multi-inc");
+      expect(result.remaining).toBe(5);
+    });
+
+    it("should handle zero maxRequests", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({ maxRequests: 0, windowMs: 60000 });
+
+      const result = await limiter.checkAndIncrement("zero-limit");
+      expect(result.allowed).toBe(false);
+      expect(result.remaining).toBe(0);
+    });
+
+    it("should handle very small windowMs", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({ maxRequests: 2, windowMs: 10 });
+
+      await limiter.checkAndIncrement("small-window");
+      await limiter.checkAndIncrement("small-window");
+
+      // Should be blocked immediately due to small window
+      const result = await limiter.checkAndIncrement("small-window");
+      expect(result.allowed).toBe(false);
+
+      // Wait for window to expire
+      await new Promise((resolve) => setTimeout(resolve, 15));
+
+      // Should be allowed again
+      const afterReset = await limiter.checkAndIncrement("small-window");
+      expect(afterReset.allowed).toBe(true);
+    });
+  });
 });
