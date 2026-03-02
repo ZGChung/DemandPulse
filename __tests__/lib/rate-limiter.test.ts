@@ -319,4 +319,146 @@ describe("Rate Limiter Module", () => {
       expect(afterReset.allowed).toBe(true);
     });
   });
+
+  describe("RateLimiter in-memory store edge cases", () => {
+    it("should handle check on expired window correctly", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({ maxRequests: 5, windowMs: 30 });
+
+      // Make some requests
+      await limiter.increment("expired-key");
+      await limiter.increment("expired-key");
+
+      // Wait for window to expire
+      await new Promise((resolve) => setTimeout(resolve, 40));
+
+      // Check should show fresh window
+      const result = await limiter.check("expired-key");
+      expect(result.allowed).toBe(true);
+      expect(result.remaining).toBe(4);
+    });
+
+    it("should track increment correctly across window boundaries", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({ maxRequests: 3, windowMs: 50 });
+
+      // Fill the window
+      await limiter.increment("boundary-key");
+      await limiter.increment("boundary-key");
+      await limiter.increment("boundary-key");
+
+      const blocked = await limiter.increment("boundary-key");
+      expect(blocked.allowed).toBe(false);
+
+      // Wait for window to expire
+      await new Promise((resolve) => setTimeout(resolve, 60));
+
+      // Should be allowed again
+      const afterExpiry = await limiter.increment("boundary-key");
+      expect(afterExpiry.allowed).toBe(true);
+    });
+
+    it("should correctly reset in-memory store on window expiry during checkAndIncrement", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({ maxRequests: 2, windowMs: 25 });
+
+      await limiter.checkAndIncrement("expiry-check");
+      await limiter.checkAndIncrement("expiry-check");
+
+      // Wait for expiry
+      await new Promise((resolve) => setTimeout(resolve, 30));
+
+      const result = await limiter.checkAndIncrement("expiry-check");
+      expect(result.allowed).toBe(true);
+      expect(result.remaining).toBe(1);
+    });
+
+    it("should handle rapid sequential requests", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({ maxRequests: 10, windowMs: 60000 });
+
+      // Rapid requests
+      for (let i = 0; i < 8; i++) {
+        const result = await limiter.increment("rapid-key");
+        expect(result.allowed).toBe(true);
+      }
+
+      // Two more to hit limit
+      const r9 = await limiter.increment("rapid-key");
+      const r10 = await limiter.increment("rapid-key");
+
+      expect(r9.remaining).toBe(1);
+      expect(r10.remaining).toBe(0);
+
+      // One more should be blocked
+      const blocked = await limiter.increment("rapid-key");
+      expect(blocked.allowed).toBe(false);
+    });
+
+    it("should maintain separate counters for different keys after expiry", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({ maxRequests: 2, windowMs: 30 });
+
+      // Use key1
+      await limiter.checkAndIncrement("key1");
+      await limiter.checkAndIncrement("key1");
+
+      // Use key2
+      await limiter.checkAndIncrement("key2");
+
+      // Wait for expiry
+      await new Promise((resolve) => setTimeout(resolve, 40));
+
+      // Both should be fresh
+      const r1 = await limiter.check("key1");
+      const r2 = await limiter.check("key2");
+
+      expect(r1.allowed).toBe(true);
+      expect(r2.allowed).toBe(true);
+    });
+
+    it("should test check method returning correct remaining without incrementing", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({ maxRequests: 5, windowMs: 60000 });
+
+      // Make requests via increment
+      await limiter.increment("check-remaining");
+      await limiter.increment("check-remaining");
+      await limiter.increment("check-remaining");
+
+      // Check should show 2 remaining
+      const result = await limiter.check("check-remaining");
+      expect(result.remaining).toBe(2);
+      expect(result.allowed).toBe(true);
+    });
+  });
+
+  describe("RateLimiter disconnect and cleanup", () => {
+    it("should handle disconnect when redis is not initialized", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({ maxRequests: 10, windowMs: 60000 });
+
+      // Should not throw
+      await expect(limiter.disconnect()).resolves.toBeUndefined();
+    });
+
+    it("should clear in-memory store completely", async () => {
+      const { RateLimiter } = await import("@/lib/rate-limiter");
+      const limiter = new RateLimiter({ maxRequests: 10, windowMs: 60000 });
+
+      // Add some requests
+      await limiter.checkAndIncrement("clear1");
+      await limiter.checkAndIncrement("clear2");
+
+      // Clear
+      limiter.clearInMemoryStore();
+
+      // Keys should be reset
+      const r1 = await limiter.check("clear1");
+      const r2 = await limiter.check("clear2");
+
+      expect(r1.remaining).toBe(9);
+      expect(r2.remaining).toBe(9);
+    });
+  });
 });
