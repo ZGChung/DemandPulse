@@ -1663,7 +1663,7 @@ describe("DatabaseService", () => {
 
   describe("processScheduledDeletions", () => {
     it("should process scheduled deletions successfully", async () => {
-      const pastDate = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+      const _pastDate = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
       mockPrisma.requirement.findMany.mockResolvedValue([
         { id: "req-1", status: "PENDING" },
         { id: "req-2", status: "PROCESSED" },
