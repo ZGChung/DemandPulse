@@ -596,4 +596,129 @@ describe("ClusteringService", () => {
       await expect((service as any).updateClusterCentroid("cluster-1")).resolves.not.toThrow();
     });
   });
+
+  describe("mergeClusters", () => {
+    it("should merge multiple clusters into one", () => {
+      const clusters = [
+        {
+          clusterId: "1",
+          name: "Cluster 1",
+          description: "Desc 1",
+          centroid: [0.1, 0.1],
+          requirementIds: ["r1", "r2"],
+          requirementCount: 2,
+        },
+        {
+          clusterId: "2",
+          name: "Cluster 2",
+          description: "Desc 2",
+          centroid: [0.2, 0.2],
+          requirementIds: ["r3", "r4"],
+          requirementCount: 2,
+        },
+        {
+          clusterId: "3",
+          name: "Cluster 3",
+          description: "Desc 3",
+          centroid: [0.3, 0.3],
+          requirementIds: ["r5"],
+          requirementCount: 1,
+        },
+      ];
+
+      const result = (service as any).mergeClusters(clusters);
+      expect(result).toBeDefined();
+      expect(result.requirementIds.length).toBe(5);
+      expect(result.name).toContain("Merged Cluster");
+    });
+
+    it("should handle clusters with null centroids", () => {
+      const clusters = [
+        {
+          clusterId: "1",
+          name: "Cluster 1",
+          description: "Desc 1",
+          centroid: null,
+          requirementIds: ["r1"],
+          requirementCount: 1,
+        },
+      ];
+
+      const result = (service as any).mergeClusters(clusters);
+      expect(result).toBeDefined();
+      expect(result.requirementIds).toContain("r1");
+    });
+  });
+
+  describe("clusterRequirements - additional edge cases", () => {
+    it("should handle cluster size below minClusterSize after filtering", async () => {
+      const requirements = [
+        { id: "1", embedding: [] },
+        { id: "2", embedding: [] },
+        { id: "3", embedding: [0.1, 0.2, 0.3] },
+      ];
+      const result = await service.clusterRequirements(requirements, { minClusterSize: 3 });
+      expect(result).toEqual([]);
+    });
+
+    it("should handle saveClustersToDatabase", async () => {
+      const requirements = [
+        { id: "1", embedding: [0.1, 0.2, 0.3] },
+        { id: "2", embedding: [0.15, 0.25, 0.35] },
+        { id: "3", embedding: [0.4, 0.5, 0.6] },
+        { id: "4", embedding: [0.45, 0.55, 0.65] },
+      ];
+      // Just ensure clustering works without throwing
+      await expect(service.clusterRequirements(requirements)).resolves.toBeDefined();
+    });
+  });
+
+  describe("assignToCluster - additional scenarios", () => {
+    it("should update cluster when assigned", async () => {
+      const { prisma } = require("@/lib/prisma");
+      (prisma.requirementCluster.findMany as jest.Mock).mockResolvedValueOnce([
+        { id: "cluster-1", centroidEmbedding: [0.1, 0.2, 0.3] },
+      ]);
+      (prisma.requirement.update as jest.Mock).mockResolvedValue({});
+      (prisma.requirementCluster.update as jest.Mock).mockResolvedValue({});
+
+      const requirement = { id: "req-1", embedding: [0.1, 0.2, 0.3] };
+      const result = await service.assignToCluster(requirement);
+      expect(result).toBe("cluster-1");
+      expect(prisma.requirement.update).toHaveBeenCalled();
+    });
+
+    it("should not assign when below similarity threshold", async () => {
+      // Test with empty clusters to simulate below threshold scenario
+      const { prisma } = require("@/lib/prisma");
+      (prisma.requirementCluster.findMany as jest.Mock).mockResolvedValueOnce([]);
+
+      const requirement = { id: "req-1", embedding: [0.1, 0.2, 0.3] };
+      const result = await service.assignToCluster(requirement);
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("findSimilarRequirements - additional scenarios", () => {
+    it("should sort by similarity descending", async () => {
+      const { prisma } = require("@/lib/prisma");
+      (prisma.requirement.findMany as jest.Mock).mockResolvedValueOnce([
+        { id: "req-1", embedding: [0.1, 0.1, 0.1] },
+        { id: "req-2", embedding: [0.9, 0.9, 0.9] },
+      ]);
+
+      const result = await service.findSimilarRequirements([0.85, 0.85, 0.85], 10);
+      expect(result[0].similarity).toBeGreaterThanOrEqual(result[1].similarity);
+    });
+
+    it("should handle requirement with non-array embedding", async () => {
+      const { prisma } = require("@/lib/prisma");
+      (prisma.requirement.findMany as jest.Mock).mockResolvedValueOnce([
+        { id: "req-1", embedding: "not an array" },
+      ]);
+
+      const result = await service.findSimilarRequirements([0.1, 0.2, 0.3], 5);
+      expect(Array.isArray(result)).toBe(true);
+    });
+  });
 });
