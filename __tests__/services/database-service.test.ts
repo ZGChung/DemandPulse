@@ -2015,3 +2015,158 @@ describe("DatabaseService", () => {
     });
   });
 });
+
+describe("Mock implementation branch coverage", () => {
+  let serviceWithNullPrisma: DatabaseService;
+
+  beforeEach(() => {
+    // Create service with null prisma to test mock branch
+    serviceWithNullPrisma = new DatabaseService(null as any);
+  });
+
+  describe("storeRequirement mock branch", () => {
+    it("should store requirement in mock storage when prisma is null", async () => {
+      const mockRequirement: CollectedRequirement = {
+        id: "test-id",
+        originalRequirement: "Test requirement",
+        summarizedRequirement: "Test summary",
+        context: {
+          conversationId: "conv-123",
+          workspacePath: "/test/path",
+          timestamp: new Date(),
+        },
+        consent: {
+          consentOptions: {
+            dataCollection: true,
+            contact: true,
+            anonymization: false,
+          },
+          consentedAt: new Date(),
+        },
+      };
+
+      const result = await serviceWithNullPrisma.storeRequirement(mockRequirement, "user-123", 30);
+      expect(result).toMatch(/^mock-\d+$/);
+    });
+  });
+
+  describe("updateRequirementEmbedding mock branch", () => {
+    it("should update embedding in mock storage when prisma is null", async () => {
+      // First store a requirement
+      const mockRequirement: CollectedRequirement = {
+        id: "test-id",
+        originalRequirement: "Test requirement",
+        summarizedRequirement: "Test summary",
+        context: {
+          conversationId: "conv-123",
+          workspacePath: "/test/path",
+          timestamp: new Date(),
+        },
+        consent: {
+          consentOptions: {
+            dataCollection: true,
+            contact: true,
+            anonymization: false,
+          },
+          consentedAt: new Date(),
+        },
+      };
+
+      await serviceWithNullPrisma.storeRequirement(mockRequirement, "user-123", 30);
+
+      // Then update embedding
+      await expect(
+        serviceWithNullPrisma.updateRequirementEmbedding("mock-0", [0.1, 0.2, 0.3])
+      ).resolves.not.toThrow();
+    });
+  });
+
+  describe("getRequirement mock branch", () => {
+    it("should return null when requirement not found in mock storage", async () => {
+      // Use a unique ID that definitely doesn't exist
+      const result = await serviceWithNullPrisma.getRequirement("definitely-does-not-exist-12345");
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("getPrioritizedRequirements mock branch", () => {
+    it("should throw error when prisma is null", async () => {
+      await expect(serviceWithNullPrisma.getPrioritizedRequirements(10)).rejects.toThrow();
+    });
+  });
+
+  describe("getRequirementsByStatus mock branch", () => {
+    it("should throw error when prisma is null", async () => {
+      await expect(serviceWithNullPrisma.getRequirementsByStatus("PENDING", 10)).rejects.toThrow();
+    });
+  });
+
+  describe("deleteRequirement mock branch", () => {
+    it("should throw error when prisma is null", async () => {
+      await expect(
+        serviceWithNullPrisma.deleteRequirement("mock-0", "Test delete", "user")
+      ).rejects.toThrow();
+    });
+  });
+
+  describe("getStatistics mock branch", () => {
+    it("should throw error when prisma is null", async () => {
+      await expect(serviceWithNullPrisma.getStatistics("user-123")).rejects.toThrow(
+        "Failed to fetch statistics"
+      );
+    });
+  });
+
+  describe("getClusters mock branch", () => {
+    it("should throw error when prisma is null", async () => {
+      await expect(serviceWithNullPrisma.getClusters()).rejects.toThrow("Failed to fetch clusters");
+    });
+  });
+
+  describe("getClustersCount mock branch", () => {
+    it("should throw error when prisma is null", async () => {
+      await expect(serviceWithNullPrisma.getClustersCount()).rejects.toThrow(
+        "Failed to count clusters"
+      );
+    });
+  });
+
+  describe("createCluster mock branch", () => {
+    it("should throw error when prisma is null", async () => {
+      await expect(
+        serviceWithNullPrisma.createCluster("Test Cluster", "Test description")
+      ).rejects.toThrow("Failed to create cluster");
+    });
+  });
+
+  describe("getRequirementCountForUser mock branch", () => {
+    it("should return 0 when prisma is null", async () => {
+      const result = await serviceWithNullPrisma.getRequirementCountForUser("user-123");
+      expect(result).toBe(0);
+    });
+  });
+
+  describe("getRequirementsForAdmin mock branch", () => {
+    it("should throw error when prisma is null", async () => {
+      await expect(serviceWithNullPrisma.getRequirementsForAdmin()).rejects.toThrow(
+        "Failed to fetch requirements for admin view"
+      );
+    });
+  });
+
+  describe("getRequirementsCountForAdmin mock branch", () => {
+    it("should throw error when prisma is null", async () => {
+      await expect(serviceWithNullPrisma.getRequirementsCountForAdmin()).rejects.toThrow(
+        "Failed to count requirements for admin view"
+      );
+    });
+  });
+
+  describe("processScheduledDeletions mock branch", () => {
+    it("should throw error when prisma is null", async () => {
+      await expect(serviceWithNullPrisma.processScheduledDeletions()).rejects.toThrow(
+        "Failed to process scheduled deletions"
+      );
+    });
+  });
+});

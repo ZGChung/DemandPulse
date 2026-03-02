@@ -881,4 +881,106 @@ describe("AutoCompactService", () => {
       expect(service.isEnabled()).toBe(true);
     });
   });
+
+  describe("notification methods", () => {
+    it("should use console notification method", async () => {
+      const consoleService = new AutoCompactService({
+        enabled: true,
+        notificationMethod: "console",
+        confirmBeforeExecute: false,
+      });
+      const result = await consoleService.manualCompact();
+      expect(result.success).toBe(true);
+    });
+
+    it("should use notification notification method", async () => {
+      const notifyService = new AutoCompactService({
+        enabled: true,
+        notificationMethod: "notification",
+        confirmBeforeExecute: false,
+      });
+      const result = await notifyService.manualCompact();
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("compact strategies", () => {
+    it("should have all default strategies defined", () => {
+      const service = new AutoCompactService();
+      const config = service.getConfig();
+      expect(config.compactStrategies.length).toBeGreaterThan(0);
+      expect(config.compactStrategies.some((s) => s.default)).toBe(true);
+    });
+
+    it("should handle custom strategies", async () => {
+      const customService = new AutoCompactService({
+        enabled: true,
+        compactStrategies: [{ name: "custom_strategy", description: "Custom", default: true }],
+        confirmBeforeExecute: false,
+      });
+      const result = await customService.manualCompact("custom_strategy");
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("history management", () => {
+    it("should maintain history up to 100 entries", async () => {
+      const service = new AutoCompactService({ enabled: true, confirmBeforeExecute: false });
+
+      // Execute multiple compacts to build history
+      for (let i = 0; i < 105; i++) {
+        await service.manualCompact();
+      }
+
+      const history = service.getHistory();
+      // History should be trimmed to ~50 after exceeding 100
+      expect(history.length).toBeLessThanOrEqual(60);
+    });
+
+    it("should return history with specific limit", () => {
+      const service = new AutoCompactService();
+      const history = service.getHistory(10);
+      expect(history.length).toBeLessThanOrEqual(10);
+    });
+  });
+
+  describe("statistics", () => {
+    it("should track successful and failed compacts", async () => {
+      const service = new AutoCompactService({ enabled: true, confirmBeforeExecute: false });
+
+      await service.manualCompact();
+      await service.manualCompact();
+
+      const stats = service.getStatistics();
+      expect(stats.totalCompacts).toBe(2);
+      expect(stats.successfulCompacts).toBe(2);
+      expect(stats.failedCompacts).toBe(0);
+      expect(stats.isExecuting).toBe(false);
+    });
+
+    it("should include lastCompact in statistics", async () => {
+      const service = new AutoCompactService({ enabled: true, confirmBeforeExecute: false });
+
+      await service.manualCompact();
+
+      const stats = service.getStatistics();
+      expect(stats.lastCompact).toBeDefined();
+    });
+  });
+
+  describe("default strategy selection", () => {
+    it("should return summarize_oldest as default", () => {
+      const service = new AutoCompactService();
+      const strategy = service.getDefaultStrategy();
+      expect(strategy).toBe("summarize_oldest");
+    });
+
+    it("should return custom default when specified", () => {
+      const service = new AutoCompactService({
+        compactStrategies: [{ name: "new_default", description: "New default", default: true }],
+      });
+      const strategy = service.getDefaultStrategy();
+      expect(strategy).toBe("new_default");
+    });
+  });
 });
