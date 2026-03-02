@@ -25,10 +25,10 @@ describe("Encryption Module", () => {
       expect(typeof service.decrypt).toBe("function");
     });
 
-    it.skip("should encrypt and decrypt text correctly", async () => {
+    it("should encrypt and decrypt text correctly", async () => {
       const { EncryptionService } = await import("@/lib/encryption");
       const service = new EncryptionService({
-        key: "test-key-12345678901234567890123456789012",
+        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
         enabled: true,
       });
       const plaintext = "Hello, World!";
@@ -37,10 +37,10 @@ describe("Encryption Module", () => {
       expect(decrypted).toBe(plaintext);
     });
 
-    it.skip("should handle empty string", async () => {
+    it("should handle empty string", async () => {
       const { EncryptionService } = await import("@/lib/encryption");
       const service = new EncryptionService({
-        key: "test-key-12345678901234567890123456789012",
+        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
         enabled: true,
       });
       const encrypted = await service.encrypt("");
@@ -48,10 +48,10 @@ describe("Encryption Module", () => {
       expect(decrypted).toBe("");
     });
 
-    it.skip("should handle unicode text", async () => {
+    it("should handle unicode text", async () => {
       const { EncryptionService } = await import("@/lib/encryption");
       const service = new EncryptionService({
-        key: "test-key-12345678901234567890123456789012",
+        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
         enabled: true,
       });
       const plaintext = "你好世界";
@@ -78,10 +78,10 @@ describe("Encryption Module", () => {
       await expect(service.encrypt("test")).rejects.toThrow();
     });
 
-    it.skip("should handle encryptJSON with array data", async () => {
+    it("should handle encryptJSON with array data", async () => {
       const { EncryptionService } = await import("@/lib/encryption");
       const service = new EncryptionService({
-        key: "test-key-12345678901234567890123456789012",
+        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
         enabled: true,
       });
       const data = [1, 2, 3, "test"];
@@ -90,10 +90,10 @@ describe("Encryption Module", () => {
       expect(decrypted).toEqual(data);
     });
 
-    it.skip("should handle encryptJSON with null data", async () => {
+    it("should handle encryptJSON with null data", async () => {
       const { EncryptionService } = await import("@/lib/encryption");
       const service = new EncryptionService({
-        key: "test-key-12345678901234567890123456789012",
+        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
         enabled: true,
       });
       const data = null;
@@ -102,10 +102,10 @@ describe("Encryption Module", () => {
       expect(decrypted).toBeNull();
     });
 
-    it.skip("should handle encryptJSON with boolean data", async () => {
+    it("should handle encryptJSON with boolean data", async () => {
       const { EncryptionService } = await import("@/lib/encryption");
       const service = new EncryptionService({
-        key: "test-key-12345678901234567890123456789012",
+        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
         enabled: true,
       });
       const data = true;
@@ -158,10 +158,10 @@ describe("Encryption Module", () => {
       expect(service.isEnabled()).toBe(true);
     });
 
-    it.skip("should encrypt and decrypt JSON objects", async () => {
+    it("should encrypt and decrypt JSON objects", async () => {
       const { EncryptionService } = await import("@/lib/encryption");
       const service = new EncryptionService({
-        key: "test-key-12345678901234567890123456789012",
+        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
         enabled: true,
       });
       const data = { name: "test", value: 123, nested: { a: 1 } };
@@ -220,10 +220,10 @@ describe("Encryption Module", () => {
       expect(typeof defaultEncryptionConfig.enabled).toBe("boolean");
     });
 
-    it.skip("should handle long text encryption", async () => {
+    it("should handle long text encryption", async () => {
       const { EncryptionService } = await import("@/lib/encryption");
       const service = new EncryptionService({
-        key: "test-key-12345678901234567890123456789012",
+        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
         enabled: true,
       });
       const plaintext = "A".repeat(10000);
@@ -232,10 +232,10 @@ describe("Encryption Module", () => {
       expect(decrypted).toBe(plaintext);
     });
 
-    it.skip("should handle special characters", async () => {
+    it("should handle special characters", async () => {
       const { EncryptionService } = await import("@/lib/encryption");
       const service = new EncryptionService({
-        key: "test-key-12345678901234567890123456789012",
+        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
         enabled: true,
       });
       const plaintext = "!@#$%^&*()_+-=[]{}|;':\",./<>?`~";
@@ -244,10 +244,10 @@ describe("Encryption Module", () => {
       expect(decrypted).toBe(plaintext);
     });
 
-    it.skip("should encrypt different plaintexts to different ciphertexts", async () => {
+    it("should encrypt different plaintexts to different ciphertexts", async () => {
       const { EncryptionService } = await import("@/lib/encryption");
       const service = new EncryptionService({
-        key: "test-key-12345678901234567890123456789012",
+        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
         enabled: true,
       });
       const encrypted1 = await service.encrypt("text1");
@@ -255,10 +255,10 @@ describe("Encryption Module", () => {
       expect(encrypted1).not.toBe(encrypted2);
     });
 
-    it.skip("should handle base64 special characters in plaintext", async () => {
+    it("should handle base64 special characters in plaintext", async () => {
       const { EncryptionService } = await import("@/lib/encryption");
       const service = new EncryptionService({
-        key: "test-key-12345678901234567890123456789012",
+        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
         enabled: true,
       });
       // This could cause issues if not handled properly
@@ -284,10 +284,10 @@ describe("Encryption Module", () => {
       expect(result).toBe("test");
     });
 
-    it.skip("should handle decryptJSON with invalid JSON", async () => {
+    it("should handle decryptJSON with invalid JSON", async () => {
       const { EncryptionService } = await import("@/lib/encryption");
       const service = new EncryptionService({
-        key: "test-key-12345678901234567890123456789012",
+        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
         enabled: true,
       });
       const encrypted = await service.encrypt("not-valid-json");

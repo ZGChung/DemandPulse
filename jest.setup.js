@@ -14,6 +14,9 @@ if (!global.TextDecoder) {
 // Polyfill crypto for Node.js test environment (jsdom should provide it, but ensure it's available)
 if (!global.crypto) {
   global.crypto = require("crypto").webcrypto;
+} else if (!global.crypto.subtle) {
+  // Ensure subtle is available
+  global.crypto.subtle = require("crypto").webcrypto.subtle;
 }
 
 // Polyfill Response and Request for tests
