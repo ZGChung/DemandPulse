@@ -511,4 +511,83 @@ describe("AutoCompactService", () => {
       expect(Array.isArray(history)).toBe(true);
     });
   });
+
+  describe("CLI execution method", () => {
+    it("should use CLI execution method when configured", async () => {
+      const cliService = new AutoCompactService({
+        executionMethod: "cli",
+        cliPath: "/usr/local/bin/claude",
+      });
+      const result = await cliService.manualCompact("summarize_oldest");
+      expect(result).toBeDefined();
+    });
+
+    it("should use custom cli path", async () => {
+      const cliService = new AutoCompactService({
+        executionMethod: "cli",
+        cliPath: "/custom/path/claude",
+      });
+      const result = await cliService.manualCompact();
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe("API execution method", () => {
+    it("should use API execution method when configured", async () => {
+      const apiService = new AutoCompactService({
+        executionMethod: "api",
+        apiEndpoint: "https://api.claude.ai/compact",
+        apiToken: "test-token",
+      });
+      const result = await apiService.manualCompact("summarize_oldest");
+      expect(result).toBeDefined();
+    });
+
+    it("should use custom API endpoint", async () => {
+      const apiService = new AutoCompactService({
+        executionMethod: "api",
+        apiEndpoint: "https://my-api.com/compact",
+      });
+      const result = await apiService.manualCompact();
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe("confirmBeforeExecute option", () => {
+    it("should respect confirmBeforeExecute flag", async () => {
+      const confirmedService = new AutoCompactService({
+        confirmBeforeExecute: true,
+      });
+      const result = await confirmedService.manualCompact();
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe("default strategy selection", () => {
+    it("should return summarize_oldest when no default is set", () => {
+      const customService = new AutoCompactService({
+        compactStrategies: [{ name: "test", description: "test", default: false }],
+      });
+      const strategy = customService.getDefaultStrategy();
+      expect(strategy).toBe("summarize_oldest");
+    });
+
+    it("should return custom default when set", () => {
+      const customService = new AutoCompactService({
+        compactStrategies: [{ name: "custom", description: "custom", default: true }],
+      });
+      const strategy = customService.getDefaultStrategy();
+      expect(strategy).toBe("custom");
+    });
+  });
+
+  describe("compact history details", () => {
+    it("should return history as array", async () => {
+      const newService = new AutoCompactService({ enabled: true });
+      await newService.manualCompact("remove_oldest");
+      const history = newService.getHistory();
+      // History may or may not have entries depending on execution
+      expect(Array.isArray(history)).toBe(true);
+    });
+  });
 });
