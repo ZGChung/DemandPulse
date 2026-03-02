@@ -1928,4 +1928,90 @@ describe("DatabaseService", () => {
       expect(result).toEqual([]);
     });
   });
+
+  describe("getClustersForUser error handling", () => {
+    it("should return empty array when prisma throws", async () => {
+      mockPrisma.requirementCluster.findMany.mockRejectedValue(new Error("DB error"));
+
+      const result = await service.getClustersForUser("user-123");
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("getPublicStatistics error handling", () => {
+    it("should return default stats when prisma throws", async () => {
+      mockPrisma.requirement.count.mockRejectedValue(new Error("DB error"));
+
+      const result = await service.getPublicStatistics();
+      expect(result).toEqual({
+        totalRequirements: 0,
+        totalClusters: 0,
+        totalUsers: 0,
+        recentRequirements: 0,
+      });
+    });
+  });
+
+  describe("getStatistics error handling", () => {
+    it("should throw error when prisma throws", async () => {
+      mockPrisma.requirement.count.mockRejectedValue(new Error("DB error"));
+
+      await expect(service.getStatistics()).rejects.toThrow("Failed to fetch statistics");
+    });
+  });
+
+  describe("getClusters error handling", () => {
+    it("should throw error when prisma throws", async () => {
+      mockPrisma.requirementCluster.findMany.mockRejectedValue(new Error("DB error"));
+
+      await expect(service.getClusters()).rejects.toThrow("Failed to fetch clusters");
+    });
+  });
+
+  describe("getClustersCount error handling", () => {
+    it("should throw error when prisma throws", async () => {
+      mockPrisma.requirementCluster.count.mockRejectedValue(new Error("DB error"));
+
+      await expect(service.getClustersCount()).rejects.toThrow("Failed to count clusters");
+    });
+  });
+
+  describe("createCluster error handling", () => {
+    it("should throw error when prisma throws", async () => {
+      mockPrisma.requirementCluster.create.mockRejectedValue(new Error("DB error"));
+
+      await expect(service.createCluster("test", "desc")).rejects.toThrow(
+        "Failed to create cluster"
+      );
+    });
+  });
+
+  describe("getRequirementCountForUser error handling", () => {
+    it("should return 0 when prisma throws", async () => {
+      mockPrisma.requirement.count.mockRejectedValue(new Error("DB error"));
+
+      const result = await service.getRequirementCountForUser("user-123");
+      expect(result).toBe(0);
+    });
+  });
+
+  describe("getRequirementsForAdmin error handling", () => {
+    it("should throw error when prisma throws", async () => {
+      mockPrisma.requirement.findMany.mockRejectedValue(new Error("DB error"));
+
+      await expect(service.getRequirementsForAdmin()).rejects.toThrow(
+        "Failed to fetch requirements for admin view"
+      );
+    });
+  });
+
+  describe("getRequirementsCountForAdmin error handling", () => {
+    it("should throw error when prisma throws", async () => {
+      mockPrisma.requirement.count.mockRejectedValue(new Error("DB error"));
+
+      await expect(service.getRequirementsCountForAdmin()).rejects.toThrow(
+        "Failed to count requirements for admin view"
+      );
+    });
+  });
 });
