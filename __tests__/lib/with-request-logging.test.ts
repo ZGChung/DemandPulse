@@ -1,5 +1,7 @@
 import { describe, it, expect, jest } from "@jest/globals";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+
+import type { RouteHandler } from "@/lib/with-request-logging";
 
 describe("withRequestLogging", () => {
   it("should export withRequestLogging function", async () => {
@@ -10,11 +12,8 @@ describe("withRequestLogging", () => {
   it("should return a function that wraps a handler", async () => {
     const { withRequestLogging } = await import("@/lib/with-request-logging");
 
-    const mockHandler = async () => {
-      return new Response(JSON.stringify({ ok: true }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
+    const mockHandler: RouteHandler = async () => {
+      return NextResponse.json({ ok: true });
     };
 
     const wrapped = withRequestLogging(mockHandler);
@@ -24,12 +23,7 @@ describe("withRequestLogging", () => {
   it("should create wrapped handler that preserves handler behavior", async () => {
     const { withRequestLogging } = await import("@/lib/with-request-logging");
 
-    const mockHandler = jest.fn().mockResolvedValue(
-      new Response(JSON.stringify({ ok: true }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      })
-    );
+    const mockHandler = jest.fn().mockResolvedValue(NextResponse.json({ ok: true }));
 
     const wrapped = withRequestLogging(mockHandler);
 
@@ -52,9 +46,7 @@ describe("withRequestLogging", () => {
     const methods = ["GET", "POST", "PUT", "DELETE", "PATCH"];
 
     for (const method of methods) {
-      const mockHandler = jest
-        .fn()
-        .mockResolvedValue(new Response(JSON.stringify({ method }), { status: 200 }));
+      const mockHandler = jest.fn().mockResolvedValue(NextResponse.json({ method }));
 
       const wrapped = withRequestLogging(mockHandler);
       const mockRequest = {
