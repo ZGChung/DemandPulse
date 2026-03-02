@@ -793,5 +793,81 @@ describe("ClusteringService", () => {
       );
       expect(typeof description).toBe("string");
     });
+
+    it("should handle empty cluster", () => {
+      const description = service.generateClusterDescription([], [], null);
+      expect(description).toBe("Empty cluster");
+    });
+  });
+
+  describe("mergeClusters", () => {
+    it("should merge multiple clusters correctly", () => {
+      const clusters = [
+        {
+          clusterId: "1",
+          name: "Cluster 1",
+          description: "Desc 1",
+          centroid: [0.1, 0.2],
+          requirementIds: ["r1", "r2"],
+          requirementCount: 2,
+        },
+        {
+          clusterId: "2",
+          name: "Cluster 2",
+          description: "Desc 2",
+          centroid: [0.3, 0.4],
+          requirementIds: ["r3", "r4"],
+          requirementCount: 2,
+        },
+      ];
+      const merged = service.mergeClusters(clusters);
+      expect(merged.requirementCount).toBe(4);
+      expect(merged.requirementIds).toContain("r1");
+      expect(merged.requirementIds).toContain("r4");
+    });
+  });
+
+  describe("clusterRequirements with similarityThreshold", () => {
+    it("should use custom similarity threshold", async () => {
+      const requirements = [
+        { id: "1", embedding: [0.1, 0.2, 0.3] },
+        { id: "2", embedding: [0.15, 0.25, 0.35] },
+        { id: "3", embedding: [0.4, 0.5, 0.6] },
+        { id: "4", embedding: [0.45, 0.55, 0.65] },
+      ];
+      const result = await service.clusterRequirements(requirements, {
+        minClusterSize: 2,
+        similarityThreshold: 0.95,
+      });
+      expect(Array.isArray(result)).toBe(true);
+    });
+
+    it("should use custom maxIterations", async () => {
+      const requirements = [
+        { id: "1", embedding: [0.1, 0.2, 0.3] },
+        { id: "2", embedding: [0.15, 0.25, 0.35] },
+        { id: "3", embedding: [0.4, 0.5, 0.6] },
+        { id: "4", embedding: [0.45, 0.55, 0.65] },
+      ];
+      const result = await service.clusterRequirements(requirements, {
+        minClusterSize: 2,
+        maxIterations: 50,
+      });
+      expect(Array.isArray(result)).toBe(true);
+    });
+  });
+
+  describe("findSimilarRequirements edge cases", () => {
+    it("should handle null embedding", async () => {
+      const requirement = { id: "1", embedding: null as any };
+      const result = await service.findSimilarRequirements(requirement, 5);
+      expect(result).toEqual([]);
+    });
+
+    it("should handle undefined embedding", async () => {
+      const requirement = { id: "1", embedding: undefined as any };
+      const result = await service.findSimilarRequirements(requirement, 5);
+      expect(result).toEqual([]);
+    });
   });
 });
