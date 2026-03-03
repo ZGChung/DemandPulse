@@ -1289,7 +1289,7 @@ describe("AutoCompactService", () => {
     it("should keep history size manageable (max 100)", async () => {
       const service = new AutoCompactService({ enabled: true });
       // Manually add many entries - note: direct push doesn't trigger trim
-      // Trim only happens when using the service's addHistory method
+      // Trim only happens when using the service's runAutoCompact method
       for (let i = 0; i < 120; i++) {
         (service as any).compactHistory.push({
           timestamp: new Date(),
@@ -1305,7 +1305,7 @@ describe("AutoCompactService", () => {
         status: "success" as const,
         contextBefore: {},
       });
-      // History won't be trimmed on direct push - verify current length
+      // History won't be trimmed on direct push - verify current length is 121
       expect((service as any).compactHistory.length).toBe(121);
     });
 
