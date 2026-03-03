@@ -1,4 +1,4 @@
-import { RateLimiter, RateLimitResult } from "@/lib/rate-limiter";
+import { RateLimiter } from "@/lib/rate-limiter";
 
 // Mock Redis
 jest.mock("ioredis", () => {
