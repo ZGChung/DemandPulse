@@ -2268,4 +2268,81 @@ describe("Mock implementation branch coverage", () => {
       expect(count).toBe(0);
     });
   });
+
+  describe("updateRequirementStatus with mock storage", () => {
+    it("should update requirement status in mock storage", async () => {
+      const service = new DatabaseService();
+      // Add mock requirement
+      (service as any).mockRequirements = [
+        {
+          id: "test-req-1",
+          originalRequirement: "Test",
+          summarizedRequirement: "Test",
+          status: "PENDING" as RequirementStatus,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
+      (service as any).prisma = null;
+
+      const result = await service.updateRequirementStatus("test-req-1", "PROCESSED");
+      expect(result.status).toBe("PROCESSED");
+    });
+  });
+
+  describe("deleteRequirement with mock storage", () => {
+    it("should delete requirement from mock storage", async () => {
+      const service = new DatabaseService();
+      (service as any).mockRequirements = [
+        {
+          id: "test-req-2",
+          originalRequirement: "Test",
+          summarizedRequirement: "Test",
+          status: "PENDING" as RequirementStatus,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
+      (service as any).prisma = null;
+
+      const result = await service.deleteRequirement("test-req-2", "Test delete");
+      expect(result.status).toBe("DELETED");
+    });
+  });
+
+  describe("getStatistics", () => {
+    it("should return statistics from prisma", async () => {
+      const mockPrisma = {
+        requirement: {
+          count: jest.fn().mockResolvedValue(10),
+        },
+        requirementCluster: {
+          count: jest.fn().mockResolvedValue(5),
+        },
+        user: {
+          count: jest.fn().mockResolvedValue(3),
+        },
+        $disconnect: jest.fn(),
+      } as any;
+
+      const service = new DatabaseService();
+      (service as any).prisma = mockPrisma;
+
+      const stats = await service.getStatistics();
+      expect(stats.totalRequirements).toBe(10);
+      expect(stats.totalClusters).toBe(5);
+      expect(stats.totalUsers).toBe(3);
+    });
+
+    it("should return mock statistics when prisma is null", async () => {
+      const service = new DatabaseService();
+      (service as any).prisma = null;
+      (service as any).mockRequirements = [];
+      (service as any).mockClusters = [];
+
+      const stats = await service.getStatistics();
+      expect(stats.totalRequirements).toBe(0);
+      expect(stats.totalClusters).toBe(0);
+    });
+  });
 });
