@@ -11,7 +11,7 @@ jest.mock("@auth/prisma-adapter", () => ({
   PrismaAdapter: jest.fn(),
 }));
 
-import GitHubProvider from "next-auth/providers/github";
+import _GitHubProvider from "next-auth/providers/github";
 
 import { authOptions } from "@/lib/auth";
 
