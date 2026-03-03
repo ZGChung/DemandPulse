@@ -78,4 +78,76 @@ describe("withRequestLogging", () => {
 
     expect(response.status).toBe(500);
   });
+
+  it("should handle request with URL object when nextUrl is undefined", async () => {
+    const { withRequestLogging } = await import("@/lib/with-request-logging");
+
+    const mockHandler = jest.fn().mockResolvedValue(NextResponse.json({ ok: true }));
+
+    const wrapped = withRequestLogging(mockHandler);
+    const mockRequest = {
+      nextUrl: null,
+      url: "http://localhost:3000/api/test",
+      method: "GET",
+      headers: { get: () => null },
+    } as unknown as NextRequest;
+
+    await wrapped(mockRequest);
+
+    expect(mockHandler).toHaveBeenCalled();
+  });
+
+  it("should propagate trace ID in response headers", async () => {
+    const { withRequestLogging } = await import("@/lib/with-request-logging");
+
+    const mockHandler = jest.fn().mockResolvedValue(NextResponse.json({ ok: true }));
+
+    const wrapped = withRequestLogging(mockHandler);
+    const mockRequest = {
+      nextUrl: { pathname: "/api/test" },
+      method: "GET",
+      headers: new Headers({ "x-trace-id": "test-trace-123" }),
+    } as unknown as NextRequest;
+
+    const response = await wrapped(mockRequest);
+
+    // Should have trace ID in headers
+    expect(response.headers.get("x-trace-id")).toBe("test-trace-123");
+  });
+
+  it("should handle context with params", async () => {
+    const { withRequestLogging } = await import("@/lib/with-request-logging");
+
+    const mockHandler = jest.fn().mockResolvedValue(NextResponse.json({ ok: true }));
+
+    const wrapped = withRequestLogging(mockHandler);
+    const mockRequest = {
+      nextUrl: { pathname: "/api/test" },
+      method: "GET",
+      headers: { get: () => null },
+    } as unknown as NextRequest;
+    const context = { params: { id: "123" } };
+
+    await wrapped(mockRequest, context);
+
+    expect(mockHandler).toHaveBeenCalledWith(mockRequest, context);
+  });
+
+  it("should return error response with trace ID when handler throws", async () => {
+    const { withRequestLogging } = await import("@/lib/with-request-logging");
+
+    const mockHandler = jest.fn().mockRejectedValue(new Error("Test error"));
+
+    const wrapped = withRequestLogging(mockHandler);
+    const mockRequest = {
+      nextUrl: { pathname: "/api/test" },
+      method: "GET",
+      headers: new Headers({ "x-trace-id": "error-trace-456" }),
+    } as unknown as NextRequest;
+
+    const response = await wrapped(mockRequest);
+
+    expect(response.status).toBe(500);
+    expect(response.headers.get("x-trace-id")).toBe("error-trace-456");
+  });
 });

@@ -304,4 +304,79 @@ describe("Encryption Module", () => {
       await expect(service.decryptJSON("corrupted:data")).rejects.toThrow();
     });
   });
+
+  describe("EncryptionService edge cases", () => {
+    it("should handle isEnabled correctly", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const disabledService = new EncryptionService({
+        key: "test-key-12345678901234567890123456789012",
+        enabled: false,
+      });
+      expect(disabledService.isEnabled()).toBe(false);
+
+      const enabledService = new EncryptionService({
+        key: "test-key-12345678901234567890123456789012",
+        enabled: true,
+      });
+      expect(enabledService.isEnabled()).toBe(true);
+    });
+
+    it("should handle long plaintext", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const service = new EncryptionService({
+        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
+        enabled: true,
+      });
+      const plaintext = "A".repeat(10000);
+      const encrypted = await service.encrypt(plaintext);
+      const decrypted = await service.decrypt(encrypted);
+      expect(decrypted).toBe(plaintext);
+    });
+
+    it("should handle unicode characters", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const service = new EncryptionService({
+        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
+        enabled: true,
+      });
+      const plaintext = "你好世界🌍🎉🚀 émojis and 中文";
+      const encrypted = await service.encrypt(plaintext);
+      const decrypted = await service.decrypt(encrypted);
+      expect(decrypted).toBe(plaintext);
+    });
+
+    it("should handle special characters", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const service = new EncryptionService({
+        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
+        enabled: true,
+      });
+      const plaintext = "!@#$%^&*()_+-=[]{}|;':\",./<>?`~";
+      const encrypted = await service.encrypt(plaintext);
+      const decrypted = await service.decrypt(encrypted);
+      expect(decrypted).toBe(plaintext);
+    });
+
+    it("should handle JSON object encryption and decryption", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const service = new EncryptionService({
+        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
+        enabled: true,
+      });
+      const plaintext = { name: "John", age: 30, email: "john@example.com" };
+      const encrypted = await service.encryptJSON(plaintext);
+      const decrypted = await service.decryptJSON(encrypted);
+      expect(decrypted).toEqual(plaintext);
+    });
+
+    it("should return same value when decrypting non-prefixed string with disabled encryption", async () => {
+      const { EncryptionService } = await import("@/lib/encryption");
+      const service = new EncryptionService({
+        key: "",
+        enabled: false,
+      });
+      const result = await service.decrypt("plain-text-without-prefix");
+      expect(result).toBe("plain-text-without-prefix");
+    });
+  });
 });
