@@ -2166,4 +2166,34 @@ describe("Mock implementation branch coverage", () => {
       expect(result).toBe(0);
     });
   });
+
+  describe("updateRequirementStatus mock branch", () => {
+    it("should throw when requirement not found in mock storage", async () => {
+      await expect(
+        serviceWithNullPrisma.updateRequirementStatus("mock-0", "PROCESSED")
+      ).rejects.toThrow("Failed to update requirement status");
+    });
+  });
+
+  describe("deleteRequirement mock branch", () => {
+    it("should throw when requirement not found in mock storage", async () => {
+      await expect(
+        serviceWithNullPrisma.deleteRequirement("mock-0", "Test delete", "test-user")
+      ).rejects.toThrow();
+    });
+  });
+
+  describe("getRequirementsForAdmin mock branch with filtering", () => {
+    it("should return empty array when prisma is null", async () => {
+      const result = await serviceWithNullPrisma.getRequirementsForAdmin(10, 0, undefined, "user");
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("countRequirementsForAdmin mock branch", () => {
+    it("should return 0 when prisma is null", async () => {
+      const count = await serviceWithNullPrisma.getRequirementsCountForAdmin();
+      expect(count).toBe(0);
+    });
+  });
 });
