@@ -433,9 +433,81 @@ describe("DatabaseService", () => {
 
   describe("getClusters", () => {
     it("should return clusters with pagination", async () => {
-      // Skip this test - requires complex mock setup for prisma.requirementCluster
-      // The getClusters method requires a working Prisma client with proper mocks
-      expect(true).toBe(true);
+      const mockClusters = [
+        {
+          id: "cluster-1",
+          name: "Authentication",
+          description: "Login and OAuth",
+          _count: { requirements: 10 },
+          firstDetectedAt: new Date(),
+          lastDetectedAt: new Date(),
+          requirements: [{ summarizedRequirement: "Add OAuth", detectedAt: new Date() }],
+        },
+        {
+          id: "cluster-2",
+          name: "Database",
+          description: "DB and SQL",
+          _count: { requirements: 5 },
+          firstDetectedAt: new Date(),
+          lastDetectedAt: new Date(),
+          requirements: [],
+        },
+      ];
+
+      mockPrisma.requirementCluster.findMany.mockResolvedValue(mockClusters);
+
+      const result = await service.getClusters(10, 0);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].name).toBe("Authentication");
+      expect(result[0].requirementCount).toBe(10);
+      expect(mockPrisma.requirementCluster.findMany).toHaveBeenCalledWith({
+        take: 10,
+        skip: 0,
+        include: {
+          _count: { select: { requirements: true } },
+          requirements: {
+            take: 5,
+            select: {
+              summarizedRequirement: true,
+              detectedAt: true,
+            },
+          },
+        },
+        orderBy: { requirementCount: "desc" },
+      });
+    });
+
+    it("should use default pagination values", async () => {
+      mockPrisma.requirementCluster.findMany.mockResolvedValue([]);
+
+      await service.getClusters();
+
+      expect(mockPrisma.requirementCluster.findMany).toHaveBeenCalledWith({
+        take: 10,
+        skip: 0,
+        include: {
+          _count: { select: { requirements: true } },
+          requirements: {
+            take: 5,
+            select: {
+              summarizedRequirement: true,
+              detectedAt: true,
+            },
+          },
+        },
+        orderBy: { requirementCount: "desc" },
+      });
+    });
+
+    it("should return mock data when prisma is null", async () => {
+      // Create service with null prisma
+      const nullPrismaService = new DatabaseService(null as any);
+      const result = await nullPrismaService.getClusters(5, 0);
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBeGreaterThan(0);
     });
   });
 
