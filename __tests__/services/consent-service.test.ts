@@ -179,4 +179,163 @@ describe("ConsentService", () => {
       expect(result.errors).toContain("Invalid email format");
     });
   });
+
+  describe("createCollectedRequirement", () => {
+    it("should create collected requirement with all fields", () => {
+      const consent: UserConsent = {
+        requirementId: "req-123",
+        consentedAt: new Date(),
+        consentOptions: {
+          dataCollection: true,
+          contact: false,
+          anonymization: true,
+        },
+      };
+      const context = {
+        conversationId: "conv-123",
+        userId: "user-456",
+        workspacePath: "/path/to/workspace",
+      };
+      const result = service.createCollectedRequirement(
+        "req-123",
+        "Original requirement",
+        "Summarized requirement",
+        context,
+        consent
+      );
+      expect(result.id).toBe("req-123");
+      expect(result.originalRequirement).toBe("Original requirement");
+      expect(result.summarizedRequirement).toBe("Summarized requirement");
+      expect(result.context.conversationId).toBe("conv-123");
+      expect(result.context.userId).toBe("user-456");
+      expect(result.context.workspacePath).toBe("/path/to/workspace");
+      expect(result.status).toBe("pending");
+      expect(result.collectedAt).toBeInstanceOf(Date);
+    });
+
+    it("should use default conversationId when not provided", () => {
+      const consent: UserConsent = {
+        requirementId: "req-123",
+        consentedAt: new Date(),
+        consentOptions: {
+          dataCollection: true,
+          contact: false,
+          anonymization: true,
+        },
+      };
+      const result = service.createCollectedRequirement(
+        "req-123",
+        "Original",
+        "Summarized",
+        {},
+        consent
+      );
+      expect(result.context.conversationId).toBe("unknown");
+    });
+  });
+
+  describe("generateConsentSummary", () => {
+    it("should generate summary with all options enabled", () => {
+      const consent: UserConsent = {
+        requirementId: "req-123",
+        consentedAt: new Date(),
+        consentOptions: {
+          dataCollection: true,
+          contact: true,
+          anonymization: true,
+        },
+        userProvidedEmail: "test@example.com",
+      };
+      const summary = service.generateConsentSummary(consent);
+      expect(summary).toContain("✅ Data collection consented");
+      expect(summary).toContain("✅ Contact consented");
+      expect(summary).toContain("✅ Data will be anonymized");
+      expect(summary).toContain("📧 Contact email: test@example.com");
+    });
+
+    it("should generate summary with all options disabled", () => {
+      const consent: UserConsent = {
+        requirementId: "req-123",
+        consentedAt: new Date(),
+        consentOptions: {
+          dataCollection: false,
+          contact: false,
+          anonymization: false,
+        },
+      };
+      const summary = service.generateConsentSummary(consent);
+      expect(summary).toContain("❌ Data collection not consented");
+      expect(summary).toContain("❌ Contact not consented");
+      expect(summary).toContain("❌ Data will not be anonymized");
+    });
+  });
+
+  describe("shouldStoreRequirement", () => {
+    it("should return true when data collection is consented", () => {
+      const consent: UserConsent = {
+        requirementId: "req-123",
+        consentedAt: new Date(),
+        consentOptions: {
+          dataCollection: true,
+          contact: false,
+          anonymization: true,
+        },
+      };
+      expect(service.shouldStoreRequirement(consent)).toBe(true);
+    });
+
+    it("should return false when data collection is not consented", () => {
+      const consent: UserConsent = {
+        requirementId: "req-123",
+        consentedAt: new Date(),
+        consentOptions: {
+          dataCollection: false,
+          contact: false,
+          anonymization: true,
+        },
+      };
+      expect(service.shouldStoreRequirement(consent)).toBe(false);
+    });
+  });
+
+  describe("getDataRetentionPeriod", () => {
+    it("should return 5 years for anonymized data", () => {
+      const consent: UserConsent = {
+        requirementId: "req-123",
+        consentedAt: new Date(),
+        consentOptions: {
+          dataCollection: true,
+          contact: false,
+          anonymization: true,
+        },
+      };
+      expect(service.getDataRetentionPeriod(consent)).toBe(365 * 5);
+    });
+
+    it("should return 2 years for data with contact info", () => {
+      const consent: UserConsent = {
+        requirementId: "req-123",
+        consentedAt: new Date(),
+        consentOptions: {
+          dataCollection: true,
+          contact: true,
+          anonymization: false,
+        },
+      };
+      expect(service.getDataRetentionPeriod(consent)).toBe(365 * 2);
+    });
+
+    it("should return 1 year for basic consented data", () => {
+      const consent: UserConsent = {
+        requirementId: "req-123",
+        consentedAt: new Date(),
+        consentOptions: {
+          dataCollection: true,
+          contact: false,
+          anonymization: false,
+        },
+      };
+      expect(service.getDataRetentionPeriod(consent)).toBe(365);
+    });
+  });
 });
