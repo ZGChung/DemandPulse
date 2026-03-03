@@ -1142,7 +1142,7 @@ describe("AutoCompactService", () => {
       (errorService as any).isExecuting = false;
       try {
         await (errorService as any).handleAutoCompactTrigger({ strategy: "invalid" });
-      } catch (e) {
+      } catch {
         // May throw, that's ok
       }
       expect(errorService.isEnabled()).toBe(true);
