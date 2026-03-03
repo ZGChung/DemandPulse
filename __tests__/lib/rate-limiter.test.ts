@@ -61,6 +61,16 @@ describe("RateLimiter", () => {
       expect(result2.remaining).toBe(4);
     });
 
+    it("should deny when limit exceeded via check", async () => {
+      // Use up the limit with increment (check doesn't consume)
+      for (let i = 0; i < 5; i++) {
+        await rateLimiter.increment("user-limit");
+      }
+      const result = await rateLimiter.check("user-limit");
+      expect(result.allowed).toBe(false);
+      expect(result.remaining).toBe(0);
+    });
+
     it("should return valid reset timestamp", async () => {
       const result = await rateLimiter.check("user3");
       expect(result.reset).toBeGreaterThan(Date.now());
