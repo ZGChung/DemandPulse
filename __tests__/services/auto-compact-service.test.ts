@@ -1247,4 +1247,79 @@ describe("AutoCompactService", () => {
       expect(result.message).toContain("simulated");
     });
   });
+
+  describe("additional edge cases", () => {
+    it("should handle handleAutoCompactTrigger when disabled", async () => {
+      const service = new AutoCompactService({ enabled: false });
+      (service as any).isExecuting = false;
+      await (service as any).handleAutoCompactTrigger({ strategy: "summarize_oldest" });
+      // Should return early without executing
+      const history = service.getHistory();
+      expect(history.length).toBe(0);
+    });
+
+    it("should handle handleAutoCompactTrigger when already executing", async () => {
+      const service = new AutoCompactService({ enabled: true });
+      (service as any).isExecuting = true;
+      await (service as any).handleAutoCompactTrigger({ strategy: "summarize_oldest" });
+      // Should return early without executing
+      const history = service.getHistory();
+      expect(history.length).toBe(0);
+    });
+
+    it("should handle handleContextLimitReached when disabled", async () => {
+      const { hookManager } = require("@/services/hook-manager");
+      jest.clearAllMocks();
+      const service = new AutoCompactService({ enabled: false });
+      await (service as any).handleContextLimitReached({});
+      // Should notify but not trigger
+      expect(hookManager.trigger).not.toHaveBeenCalled();
+    });
+
+    it("should handle handleContextWarning when disabled", async () => {
+      const { hookManager } = require("@/services/hook-manager");
+      jest.clearAllMocks();
+      const service = new AutoCompactService({ enabled: false });
+      await (service as any).handleContextWarning({
+        status: { shouldCompact: true, shouldWarn: true },
+      });
+      expect(hookManager.trigger).not.toHaveBeenCalled();
+    });
+
+    it("should keep history size manageable (max 100)", async () => {
+      const service = new AutoCompactService({ enabled: true });
+      // Manually add many entries to trigger trimming
+      for (let i = 0; i < 120; i++) {
+        (service as any).compactHistory.push({
+          timestamp: new Date(),
+          strategy: "test",
+          status: "success" as const,
+          contextBefore: {},
+        });
+      }
+      // Add one more to trigger trim
+      (service as any).compactHistory.push({
+        timestamp: new Date(),
+        strategy: "test",
+        status: "success" as const,
+        contextBefore: {},
+      });
+      // History should be trimmed to around 50
+      expect((service as any).compactHistory.length).toBeLessThanOrEqual(100);
+    });
+
+    it("should get default strategy correctly", async () => {
+      const service = new AutoCompactService();
+      const strategy = (service as any).getDefaultStrategy();
+      expect(strategy).toBe("summarize_oldest");
+    });
+
+    it("should get custom default strategy when set", async () => {
+      const service = new AutoCompactService({
+        compactStrategies: [{ name: "custom", description: "Custom", default: true }],
+      });
+      const strategy = (service as any).getDefaultStrategy();
+      expect(strategy).toBe("custom");
+    });
+  });
 });
