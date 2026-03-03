@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
 
-import { RateLimiter, RateLimitResult } from "@/lib/rate-limiter";
+import { RateLimiter } from "@/lib/rate-limiter";
 
 describe("RateLimiter", () => {
   let rateLimiter: RateLimiter;
