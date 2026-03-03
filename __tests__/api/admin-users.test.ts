@@ -45,6 +45,9 @@ jest.mock("@/lib/prisma", () => ({
       update: jest.fn().mockResolvedValue({ id: "user-1", role: "USER" }),
       delete: jest.fn().mockResolvedValue(true),
     },
+    privacyAuditLog: {
+      create: jest.fn().mockResolvedValue(true),
+    },
   },
 }));
 
