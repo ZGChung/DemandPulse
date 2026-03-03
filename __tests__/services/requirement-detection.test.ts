@@ -1,4 +1,4 @@
-import { RequirementDetectionService } from "@/services/requirement-detection";
+import { RequirementDetectionService } from "../../services/requirement-detection";
 
 describe("RequirementDetectionService", () => {
   let service: RequirementDetectionService;
