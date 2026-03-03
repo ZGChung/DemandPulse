@@ -195,6 +195,8 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         continue-on-error: true
 
-      - name: Dependency review
-        uses: actions/dependency-review-action@v3
-        if: github.event_name == 'pull_request'
+      # Dependency review - requires GitHub Advanced Security
+      # Uncomment when Advanced Security is enabled
+      # - name: Dependency review
+      #   uses: actions/dependency-review-action@v3
+      #   if: github.event_name == 'pull_request'
