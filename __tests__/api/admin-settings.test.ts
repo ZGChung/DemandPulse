@@ -76,8 +76,6 @@ function createMockRequest(
     headers?: Record<string, string>;
   } = {}
 ): NextRequest {
-  const { getServerSession } = require("next-auth");
-
   return {
     headers: new Map(Object.entries(options.headers || {})),
     nextUrl: { searchParams: new URLSearchParams() },
