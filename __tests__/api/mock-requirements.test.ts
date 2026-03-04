@@ -36,7 +36,7 @@ jest.mock("@/lib/validation-middleware", () => ({
     parse: jest.fn().mockImplementation((data) => data),
   },
   validateRequirementSubmission: jest.fn().mockReturnValue({ valid: true, errors: [] }),
-  validateQueryParams: jest.fn().mockImplementation((params, schema) => {
+  validateQueryParams: jest.fn().mockImplementation((params, _schema) => {
     const count = params.get("count");
     if (count && !/^\d+$/.test(count)) {
       return { success: false, errors: [{ path: ["count"], message: "Invalid count" }] };
