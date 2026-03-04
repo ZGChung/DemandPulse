@@ -906,4 +906,49 @@ describe("ClusteringService", () => {
       expect(Array.isArray(result)).toBe(true);
     });
   });
+
+  describe("clusterRequirements error handling", () => {
+    it("should return empty array on clustering error", async () => {
+      // Mock console.error
+      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+
+      // Mock kmeans to throw an error
+      const mockKMeans = require("ml-kmeans");
+      const originalKMeans = mockKMeans.kmeans;
+      mockKMeans.kmeans = jest.fn().mockImplementation(() => {
+        throw new Error("K-means computation failed");
+      });
+
+      // Mock prisma to throw
+      const { prisma } = require("@/lib/prisma");
+      (prisma.requirement.findMany as jest.Mock).mockRejectedValueOnce(new Error("Database error"));
+
+      const requirements = [
+        { id: "1", content: "Test requirement 1", embedding: [0.1, 0.2, 0.3] },
+        { id: "2", content: "Test requirement 2", embedding: [0.4, 0.5, 0.6] },
+      ];
+
+      const result = await service.clusterRequirements(requirements, 2);
+
+      // Should return empty array on error
+      expect(result).toEqual([]);
+      expect(consoleSpy).toHaveBeenCalled();
+
+      // Restore mocks
+      mockKMeans.kmeans = originalKMeans;
+      consoleSpy.mockRestore();
+    });
+
+    it("should handle empty requirements array", async () => {
+      const result = await service.clusterRequirements([], 2);
+      expect(result).toEqual([]);
+    });
+
+    it("should handle single requirement", async () => {
+      const requirements = [{ id: "1", content: "Single requirement", embedding: [0.1, 0.2, 0.3] }];
+
+      const result = await service.clusterRequirements(requirements, 1);
+      expect(Array.isArray(result)).toBe(true);
+    });
+  });
 });
