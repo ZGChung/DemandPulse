@@ -492,4 +492,67 @@ describe("AIProcessingService", () => {
       expect(result).toBe(false);
     });
   });
+
+  describe("clusterRequirements", () => {
+    it("should cluster requirements without embeddings using fallback", async () => {
+      // Mock fetch for embeddings to return null (no embeddings)
+      (fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({ data: [] }),
+      });
+
+      const requirements = [
+        { id: "1", title: "Build login API", description: "Create login endpoint" },
+        { id: "2", title: "Add OAuth support", description: "Implement OAuth 2.0" },
+      ];
+
+      const result = await service.clusterRequirements(requirements, 3);
+
+      // Should return cluster results from fallback method
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+    });
+
+    it("should handle clustering errors gracefully", async () => {
+      // Make embeddings API fail
+      (fetch as jest.Mock).mockRejectedValue(new Error("API error"));
+
+      const requirements = [{ id: "1", title: "Test", description: "Test desc" }];
+
+      const result = await service.clusterRequirements(requirements, 2);
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe("extractFallbackKeywords", () => {
+    it("should extract keywords from text", () => {
+      const result = (service as any).extractFallbackKeywords(
+        "Build a secure authentication system with OAuth"
+      );
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+    });
+
+    it("should handle empty text", () => {
+      const result = (service as any).extractFallbackKeywords("");
+      expect(result).toEqual([]);
+    });
+  });
+});
+
+// Test constructor error with missing API key
+describe("AIProcessingService constructor", () => {
+  it("should throw error when API key is not configured", () => {
+    jest.resetModules();
+    jest.doMock("@/lib/env", () => ({
+      env: {
+        deepseekApiKey: () => undefined,
+      },
+    }));
+
+    // Re-import to trigger constructor
+    expect(() => {
+      new (require("@/services/ai-processing").AIProcessingService)();
+    }).toThrow("DeepSeek API key is not configured");
+  });
 });
