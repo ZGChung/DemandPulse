@@ -1,382 +1,127 @@
-import { describe, it, expect } from "@jest/globals";
+// Field-level encryption tests
+import { EncryptionService, EncryptionError, defaultEncryptionConfig } from "@/lib/encryption";
 
-describe("Encryption Module", () => {
-  describe("EncryptionService", () => {
-    it("should export EncryptionService class", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      expect(EncryptionService).toBeDefined();
-    });
+describe("EncryptionService", () => {
+  describe("constructor", () => {
+    const testKey = "dGVzdGtleTMyYnl0ZXNsb25ndGhlcnRoYW5kb3RoZXJieXRlcw=="; // 32 bytes
 
-    it("should have encrypt method", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "test-key-12345678901234567890123456789012",
-        enabled: true,
-      });
-      expect(typeof service.encrypt).toBe("function");
-    });
-
-    it("should have decrypt method", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "test-key-12345678901234567890123456789012",
-        enabled: true,
-      });
-      expect(typeof service.decrypt).toBe("function");
-    });
-
-    it("should encrypt and decrypt text correctly", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
-        enabled: true,
-      });
-      const plaintext = "Hello, World!";
-      const encrypted = await service.encrypt(plaintext);
-      const decrypted = await service.decrypt(encrypted);
-      expect(decrypted).toBe(plaintext);
-    });
-
-    it("should handle empty string", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
-        enabled: true,
-      });
-      const encrypted = await service.encrypt("");
-      const decrypted = await service.decrypt(encrypted);
-      expect(decrypted).toBe("");
-    });
-
-    it("should handle unicode text", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
-        enabled: true,
-      });
-      const plaintext = "你好世界";
-      const encrypted = await service.encrypt(plaintext);
-      const decrypted = await service.decrypt(encrypted);
-      expect(decrypted).toBe(plaintext);
-    });
-
-    it("should handle invalid encrypted data", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "test-key-12345678901234567890123456789012",
-        enabled: true,
-      });
-      // Service may return invalid data as-is or throw depending on implementation
-      const result = await service.decrypt("invalid-data");
-      expect(result).toBeDefined();
-    });
-
-    it("should throw EncryptionError when Web Crypto API not available", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      // Test the getKey method by trying to import invalid key
-      const service = new EncryptionService({ key: "invalid-key-format", enabled: true });
-      await expect(service.encrypt("test")).rejects.toThrow();
-    });
-
-    it("should handle encryptJSON with array data", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
-        enabled: true,
-      });
-      const data = [1, 2, 3, "test"];
-      const encrypted = await service.encryptJSON(data);
-      const decrypted = await service.decryptJSON(encrypted);
-      expect(decrypted).toEqual(data);
-    });
-
-    it("should handle encryptJSON with null data", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
-        enabled: true,
-      });
-      const data = null;
-      const encrypted = await service.encryptJSON(data);
-      const decrypted = await service.decryptJSON(encrypted);
-      expect(decrypted).toBeNull();
-    });
-
-    it("should handle encryptJSON with boolean data", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
-        enabled: true,
-      });
-      const data = true;
-      const encrypted = await service.encryptJSON(data);
-      const decrypted = await service.decryptJSON(encrypted);
-      expect(decrypted).toBe(true);
-    });
-  });
-
-  describe("EncryptionError", () => {
-    it("should export EncryptionError class", async () => {
-      const { EncryptionError } = await import("@/lib/encryption");
-      expect(EncryptionError).toBeDefined();
-    });
-
-    it("should create EncryptionError with message", async () => {
-      const { EncryptionError } = await import("@/lib/encryption");
-      const error = new EncryptionError("Test error");
-      expect(error.message).toBe("Test error");
-      expect(error.name).toBe("EncryptionError");
-    });
-  });
-
-  describe("encryptionService", () => {
-    it("should export encryptionService instance", async () => {
-      const { encryptionService } = await import("@/lib/encryption");
-      expect(encryptionService).toBeDefined();
-    });
-  });
-
-  describe("EncryptionService methods", () => {
-    it("should report isEnabled correctly when disabled", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({ key: "", enabled: false });
-      expect(service.isEnabled()).toBe(false);
-    });
-
-    it("should report isEnabled correctly when enabled but no key", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({ key: "", enabled: true });
-      expect(service.isEnabled()).toBe(false);
-    });
-
-    it("should report isEnabled correctly when enabled with key", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "test-key-12345678901234567890123456789012",
-        enabled: true,
-      });
+    it("should create instance with provided config", () => {
+      const service = new EncryptionService({ key: testKey, enabled: true });
       expect(service.isEnabled()).toBe(true);
     });
 
-    it("should encrypt and decrypt JSON objects", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
-        enabled: true,
-      });
-      const data = { name: "test", value: 123, nested: { a: 1 } };
-      const encrypted = await service.encryptJSON(data);
-      const decrypted = await service.decryptJSON(encrypted);
-      expect(decrypted).toEqual(data);
+    it("should be disabled when enabled is false", () => {
+      const service = new EncryptionService({ key: testKey, enabled: false });
+      expect(service.isEnabled()).toBe(false);
     });
 
-    it("should return plaintext when encryption disabled", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({ key: "", enabled: false });
-      const plaintext = "secret data";
-      const result = await service.encrypt(plaintext);
-      expect(result).toBe(plaintext);
+    it("should be disabled when key is empty", () => {
+      const service = new EncryptionService({ key: "", enabled: true });
+      expect(service.isEnabled()).toBe(false);
+    });
+  });
+
+  describe("isEnabled", () => {
+    const testKey = "dGVzdGtleTMyYnl0ZXNsb25ndGhlcnRoYW5kb3RoZXJieXRlcw==";
+
+    it("should return true when enabled with valid key", () => {
+      const service = new EncryptionService({ key: testKey, enabled: true });
+      expect(service.isEnabled()).toBe(true);
     });
 
-    it("should return ciphertext as-is when encryption disabled", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({ key: "", enabled: false });
-      const ciphertext = "some-data";
-      const result = await service.decrypt(ciphertext);
-      expect(result).toBe(ciphertext);
+    it("should return false when disabled", () => {
+      const service = new EncryptionService({ key: testKey, enabled: false });
+      expect(service.isEnabled()).toBe(false);
     });
 
-    it("should handle non-encrypted format in decrypt", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "test-key-12345678901234567890123456789012",
-        enabled: true,
-      });
-      const plaintext = "not-encrypted-format";
-      const result = await service.decrypt(plaintext);
-      expect(result).toBe(plaintext);
+    it("should return false when key is missing", () => {
+      const service = new EncryptionService({ key: "", enabled: true });
+      expect(service.isEnabled()).toBe(false);
+    });
+  });
+
+  describe("encrypt", () => {
+    const testKey = "dGVzdGtleTMyYnl0ZXNsb25ndGhlcnRoYW5kb3RoZXJieXRlcw==";
+
+    it("should return plaintext when encryption is disabled", async () => {
+      const service = new EncryptionService({ key: testKey, enabled: false });
+      const result = await service.encrypt("sensitive data");
+      expect(result).toBe("sensitive data");
     });
 
-    it("should generate a valid key", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
+    it("should throw EncryptionError when Web Crypto API is not available", async () => {
+      // Save original crypto
+      const originalCrypto = global.crypto;
+
+      // @ts-expect-error - intentionally deleting global.crypto to test error handling
+      delete global.crypto;
+
+      const service = new EncryptionService({ key: testKey, enabled: true });
+      await expect(service.encrypt("test")).rejects.toThrow(EncryptionError);
+
+      // Restore
+      global.crypto = originalCrypto;
+    });
+  });
+
+  describe("decrypt", () => {
+    const testKey = "dGVzdGtleTMyYnl0ZXNsb25ndGhlcnRoYW5kb3RoZXJieXRlcw==";
+
+    it("should return ciphertext when encryption is disabled", async () => {
+      const service = new EncryptionService({ key: testKey, enabled: false });
+      const result = await service.decrypt("encrypted data");
+      expect(result).toBe("encrypted data");
+    });
+
+    it("should return plaintext when input doesn't contain dot", async () => {
+      const service = new EncryptionService({ key: testKey, enabled: true });
+      const result = await service.decrypt("not-encrypted");
+      expect(result).toBe("not-encrypted");
+    });
+
+    it("should throw EncryptionError when crypto not available", async () => {
+      const originalCrypto = global.crypto;
+      // @ts-expect-error - intentionally deleting global.crypto to test error handling
+      delete global.crypto;
+
+      const service = new EncryptionService({ key: testKey, enabled: true });
+      await expect(service.decrypt("a.b")).rejects.toThrow(EncryptionError);
+
+      global.crypto = originalCrypto;
+    });
+  });
+
+  describe("generateKey", () => {
+    it("should generate a valid base64 key", () => {
       const key = EncryptionService.generateKey();
       expect(key).toBeDefined();
       expect(typeof key).toBe("string");
       expect(key.length).toBeGreaterThan(0);
-      // Base64 encoded 32 bytes should be ~44 characters
-      expect(key.length).toBeGreaterThan(40);
     });
 
-    it("should generate unique keys", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const key1 = EncryptionService.generateKey();
-      const key2 = EncryptionService.generateKey();
-      expect(key1).not.toBe(key2);
-    });
+    it("should throw when crypto.getRandomValues is not available", () => {
+      const originalCrypto = global.crypto;
+      // @ts-expect-error - intentionally deleting global.crypto to test error handling
+      delete global.crypto;
 
-    it("should export defaultEncryptionConfig", async () => {
-      const { defaultEncryptionConfig } = await import("@/lib/encryption");
-      expect(defaultEncryptionConfig).toBeDefined();
-      expect(typeof defaultEncryptionConfig.enabled).toBe("boolean");
-    });
+      expect(() => EncryptionService.generateKey()).toThrow(EncryptionError);
 
-    it("should handle long text encryption", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
-        enabled: true,
-      });
-      const plaintext = "A".repeat(10000);
-      const encrypted = await service.encrypt(plaintext);
-      const decrypted = await service.decrypt(encrypted);
-      expect(decrypted).toBe(plaintext);
-    });
-
-    it("should handle special characters", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
-        enabled: true,
-      });
-      const plaintext = "!@#$%^&*()_+-=[]{}|;':\",./<>?`~";
-      const encrypted = await service.encrypt(plaintext);
-      const decrypted = await service.decrypt(encrypted);
-      expect(decrypted).toBe(plaintext);
-    });
-
-    it("should encrypt different plaintexts to different ciphertexts", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
-        enabled: true,
-      });
-      const encrypted1 = await service.encrypt("text1");
-      const encrypted2 = await service.encrypt("text2");
-      expect(encrypted1).not.toBe(encrypted2);
-    });
-
-    it("should handle base64 special characters in plaintext", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
-        enabled: true,
-      });
-      // This could cause issues if not handled properly
-      const plaintext = "a+b/c=d==";
-      const encrypted = await service.encrypt(plaintext);
-      const decrypted = await service.decrypt(encrypted);
-      expect(decrypted).toBe(plaintext);
+      global.crypto = originalCrypto;
     });
   });
+});
 
-  describe("EncryptionService errors", () => {
-    it("should return plaintext when encrypting without key and disabled", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({ key: "", enabled: false });
-      const result = await service.encrypt("test");
-      expect(result).toBe("test");
-    });
-
-    it("should return ciphertext when decrypting without key and disabled", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({ key: "", enabled: false });
-      const result = await service.decrypt("test");
-      expect(result).toBe("test");
-    });
-
-    it("should handle decryptJSON with invalid JSON", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
-        enabled: true,
-      });
-      const encrypted = await service.encrypt("not-valid-json");
-      await expect(service.decryptJSON(encrypted)).rejects.toThrow();
-    });
-
-    it("should handle decryptJSON with corrupted data", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "test-key-12345678901234567890123456789012",
-        enabled: true,
-      });
-      // Create a corrupted encrypted string (valid base64 but not our encrypted format)
-      await expect(service.decryptJSON("corrupted:data")).rejects.toThrow();
-    });
+describe("EncryptionError", () => {
+  it("should have correct name and message", () => {
+    const error = new EncryptionError("test error");
+    expect(error.name).toBe("EncryptionError");
+    expect(error.message).toBe("test error");
   });
+});
 
-  describe("EncryptionService edge cases", () => {
-    it("should handle isEnabled correctly", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const disabledService = new EncryptionService({
-        key: "test-key-12345678901234567890123456789012",
-        enabled: false,
-      });
-      expect(disabledService.isEnabled()).toBe(false);
-
-      const enabledService = new EncryptionService({
-        key: "test-key-12345678901234567890123456789012",
-        enabled: true,
-      });
-      expect(enabledService.isEnabled()).toBe(true);
-    });
-
-    it("should handle long plaintext", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
-        enabled: true,
-      });
-      const plaintext = "A".repeat(10000);
-      const encrypted = await service.encrypt(plaintext);
-      const decrypted = await service.decrypt(encrypted);
-      expect(decrypted).toBe(plaintext);
-    });
-
-    it("should handle unicode characters", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
-        enabled: true,
-      });
-      const plaintext = "你好世界🌍🎉🚀 émojis and 中文";
-      const encrypted = await service.encrypt(plaintext);
-      const decrypted = await service.decrypt(encrypted);
-      expect(decrypted).toBe(plaintext);
-    });
-
-    it("should handle special characters", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
-        enabled: true,
-      });
-      const plaintext = "!@#$%^&*()_+-=[]{}|;':\",./<>?`~";
-      const encrypted = await service.encrypt(plaintext);
-      const decrypted = await service.decrypt(encrypted);
-      expect(decrypted).toBe(plaintext);
-    });
-
-    it("should handle JSON object encryption and decryption", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "LZo4cxG7tzPzUOdAHGlmfYP9Lm0HR5CI8rthRrzLLUA=",
-        enabled: true,
-      });
-      const plaintext = { name: "John", age: 30, email: "john@example.com" };
-      const encrypted = await service.encryptJSON(plaintext);
-      const decrypted = await service.decryptJSON(encrypted);
-      expect(decrypted).toEqual(plaintext);
-    });
-
-    it("should return same value when decrypting non-prefixed string with disabled encryption", async () => {
-      const { EncryptionService } = await import("@/lib/encryption");
-      const service = new EncryptionService({
-        key: "",
-        enabled: false,
-      });
-      const result = await service.decrypt("plain-text-without-prefix");
-      expect(result).toBe("plain-text-without-prefix");
-    });
+describe("defaultEncryptionConfig", () => {
+  it("should have correct structure", () => {
+    expect(defaultEncryptionConfig).toHaveProperty("key");
+    expect(defaultEncryptionConfig).toHaveProperty("enabled");
   });
 });

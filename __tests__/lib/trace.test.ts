@@ -1,5 +1,4 @@
-import { describe, it, expect } from "@jest/globals";
-
+// Trace ID utilities tests
 import {
   generateTraceId,
   getTraceIdFromHeaders,
@@ -12,156 +11,225 @@ import {
   createSpan,
 } from "@/lib/trace";
 
-describe("Trace Utilities", () => {
+describe("Trace ID Utilities", () => {
   describe("generateTraceId", () => {
-    it("should generate a valid trace ID", () => {
+    it("should generate a trace ID with trace_ prefix", () => {
       const traceId = generateTraceId();
+
       expect(traceId).toMatch(/^trace_[a-z0-9]+_[a-z0-9]+$/);
     });
 
     it("should generate unique IDs", () => {
-      const id1 = generateTraceId();
-      const id2 = generateTraceId();
-      expect(id1).not.toBe(id2);
+      const ids = new Set<string>();
+      for (let i = 0; i < 100; i++) {
+        ids.add(generateTraceId());
+      }
+
+      expect(ids.size).toBe(100);
     });
   });
 
   describe("getTraceIdFromHeaders", () => {
-    it("should get trace ID from x-trace-id header", () => {
-      const headers = new Headers({ "x-trace-id": "test-trace-123" });
-      const traceId = getTraceIdFromHeaders(headers);
-      expect(traceId).toBe("test-trace-123");
+    it("should return x-trace-id when present", () => {
+      const headers = new Headers({ "x-trace-id": "custom-trace-id" });
+      const result = getTraceIdFromHeaders(headers);
+
+      expect(result).toBe("custom-trace-id");
     });
 
-    it("should get trace ID from x-request-id header", () => {
-      const headers = new Headers({ "x-request-id": "request-123" });
-      const traceId = getTraceIdFromHeaders(headers);
-      expect(traceId).toBe("request-123");
+    it("should return x-request-id as fallback", () => {
+      const headers = new Headers({ "x-request-id": "request-id-123" });
+      const result = getTraceIdFromHeaders(headers);
+
+      expect(result).toBe("request-id-123");
     });
 
-    it("should get trace ID from x-correlation-id header", () => {
-      const headers = new Headers({ "x-correlation-id": "corr-123" });
-      const traceId = getTraceIdFromHeaders(headers);
-      expect(traceId).toBe("corr-123");
+    it("should return x-correlation-id as fallback", () => {
+      const headers = new Headers({ "x-correlation-id": "correlation-id-456" });
+      const result = getTraceIdFromHeaders(headers);
+
+      expect(result).toBe("correlation-id-456");
     });
 
-    it("should parse traceparent header", () => {
+    it("should parse traceparent (W3C format)", () => {
       const headers = new Headers({
         traceparent: "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
       });
-      const traceId = getTraceIdFromHeaders(headers);
-      expect(traceId).toBe("0af7651916cd43dd8448eb211c80319c");
+      const result = getTraceIdFromHeaders(headers);
+
+      expect(result).toBe("0af7651916cd43dd8448eb211c80319c");
     });
 
-    it("should generate new trace ID if none found", () => {
+    it("should generate new trace ID when none present", () => {
       const headers = new Headers();
-      const traceId = getTraceIdFromHeaders(headers);
-      expect(traceId).toMatch(/^trace_/);
+      const result = getTraceIdFromHeaders(headers);
+
+      expect(result).toMatch(/^trace_/);
     });
   });
 
   describe("setTraceIdOnHeaders", () => {
-    it("should set trace ID on headers", () => {
+    it("should set x-trace-id and x-request-id headers", () => {
       const headers = new Headers();
-      setTraceIdOnHeaders(headers, "test-trace-123");
-      expect(headers.get("x-trace-id")).toBe("test-trace-123");
-      expect(headers.get("x-request-id")).toBe("test-trace-123");
+      setTraceIdOnHeaders(headers, "test-trace-id");
+
+      expect(headers.get("x-trace-id")).toBe("test-trace-id");
+      expect(headers.get("x-request-id")).toBe("test-trace-id");
     });
   });
 
   describe("createTraceContext", () => {
-    it("should create trace context", () => {
-      const context = createTraceContext("test-trace-123");
-      expect(context.traceId).toBe("test-trace-123");
+    it("should create context with given trace ID", () => {
+      const context = createTraceContext("test-trace");
+
+      expect(context.traceId).toBe("test-trace");
       expect(context.spanId).toMatch(/^span_/);
     });
 
-    it("should use provided spanId", () => {
-      const context = createTraceContext("test-trace-123", "custom-span");
+    it("should use provided spanId when given", () => {
+      const context = createTraceContext("test-trace", "custom-span");
+
+      expect(context.traceId).toBe("test-trace");
       expect(context.spanId).toBe("custom-span");
     });
   });
+});
 
-  describe("traceStorage", () => {
-    it("should run callback with store", () => {
-      const store = { traceId: "test", spanId: "span1" };
-      let result: string | undefined;
+describe("traceStorage", () => {
+  describe("run", () => {
+    it("should run callback with given store", () => {
+      const store = { traceId: "test-trace", spanId: "test-span" };
+      let captured: ReturnType<typeof getTraceContext>;
+
       traceStorage.run(store, () => {
-        result = "executed";
+        captured = getTraceContext();
       });
-      expect(result).toBe("executed");
+
+      expect(captured).toEqual(store);
     });
 
     it("should restore previous store after callback", () => {
-      const store1 = { traceId: "test1", spanId: "span1" };
-      const store2 = { traceId: "test2", spanId: "span2" };
-      let captured: string | undefined;
+      const initial = { traceId: "initial", spanId: "initial-span" };
+      const newStore = { traceId: "new", spanId: "new-span" };
+      let afterStore: ReturnType<typeof getTraceContext>;
 
-      traceStorage.run(store1, () => {
-        traceStorage.run(store2, () => {
-          captured = traceStorage.getStore()?.traceId;
+      traceStorage.run(initial, () => {
+        traceStorage.run(newStore, () => {
+          // Nested call
         });
-        expect(traceStorage.getStore()?.traceId).toBe("test1");
+        afterStore = getTraceContext();
       });
-      expect(captured).toBe("test2");
+
+      expect(afterStore).toEqual(initial);
     });
 
-    it("should get store", () => {
-      const store = { traceId: "test", spanId: "span1" };
+    it("should restore store even on error", () => {
+      const initial = { traceId: "initial", spanId: "initial-span" };
+
+      try {
+        traceStorage.run(initial, () => {
+          throw new Error("test error");
+        });
+      } catch {
+        // Expected
+      }
+
+      const afterStore = getTraceContext();
+      expect(afterStore).toBeUndefined();
+    });
+  });
+
+  describe("getStore", () => {
+    it("should return undefined when no context", () => {
+      const store = traceStorage.getStore();
+      expect(store).toBeUndefined();
+    });
+
+    it("should return current store when set", () => {
+      const store = { traceId: "test", spanId: "span" };
+      let result: ReturnType<typeof traceStorage.getStore>;
+
       traceStorage.run(store, () => {
-        expect(traceStorage.getStore()?.traceId).toBe("test");
+        result = traceStorage.getStore();
       });
+
+      expect(result).toEqual(store);
     });
   });
+});
 
-  describe("runWithTrace", () => {
-    it("should run callback with trace context", () => {
-      let captured: string | undefined;
-      runWithTrace("my-trace-id", () => {
-        captured = getTraceContext()?.traceId;
-      });
-      expect(captured).toBe("my-trace-id");
+describe("runWithTrace", () => {
+  it("should run callback with trace context", () => {
+    let context: ReturnType<typeof getTraceContext>;
+
+    runWithTrace("my-trace-id", () => {
+      context = getTraceContext();
     });
 
-    it("should restore context after callback", () => {
-      runWithTrace("my-trace-id", () => {
-        // Context exists inside
-      });
-      expect(getTraceContext()).toBeUndefined();
-    });
+    expect(context?.traceId).toBe("my-trace-id");
+    expect(context?.spanId).toMatch(/^span_/);
   });
 
-  describe("getCurrentTraceId", () => {
-    it("should return current trace ID when in context", () => {
-      let result: string | undefined;
-      runWithTrace("trace-123", () => {
-        result = getCurrentTraceId();
-      });
-      expect(result).toBe("trace-123");
-    });
+  it("should return callback result", () => {
+    const result = runWithTrace("trace", () => 42);
+    expect(result).toBe(42);
+  });
+});
 
-    it("should return undefined when not in context", () => {
-      expect(getCurrentTraceId()).toBeUndefined();
-    });
+describe("getTraceContext", () => {
+  it("should return undefined outside runWithTrace", () => {
+    const context = getTraceContext();
+    expect(context).toBeUndefined();
   });
 
-  describe("createSpan", () => {
-    it("should create a span with end function", () => {
-      const span = createSpan("test-span");
-      expect(typeof span.end).toBe("function");
+  it("should return context inside runWithTrace", () => {
+    let context: ReturnType<typeof getTraceContext>;
+
+    runWithTrace("trace", () => {
+      context = getTraceContext();
     });
 
-    it("should end span without error", () => {
-      const span = createSpan("test-span");
-      expect(() => span.end()).not.toThrow();
+    expect(context).toBeDefined();
+    expect(context?.traceId).toBe("trace");
+  });
+});
+
+describe("getCurrentTraceId", () => {
+  it("should return undefined when no context", () => {
+    const traceId = getCurrentTraceId();
+    expect(traceId).toBeUndefined();
+  });
+
+  it("should return trace ID in context", () => {
+    let traceId: string | undefined;
+
+    runWithTrace("trace-id-123", () => {
+      traceId = getCurrentTraceId();
     });
 
-    it("should include parent trace context", () => {
-      runWithTrace("parent-trace", () => {
-        const span = createSpan("child-span");
-        span.end();
-        // Should complete without error
-      });
+    expect(traceId).toBe("trace-id-123");
+  });
+});
+
+describe("createSpan", () => {
+  it("should return object with end method", () => {
+    const span = createSpan("test-span");
+
+    expect(span).toHaveProperty("end");
+    expect(typeof span.end).toBe("function");
+  });
+
+  it("should end span without error", () => {
+    const span = createSpan("test-span");
+
+    expect(() => span.end()).not.toThrow();
+  });
+
+  it("should have parent context", () => {
+    runWithTrace("parent-trace", () => {
+      const span = createSpan("child-span");
+      span.end();
+      // Should not throw - logs to console.debug
     });
   });
 });

@@ -186,4 +186,37 @@ describe("RateLimiter", () => {
       await expect(limiter.disconnect()).resolves.toBeUndefined();
     });
   });
+
+  describe("Redis fallback scenarios", () => {
+    it("should use in-memory when Redis is not configured", () => {
+      const memLimiter = new RateLimiter({
+        maxRequests: 5,
+        windowMs: 60000,
+        keyPrefix: "memory:",
+      });
+      expect(memLimiter).toBeDefined();
+    });
+
+    it("should handle checkAndIncrement correctly at exact limit", async () => {
+      const smallLimiter = new RateLimiter({
+        maxRequests: 1,
+        windowMs: 60000,
+        keyPrefix: "exact:",
+      });
+
+      const result1 = await smallLimiter.checkAndIncrement("user1");
+      expect(result1.allowed).toBe(true);
+      expect(result1.remaining).toBe(0);
+
+      const result2 = await smallLimiter.checkAndIncrement("user1");
+      expect(result2.allowed).toBe(false);
+    });
+
+    it("should return proper reset timestamps", async () => {
+      const now = Date.now();
+      const result = await limiter.checkAndIncrement("user1");
+      expect(result.reset).toBeGreaterThanOrEqual(now);
+      expect(result.reset).toBeLessThanOrEqual(now + 60000);
+    });
+  });
 });
