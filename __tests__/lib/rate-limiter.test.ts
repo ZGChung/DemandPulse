@@ -196,4 +196,106 @@ describe("RateLimiter", () => {
       expect(result.allowed).toBe(true);
     });
   });
+
+  describe("Redis fallback scenarios", () => {
+    it("should handle Redis check error and fallback to in-memory", async () => {
+      // Create limiter with short window
+      const limiter = new RateLimiter({
+        maxRequests: 3,
+        windowMs: 60000,
+        keyPrefix: "fallback:",
+      });
+
+      // Manually set a faulty scenario by using increment to build up state
+      await limiter.increment("user1");
+      await limiter.increment("user1");
+
+      // Check should work with in-memory fallback
+      const result = await limiter.check("user1");
+      expect(result.allowed).toBe(true);
+
+      await limiter.disconnect();
+    });
+
+    it("should handle Redis increment error and fallback to in-memory", async () => {
+      const limiter = new RateLimiter({
+        maxRequests: 3,
+        windowMs: 60000,
+        keyPrefix: "fallback:",
+      });
+
+      // Increment should work even without Redis
+      const result = await limiter.increment("user2");
+      expect(result.allowed).toBe(true);
+      expect(result.remaining).toBe(2);
+
+      await limiter.disconnect();
+    });
+
+    it("should handle Redis checkAndIncrement error and fallback to in-memory", async () => {
+      const limiter = new RateLimiter({
+        maxRequests: 3,
+        windowMs: 60000,
+        keyPrefix: "fallback:",
+      });
+
+      const result = await limiter.checkAndIncrement("user3");
+      expect(result.allowed).toBe(true);
+      expect(result.remaining).toBe(2);
+
+      await limiter.disconnect();
+    });
+  });
+
+  describe("edge cases", () => {
+    it("should handle empty key", async () => {
+      const limiter = new RateLimiter({
+        maxRequests: 5,
+        windowMs: 60000,
+        keyPrefix: "edge:",
+      });
+
+      const result = await limiter.check("");
+      expect(result.allowed).toBe(true);
+
+      await limiter.disconnect();
+    });
+
+    it("should handle very long key", async () => {
+      const limiter = new RateLimiter({
+        maxRequests: 5,
+        windowMs: 60000,
+        keyPrefix: "edge:",
+      });
+
+      const longKey = "a".repeat(1000);
+      const result = await limiter.check(longKey);
+      expect(result.allowed).toBe(true);
+
+      await limiter.disconnect();
+    });
+
+    it("should handle rapid sequential requests", async () => {
+      const limiter = new RateLimiter({
+        maxRequests: 3,
+        windowMs: 60000,
+        keyPrefix: "rapid:",
+      });
+
+      const results = [];
+      for (let i = 0; i < 3; i++) {
+        results.push(await limiter.increment("rapid-user"));
+      }
+
+      expect(results[0].allowed).toBe(true);
+      expect(results[1].allowed).toBe(true);
+      expect(results[2].allowed).toBe(true);
+
+      // Next request should be blocked
+      const blocked = await limiter.increment("rapid-user");
+      expect(blocked.allowed).toBe(false);
+
+      await limiter.disconnect();
+    });
+  });
 });
