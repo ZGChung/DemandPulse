@@ -99,6 +99,12 @@ describe("EncryptionService", () => {
       expect(key.length).toBeGreaterThan(0);
     });
 
+    it("should generate a 256-bit key (44 chars base64)", () => {
+      const key = EncryptionService.generateKey();
+      // 256 bits = 32 bytes = 44 chars in base64 (with padding)
+      expect(key.length).toBe(44);
+    });
+
     it("should throw when crypto.getRandomValues is not available", () => {
       const originalCrypto = global.crypto;
       // @ts-expect-error - intentionally deleting global.crypto to test error handling
@@ -107,6 +113,65 @@ describe("EncryptionService", () => {
       expect(() => EncryptionService.generateKey()).toThrow(EncryptionError);
 
       global.crypto = originalCrypto;
+    });
+  });
+
+  describe("encrypt and decrypt round-trip", () => {
+    // Generate a valid 256-bit key for testing
+    const testKey = EncryptionService.generateKey();
+
+    it("should encrypt and decrypt a string correctly", async () => {
+      const service = new EncryptionService({ key: testKey, enabled: true });
+      const plaintext = "Hello, World!";
+
+      const encrypted = await service.encrypt(plaintext);
+      expect(encrypted).not.toBe(plaintext);
+      expect(encrypted).toContain("."); // Format: iv.ciphertext
+
+      const decrypted = await service.decrypt(encrypted);
+      expect(decrypted).toBe(plaintext);
+    });
+
+    it("should encrypt and decrypt Unicode strings", async () => {
+      const service = new EncryptionService({ key: testKey, enabled: true });
+      const plaintext = "你好世界🌍🎉";
+
+      const encrypted = await service.encrypt(plaintext);
+      const decrypted = await service.decrypt(encrypted);
+      expect(decrypted).toBe(plaintext);
+    });
+
+    it("should encrypt and decrypt long strings", async () => {
+      const service = new EncryptionService({ key: testKey, enabled: true });
+      const plaintext = "A".repeat(10000); // Long string
+
+      const encrypted = await service.encrypt(plaintext);
+      const decrypted = await service.decrypt(encrypted);
+      expect(decrypted).toBe(plaintext);
+    });
+
+    it("should encrypt and decrypt JSON objects", async () => {
+      const service = new EncryptionService({ key: testKey, enabled: true });
+      const data = { name: "test", value: 123, nested: { a: 1, b: 2 } };
+
+      const encrypted = await service.encryptJSON(data);
+      const decrypted = await service.decryptJSON(encrypted);
+      expect(decrypted).toEqual(data);
+    });
+
+    it("should produce different ciphertext for same plaintext (due to random IV)", async () => {
+      const service = new EncryptionService({ key: testKey, enabled: true });
+      const plaintext = "Same text";
+
+      const encrypted1 = await service.encrypt(plaintext);
+      const encrypted2 = await service.encrypt(plaintext);
+
+      // Should be different due to random IV
+      expect(encrypted1).not.toBe(encrypted2);
+
+      // But both should decrypt to the same plaintext
+      expect(await service.decrypt(encrypted1)).toBe(plaintext);
+      expect(await service.decrypt(encrypted2)).toBe(plaintext);
     });
   });
 });
