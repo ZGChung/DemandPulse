@@ -84,6 +84,78 @@ describe("Auth Configuration", () => {
 
         expect(result.sub).toBe("user-456");
       });
+
+      it("should handle jwt callback without user (token refresh)", async () => {
+        const token: Record<string, unknown> = {
+          sub: "existing-user",
+          role: "admin",
+        };
+
+        const callback = authOptions.callbacks?.jwt as (args: {
+          token: Record<string, unknown>;
+          user?: { id: string };
+        }) => Promise<Record<string, unknown>>;
+
+        const result = await callback({ token, user: undefined });
+
+        expect(result.sub).toBe("existing-user");
+        expect(result.role).toBe("admin");
+      });
+
+      it("should preserve role from token when no user", async () => {
+        const token: Record<string, unknown> = {
+          sub: "user-123",
+          role: "user",
+        };
+
+        const callback = authOptions.callbacks?.jwt as (args: {
+          token: Record<string, unknown>;
+          user?: { id: string };
+        }) => Promise<Record<string, unknown>>;
+
+        const result = await callback({ token });
+
+        expect(result.role).toBe("user");
+      });
+    });
+
+    describe("session callback edge cases", () => {
+      it("should handle session with missing token fields", async () => {
+        const token = {};
+
+        const session: { user: Record<string, unknown> } = { user: {} };
+
+        const callback = authOptions.callbacks?.session as (args: {
+          token: Record<string, unknown>;
+          session: { user: Record<string, unknown> };
+        }) => Promise<{ user: Record<string, unknown> }>;
+
+        const result = await callback({ token, session });
+
+        expect(result.user.id).toBeUndefined();
+        expect(result.user.name).toBeUndefined();
+        expect(result.user.email).toBeUndefined();
+      });
+
+      it("should handle session with partial token data", async () => {
+        const token = {
+          sub: "partial-user",
+          name: "Partial User",
+        };
+
+        const session: { user: Record<string, unknown> } = { user: {} };
+
+        const callback = authOptions.callbacks?.session as (args: {
+          token: Record<string, unknown>;
+          session: { user: Record<string, unknown> };
+        }) => Promise<{ user: Record<string, unknown> }>;
+
+        const result = await callback({ token, session });
+
+        expect(result.user.id).toBe("partial-user");
+        expect(result.user.name).toBe("Partial User");
+        expect(result.user.email).toBeUndefined();
+      });
     });
   });
 });
