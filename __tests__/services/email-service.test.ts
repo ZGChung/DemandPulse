@@ -339,6 +339,41 @@ describe("EmailService", () => {
     });
   });
 
+  describe("sendRealEmail error handling", () => {
+    it("should handle sendMockEmail with no metadata", async () => {
+      const service = new EmailService({ enabled: true, useMock: true });
+      const result = await service.sendEmail({
+        to: { email: "test@example.com" },
+        template: { subject: "Test", body: "Body" },
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should handle sendMockEmail with all metadata fields", async () => {
+      const service = new EmailService({ enabled: true, useMock: true });
+      const result = await service.sendEmail({
+        to: { email: "test@example.com", name: "Test User", userId: "u1" },
+        template: { subject: "Test", body: "Body" },
+        metadata: {
+          requirementId: "req-123",
+          clusterId: "cluster-456",
+          milestone: "milestone-1",
+          digest: "weekly",
+        },
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should handle sendMockEmail with empty body", async () => {
+      const service = new EmailService({ enabled: true, useMock: true });
+      const result = await service.sendEmail({
+        to: { email: "test@example.com" },
+        template: { subject: "Test", body: "" },
+      });
+      expect(result.success).toBe(true);
+    });
+  });
+
   describe("EmailService.templates", () => {
     it("should generate welcome template with name", () => {
       const template = EmailService.templates.welcome("John");
