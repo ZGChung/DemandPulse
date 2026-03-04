@@ -870,4 +870,40 @@ describe("ClusteringService", () => {
       expect(result).toEqual([]);
     });
   });
+
+  describe("cosineSimilarity fallback logic", () => {
+    it("should handle different length vectors via findSimilarRequirements", async () => {
+      // Test via public API - different length vectors will trigger fallback path
+      const mockCosineSimilarity = require("compute-cosine-similarity");
+
+      // Mock to return null (will trigger fallback) for some pairs
+      (mockCosineSimilarity as jest.Mock).mockImplementation((a: number[], b: number[]) => {
+        if (a.length !== b.length) {
+          throw new Error("Length mismatch");
+        }
+        return 0.8;
+      });
+
+      const requirements = [
+        { id: "1", embedding: [0.1, 0.2, 0.3] },
+        { id: "2", embedding: [0.1, 0.2] }, // Different length
+      ];
+
+      const result = await service.findSimilarRequirements(requirements[0], 5);
+      expect(Array.isArray(result)).toBe(true);
+
+      // Restore mock
+      (mockCosineSimilarity as jest.Mock).mockReturnValue(0.8);
+    });
+
+    it("should handle zero vectors via findSimilarRequirements", async () => {
+      const requirements = [
+        { id: "1", embedding: [0, 0, 0] }, // Zero vector
+        { id: "2", embedding: [0.1, 0.2, 0.3] },
+      ];
+
+      const result = await service.findSimilarRequirements(requirements[0], 5);
+      expect(Array.isArray(result)).toBe(true);
+    });
+  });
 });
