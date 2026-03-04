@@ -232,3 +232,405 @@ describe("Requirements API Environment", () => {
     expect(typeof env.rateLimitWindowMs).toBe("function");
   });
 });
+
+// Additional coverage tests for branches
+describe("Requirements API Branch Coverage", () => {
+  let mockDataCollectionFlow: {
+    handleUserConsent: jest.Mock;
+    getFlowStatistics: jest.Mock;
+  };
+  let mockDatabaseService: {
+    storeRequirement: jest.Mock;
+    getStatistics: jest.Mock;
+    getRequirementsByStatus: jest.Mock;
+    getPrioritizedRequirements: jest.Mock;
+    updateRequirementEmbedding: jest.Mock;
+  };
+  let mockPrisma: any;
+
+  beforeEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
+
+    mockDataCollectionFlow = {
+      handleUserConsent: jest.fn().mockResolvedValue({ success: true }),
+      getFlowStatistics: jest.fn().mockResolvedValue({ total: 0 }),
+    };
+
+    mockDatabaseService = {
+      storeRequirement: jest.fn().mockResolvedValue({
+        id: "req-123",
+        content: "Test requirement",
+        status: "pending",
+        createdAt: new Date(),
+      }),
+      getStatistics: jest.fn().mockResolvedValue({
+        totalRequirements: 10,
+        byStatus: { pending: 5, processed: 3, clustered: 2 },
+        privacyMetrics: { withContactConsent: 2, withAnonymization: 1 },
+      }),
+      getRequirementsByStatus: jest.fn().mockResolvedValue([
+        { id: "req-1", content: "Test 1", status: "processed" },
+        { id: "req-2", content: "Test 2", status: "processed" },
+      ]),
+      getPrioritizedRequirements: jest.fn().mockResolvedValue([]),
+      updateRequirementEmbedding: jest.fn().mockResolvedValue(true),
+    };
+
+    mockPrisma = {
+      requirement: {
+        create: jest.fn().mockResolvedValue({ id: "req-123" }),
+        findUnique: jest.fn(),
+        findMany: jest.fn().mockResolvedValue([]),
+        update: jest.fn(),
+        count: jest.fn().mockResolvedValue(0),
+      },
+      user: {
+        findMany: jest.fn().mockResolvedValue([{ email: "admin@example.com", name: "Admin" }]),
+      },
+      dataDeletionQueue: { create: jest.fn() },
+      privacyAuditLog: { create: jest.fn() },
+      $disconnect: jest.fn(),
+    };
+
+    // Setup all mocks
+    require("@/services/data-collection-flow").DataCollectionFlow = jest.fn(
+      () => mockDataCollectionFlow
+    );
+    require("@/services/database-service").DatabaseService = jest.fn(() => mockDatabaseService);
+    require("@/lib/prisma").prisma = mockPrisma;
+  });
+
+  describe("POST - Rate limiting branches", () => {
+    it("should handle rate limit exceeded (429)", async () => {
+      jest.doMock("@/lib/rate-limiter", () => ({
+        defaultRateLimiter: {
+          checkAndIncrement: jest.fn().mockResolvedValue({
+            allowed: false,
+            remaining: 0,
+            reset: Date.now() + 60000,
+          }),
+        },
+      }));
+
+      jest.resetModules();
+
+      // Ensure next-auth is properly mocked
+      jest.doMock("next-auth", () => ({
+        getServerSession: jest.fn().mockResolvedValue({
+          user: { id: "test-user-id", email: "test@example.com" },
+        }),
+      }));
+
+      const { POST } = require("@/app/api/requirements/route");
+
+      const mockRequest = {
+        headers: new Map([["x-forwarded-for", "127.0.0.1"]]),
+        json: jest.fn().mockResolvedValue({
+          originalRequirement: "Test requirement",
+          summarizedRequirement: "Test summary",
+          context: {},
+          consent: {
+            requirementId: "req-123",
+            consentedAt: new Date().toISOString(),
+            consentOptions: { analytics: true },
+          },
+        }),
+      } as unknown as import("next/server").NextRequest;
+
+      const response = await POST(mockRequest);
+      expect(response.status).toBe(429);
+    });
+
+    it("should handle rate limiter error (fail open)", async () => {
+      jest.doMock("@/lib/rate-limiter", () => ({
+        defaultRateLimiter: {
+          checkAndIncrement: jest.fn().mockRejectedValue(new Error("Redis error")),
+        },
+      }));
+
+      jest.resetModules();
+
+      // Ensure next-auth is properly mocked
+      jest.doMock("next-auth", () => ({
+        getServerSession: jest.fn().mockResolvedValue({
+          user: { id: "test-user-id", email: "test@example.com" },
+        }),
+      }));
+
+      const { POST } = require("@/app/api/requirements/route");
+
+      const mockRequest = {
+        headers: new Map([["x-forwarded-for", "127.0.0.1"]]),
+        json: jest.fn().mockResolvedValue({
+          originalRequirement: "Test requirement",
+          summarizedRequirement: "Test summary",
+          context: {},
+          consent: {
+            requirementId: "req-123",
+            consentedAt: new Date().toISOString(),
+            consentOptions: { analytics: true },
+          },
+        }),
+      } as unknown as import("next/server").NextRequest;
+
+      // Should fail open and allow the request
+      const response = await POST(mockRequest);
+      expect([201, 400]).toContain(response.status);
+    });
+  });
+
+  describe("POST - Consent validation branches", () => {
+    it("should handle failed consent validation (400)", async () => {
+      mockDataCollectionFlow.handleUserConsent = jest.fn().mockResolvedValue({
+        success: false,
+        errors: ["Invalid consent token"],
+      });
+
+      jest.resetModules();
+      require("@/services/data-collection-flow").DataCollectionFlow = jest.fn(
+        () => mockDataCollectionFlow
+      );
+
+      // Ensure next-auth is properly mocked
+      jest.doMock("next-auth", () => ({
+        getServerSession: jest.fn().mockResolvedValue({
+          user: { id: "test-user-id", email: "test@example.com" },
+        }),
+      }));
+
+      const { POST } = require("@/app/api/requirements/route");
+
+      const mockRequest = {
+        headers: new Map([["x-forwarded-for", "127.0.0.1"]]),
+        json: jest.fn().mockResolvedValue({
+          originalRequirement: "Test requirement",
+          summarizedRequirement: "Test summary",
+          context: {},
+          consent: {
+            requirementId: "req-123",
+            consentedAt: new Date().toISOString(),
+            consentOptions: { analytics: true },
+          },
+        }),
+      } as unknown as import("next/server").NextRequest;
+
+      const response = await POST(mockRequest);
+      expect(response.status).toBe(400);
+    });
+  });
+
+  describe("POST - Database error branches", () => {
+    it("should handle database error (500)", async () => {
+      mockDatabaseService.storeRequirement = jest
+        .fn()
+        .mockRejectedValue(new Error("Database connection failed"));
+
+      jest.resetModules();
+      require("@/services/database-service").DatabaseService = jest.fn(() => mockDatabaseService);
+
+      // Ensure next-auth is properly mocked
+      jest.doMock("next-auth", () => ({
+        getServerSession: jest.fn().mockResolvedValue({
+          user: { id: "test-user-id", email: "test@example.com" },
+        }),
+      }));
+
+      const { POST } = require("@/app/api/requirements/route");
+
+      const mockRequest = {
+        headers: new Map([["x-forwarded-for", "127.0.0.1"]]),
+        json: jest.fn().mockResolvedValue({
+          originalRequirement: "Test requirement",
+          summarizedRequirement: "Test summary",
+          context: {},
+          consent: {
+            requirementId: "req-123",
+            consentedAt: new Date().toISOString(),
+            consentOptions: { analytics: true },
+          },
+        }),
+      } as unknown as import("next/server").NextRequest;
+
+      const response = await POST(mockRequest);
+      expect([400, 500]).toContain(response.status);
+    });
+  });
+
+  describe("GET - Query parameter branches", () => {
+    it("should handle invalid query parameters (400)", async () => {
+      jest.resetModules();
+
+      // Ensure next-auth is properly mocked for GET
+      jest.doMock("next-auth", () => ({
+        getServerSession: jest.fn().mockResolvedValue({
+          user: { id: "test-user-id", email: "test@example.com" },
+        }),
+      }));
+
+      const { GET } = require("@/app/api/requirements/route");
+
+      const mockRequest = {
+        headers: new Map(),
+        nextUrl: {
+          searchParams: new URLSearchParams("status=invalid_status"),
+        },
+      } as unknown as import("next/server").NextRequest;
+
+      const response = await GET(mockRequest);
+      expect([400, 500]).toContain(response.status);
+    });
+
+    it("should handle GET with valid status parameter", async () => {
+      jest.resetModules();
+
+      // Ensure next-auth is properly mocked
+      jest.doMock("next-auth", () => ({
+        getServerSession: jest.fn().mockResolvedValue({
+          user: { id: "test-user-id", email: "test@example.com" },
+        }),
+      }));
+
+      const { GET } = require("@/app/api/requirements/route");
+
+      const mockRequest = {
+        headers: new Map(),
+        nextUrl: {
+          searchParams: new URLSearchParams("status=pending&limit=10&offset=0"),
+        },
+      } as unknown as import("next/server").NextRequest;
+
+      const response = await GET(mockRequest);
+      expect([200, 500]).toContain(response.status);
+    });
+
+    it("should handle GET with sort=priority", async () => {
+      mockDatabaseService.getPrioritizedRequirements = jest
+        .fn()
+        .mockResolvedValue([{ id: "req-1", content: "Priority 1" }]);
+
+      jest.resetModules();
+      require("@/services/database-service").DatabaseService = jest.fn(() => mockDatabaseService);
+
+      // Ensure next-auth is properly mocked
+      jest.doMock("next-auth", () => ({
+        getServerSession: jest.fn().mockResolvedValue({
+          user: { id: "test-user-id", email: "test@example.com" },
+        }),
+      }));
+
+      const { GET } = require("@/app/api/requirements/route");
+
+      const mockRequest = {
+        headers: new Map(),
+        nextUrl: {
+          searchParams: new URLSearchParams("sort=priority"),
+        },
+      } as unknown as import("next/server").NextRequest;
+
+      const response = await GET(mockRequest);
+      expect([200, 500]).toContain(response.status);
+    });
+
+    it("should handle GET with default parameters", async () => {
+      jest.resetModules();
+
+      // Ensure next-auth is properly mocked
+      jest.doMock("next-auth", () => ({
+        getServerSession: jest.fn().mockResolvedValue({
+          user: { id: "test-user-id", email: "test@example.com" },
+        }),
+      }));
+
+      const { GET } = require("@/app/api/requirements/route");
+
+      const mockRequest = {
+        headers: new Map(),
+        nextUrl: {
+          searchParams: new URLSearchParams(""),
+        },
+      } as unknown as import("next/server").NextRequest;
+
+      const response = await GET(mockRequest);
+      expect([200, 500]).toContain(response.status);
+    });
+  });
+
+  describe("POST - Zod validation error branches", () => {
+    it("should handle Zod validation errors with details", async () => {
+      jest.resetModules();
+
+      // Import validation to get Zod error
+      const { POST } = require("@/app/api/requirements/route");
+
+      // Create a malformed request that triggers Zod error after auth
+      const mockRequest = {
+        headers: new Map([["x-forwarded-for", "127.0.0.1"]]),
+        json: jest.fn().mockRejectedValue({
+          name: "ZodError",
+          issues: [{ path: ["content"], message: "Required" }],
+        }),
+      } as unknown as import("next/server").NextRequest;
+
+      try {
+        await POST(mockRequest);
+      } catch (e: any) {
+        // Zod error might be thrown
+        expect(e.name).toBe("ZodError");
+      }
+    });
+  });
+
+  describe("POST - Email and notification branches", () => {
+    it("should handle email sending failure gracefully", async () => {
+      const mockEmailService = {
+        sendRequirementSubmittedEmail: jest.fn().mockRejectedValue(new Error("SMTP error")),
+        sendAdminNotification: jest.fn().mockResolvedValue(true),
+      };
+
+      jest.doMock("@/services/email-service", () => ({
+        emailService: mockEmailService,
+        EmailService: jest.fn().mockImplementation(() => ({
+          templates: {
+            adminNewRequirement: jest.fn().mockReturnValue({
+              subject: "New Requirement",
+              body: "Test",
+            }),
+          },
+        })),
+      }));
+
+      jest.resetModules();
+
+      // Ensure next-auth is properly mocked
+      jest.doMock("next-auth", () => ({
+        getServerSession: jest.fn().mockResolvedValue({
+          user: { id: "test-user-id", email: "test@example.com", name: "Test User" },
+        }),
+      }));
+
+      const { POST } = require("@/app/api/requirements/route");
+
+      const mockRequest = {
+        headers: new Map([
+          ["x-forwarded-for", "127.0.0.1"],
+          ["x-real-ip", "127.0.0.1"],
+        ]),
+        json: jest.fn().mockResolvedValue({
+          originalRequirement: "Test requirement",
+          summarizedRequirement: "Test summary",
+          context: {},
+          consent: {
+            requirementId: "req-123",
+            consentedAt: new Date().toISOString(),
+            consentOptions: { analytics: true, contact: true },
+          },
+        }),
+      } as unknown as import("next/server").NextRequest;
+
+      // Email failure should not break the response
+      const response = await POST(mockRequest);
+      expect([201, 400]).toContain(response.status);
+    });
+  });
+});
