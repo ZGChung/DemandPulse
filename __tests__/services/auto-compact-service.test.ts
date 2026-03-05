@@ -382,6 +382,23 @@ describe("AutoCompactService", () => {
       service.showNotification("Error message", "error");
       service.showNotification("Success message", "success");
     });
+
+    it("should call showNotification when notify is called with notification method", () => {
+      const notificationService = new AutoCompactService({
+        enabled: true,
+        maxItems: 1000,
+        minItems: 100,
+        checkIntervalMs: 60000,
+        compactIntervalMs: 3600000,
+        notificationMethod: "notification",
+        compactStrategies: [],
+      });
+
+      // This should trigger showNotification
+      notificationService.notify("Test notification", "info");
+
+      notificationService.disconnect();
+    });
   });
 
   describe("multiple compact strategies", () => {
