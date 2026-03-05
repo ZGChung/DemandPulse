@@ -385,6 +385,97 @@ describe("EmailService", () => {
     });
   });
 
+  describe("sendRealEmail error handling", () => {
+    it("should handle Resend client error", async () => {
+      const service = new EmailService({
+        enabled: true,
+        useMock: false,
+        resendApiKey: "test_key",
+        fromEmail: "test@example.com",
+      });
+      // Mock resend client that returns error
+      (service as any).resendClient = {
+        emails: {
+          send: jest.fn().mockResolvedValue({
+            error: { message: "Invalid API key" },
+          }),
+        },
+      };
+      const result = await service.sendEmail({
+        to: { email: "test@example.com", name: "Test" },
+        template: { subject: "Test", body: "Body" },
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("should send real email successfully", async () => {
+      const service = new EmailService({
+        enabled: true,
+        useMock: false,
+        resendApiKey: "test_key",
+        fromEmail: "test@example.com",
+      });
+      (service as any).resendClient = {
+        emails: {
+          send: jest.fn().mockResolvedValue({
+            data: { id: "msg_123" },
+          }),
+        },
+      };
+      const result = await service.sendEmail({
+        to: { email: "test@example.com", name: "Test User" },
+        template: { subject: "Test", body: "Body" },
+      });
+      expect(result.success).toBe(true);
+      expect(result.messageId).toBe("msg_123");
+    });
+
+    it("should handle exception in sendRealEmail", async () => {
+      const service = new EmailService({
+        enabled: true,
+        useMock: false,
+        resendApiKey: "test_key",
+        fromEmail: "test@example.com",
+      });
+      (service as any).resendClient = {
+        emails: {
+          send: jest.fn().mockRejectedValue(new Error("Network error")),
+        },
+      };
+      const result = await service.sendEmail({
+        to: { email: "test@example.com", name: "Test" },
+        template: { subject: "Test", body: "Body" },
+      });
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe("sendAdminNotification", () => {
+    it("should skip admins without email", async () => {
+      const service = new EmailService({ enabled: true, useMock: true });
+      const result = await service.sendAdminNotification([{ name: "Admin", email: "" }], {
+        subject: "Test",
+        body: "Body",
+      });
+      expect(result.sent).toBe(0);
+      expect(result.failed).toBe(0);
+    });
+
+    it("should handle mixed valid/invalid admins", async () => {
+      const service = new EmailService({ enabled: true, useMock: true });
+      const result = await service.sendAdminNotification(
+        [
+          { name: "Admin1", email: "admin1@example.com" },
+          { name: "Admin2", email: "" },
+          { name: "Admin3", email: "admin3@example.com" },
+        ],
+        { subject: "Test", body: "Body" }
+      );
+      expect(result.sent).toBe(2);
+      expect(result.failed).toBe(0);
+    });
+  });
+
   describe("EmailService.templates", () => {
     it("should generate welcome template with name", () => {
       const template = EmailService.templates.welcome("John");
