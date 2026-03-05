@@ -490,10 +490,15 @@ export class ClusteringService {
    * Compute cosine similarity between two vectors
    */
   private cosineSimilarity(vecA: number[], vecB: number[]): number {
+    let result: number | null;
     try {
-      return cosineSimilarity(vecA, vecB) ?? 0;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (_error) {
+      result = cosineSimilarity(vecA, vecB);
+    } catch {
+      result = null;
+    }
+
+    // Fallback to manual calculation if library returns null/undefined or invalid result
+    if (result === null || result === undefined || isNaN(result)) {
       // Fallback to manual calculation
       if (vecA.length !== vecB.length) {
         return 0;
@@ -515,5 +520,7 @@ export class ClusteringService {
 
       return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
     }
+
+    return result;
   }
 }
