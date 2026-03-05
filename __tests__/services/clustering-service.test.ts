@@ -160,6 +160,27 @@ describe("ClusteringService", () => {
   });
 
   describe("mergeSimilarClusters", () => {
+    it("should return clusters unchanged when only one cluster", () => {
+      const clusters = [
+        {
+          clusterId: "1",
+          name: "Cluster 1",
+          description: "Desc 1",
+          centroid: [0.1, 0.2],
+          requirementIds: ["r1"],
+          requirementCount: 1,
+        },
+      ];
+      const result = service.mergeSimilarClusters(clusters, 0.9);
+      expect(result).toHaveLength(1);
+    });
+
+    it("should return empty array when no clusters", () => {
+      const clusters: any[] = [];
+      const result = service.mergeSimilarClusters(clusters, 0.9);
+      expect(result).toEqual([]);
+    });
+
     it("should merge similar clusters", () => {
       const clusters = [
         {
