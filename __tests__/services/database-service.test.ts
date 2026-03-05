@@ -2345,4 +2345,57 @@ describe("Mock implementation branch coverage", () => {
       expect(stats.totalClusters).toBe(0);
     });
   });
+
+  describe("getClustersForUser with mock prisma", () => {
+    it("should return empty array when prisma is null", async () => {
+      const service = new DatabaseService();
+      (service as any).prisma = null;
+
+      const result = await service.getClustersForUser("user-123");
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("getClusters with mock prisma", () => {
+    it("should return default mock clusters when prisma is null", async () => {
+      const service = new DatabaseService();
+      (service as any).prisma = null;
+
+      const result = await service.getClusters();
+      // Default mock returns 2 clusters
+      expect(result).toHaveLength(2);
+      expect(result[0].name).toBe("Authentication Systems");
+    });
+
+    // Note: mock implementation doesn't apply limit/offset - returns full list
+    it("should return all mock clusters regardless of limit/offset", async () => {
+      const service = new DatabaseService();
+      (service as any).prisma = null;
+
+      const result = await service.getClusters(1, 1);
+      expect(result).toHaveLength(2); // Mock returns all clusters
+    });
+  });
+
+  describe("processScheduledDeletions with mock data", () => {
+    it("should delete requirements marked for deletion in mock storage", async () => {
+      const service = new DatabaseService();
+      (service as any).prisma = null;
+      // Need scheduledDeletionAt in the past and status not DELETED
+      (service as any).mockRequirements = [
+        {
+          id: "to-delete",
+          originalRequirement: "Test",
+          summarizedRequirement: "Test",
+          status: "PROCESSED" as RequirementStatus,
+          scheduledDeletionAt: new Date(Date.now() - 1000), // in the past
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
+
+      const result = await service.processScheduledDeletions();
+      expect(result).toBe(1);
+    });
+  });
 });
