@@ -18,6 +18,8 @@ jest.mock("@/lib/prisma", () => ({
       findUnique: jest.fn().mockResolvedValue(null),
       update: jest.fn().mockResolvedValue({}),
       findMany: jest.fn().mockResolvedValue([]),
+      upsert: jest.fn().mockResolvedValue({}),
+      create: jest.fn().mockResolvedValue({}),
     },
   },
 }));
@@ -904,6 +906,60 @@ describe("ClusteringService", () => {
 
       const result = await service.findSimilarRequirements(requirements[0], 5);
       expect(Array.isArray(result)).toBe(true);
+    });
+
+    it("should use cosineSimilarity fallback when library returns null", async () => {
+      const mockCosineSimilarity = require("compute-cosine-similarity");
+      // Make the library return null to trigger fallback
+      (mockCosineSimilarity as jest.Mock).mockReturnValueOnce(null);
+
+      const similarity = service.cosineSimilarity([1, 0, 0], [1, 0, 0]);
+      expect(similarity).toBe(1); // Should fallback to 1 for identical vectors
+
+      // Restore
+      (mockCosineSimilarity as jest.Mock).mockReturnValue(0.8);
+    });
+
+    it("should use cosineSimilarity fallback when library throws", async () => {
+      const mockCosineSimilarity = require("compute-cosine-similarity");
+      // Make the library throw to trigger fallback
+      (mockCosineSimilarity as jest.Mock).mockImplementation(() => {
+        throw new Error("Computation error");
+      });
+
+      const similarity = service.cosineSimilarity([1, 2, 3], [4, 5, 6]);
+      expect(typeof similarity).toBe("number");
+
+      // Restore
+      (mockCosineSimilarity as jest.Mock).mockReturnValue(0.8);
+    });
+  });
+
+  describe("clusterRequirements - database save and assign", () => {
+    it("should save clusters to database and assign requirements", async () => {
+      const { prisma } = require("@/lib/prisma");
+
+      // Set up mocks for cluster creation and requirement assignment
+      (prisma.requirementCluster.upsert as jest.Mock).mockResolvedValue({ id: "cluster-1" });
+      (prisma.requirementCluster.create as jest.Mock).mockResolvedValue({ id: "cluster-1" });
+      (prisma.requirement.update as jest.Mock).mockResolvedValue({});
+
+      const requirements = [
+        { id: "1", content: "Test 1", embedding: [0.1, 0.2, 0.3] },
+        { id: "2", content: "Test 2", embedding: [0.15, 0.25, 0.35] },
+        { id: "3", content: "Test 3", embedding: [0.4, 0.5, 0.6] },
+        { id: "4", content: "Test 4", embedding: [0.45, 0.55, 0.65] },
+      ];
+
+      const result = await service.clusterRequirements(requirements, { minClusterSize: 2 });
+
+      // Should complete without error and return clusters
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+      // Verify at least one database method was called
+      const upsertCalled = prisma.requirementCluster.upsert.mock.calls.length > 0;
+      const createCalled = prisma.requirementCluster.create.mock.calls.length > 0;
+      expect(upsertCalled || createCalled).toBe(true);
     });
   });
 
