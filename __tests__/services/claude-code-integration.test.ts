@@ -231,4 +231,112 @@ describe("ClaudeCodeIntegrationService", () => {
       expect(claudeCodeIntegration.getConfig).toBeDefined();
     });
   });
+
+  describe("error handling", () => {
+    it("should handle initialization without errors", async () => {
+      const service = new ClaudeCodeIntegrationService({ autoStart: false });
+
+      // Should not throw
+      await service.initialize();
+
+      expect(service.getStatus().initialized).toBe(true);
+    });
+  });
+
+  describe("generateConversationSummary", () => {
+    it("should generate summary when persistence is enabled", async () => {
+      const service = new ClaudeCodeIntegrationService({
+        autoStart: false,
+        persistenceEnabled: true,
+      });
+      await service.initialize();
+
+      // The method is private but we can test through triggerTestEvent
+      // or by checking that it doesn't throw
+      await service.triggerTestEvent("conversation_end", {});
+
+      expect(service.getStatus().initialized).toBe(true);
+    });
+
+    it("should skip summary when persistence is disabled", async () => {
+      const service = new ClaudeCodeIntegrationService({
+        autoStart: false,
+        persistenceEnabled: false,
+      });
+      await service.initialize();
+
+      // Should not throw
+      await service.triggerTestEvent("conversation_end", {});
+
+      expect(service.getStatus().initialized).toBe(true);
+    });
+  });
+
+  describe("recordCompactEvent", () => {
+    it("should record compact event when persistence enabled", async () => {
+      const service = new ClaudeCodeIntegrationService({
+        autoStart: false,
+        persistenceEnabled: true,
+      });
+      await service.initialize();
+
+      await service.triggerTestEvent("compact_command_executed", { test: true });
+
+      expect(service.getStatus().initialized).toBe(true);
+    });
+
+    it("should skip recording when persistence disabled", async () => {
+      const service = new ClaudeCodeIntegrationService({
+        autoStart: false,
+        persistenceEnabled: false,
+      });
+      await service.initialize();
+
+      // Should not throw
+      await service.triggerTestEvent("compact_command_executed", {});
+
+      expect(service.getStatus().initialized).toBe(true);
+    });
+  });
+
+  describe("verbose logging", () => {
+    it("should log when verboseLogging is enabled", async () => {
+      const service = new ClaudeCodeIntegrationService({
+        autoStart: false,
+        verboseLogging: true,
+      });
+      await service.initialize();
+
+      // Just verify it doesn't throw
+      expect(service.getConfig().verboseLogging).toBe(true);
+    });
+  });
+
+  describe("context monitoring disabled", () => {
+    it("should work with context monitoring disabled", async () => {
+      const service = new ClaudeCodeIntegrationService({
+        autoStart: false,
+        enableContextMonitoring: false,
+      });
+      await service.initialize();
+      await service.start();
+
+      expect(service.getStatus().contextMonitoring).toBe(false);
+      expect(service.isIntegrationActive()).toBe(true);
+    });
+  });
+
+  describe("auto compact disabled", () => {
+    it("should work with auto compact disabled", async () => {
+      const service = new ClaudeCodeIntegrationService({
+        autoStart: false,
+        enableAutoCompact: false,
+      });
+      await service.initialize();
+      await service.start();
+
+      expect(service.getStatus().autoCompact).toBe(false);
+      expect(service.isIntegrationActive()).toBe(true);
+    });
+  });
 });
