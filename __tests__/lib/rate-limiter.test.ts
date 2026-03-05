@@ -297,5 +297,150 @@ describe("RateLimiter", () => {
 
       await limiter.disconnect();
     });
+
+    it("should handle maxRequests of 1", async () => {
+      const limiter = new RateLimiter({
+        maxRequests: 1,
+        windowMs: 60000,
+        keyPrefix: "single:",
+      });
+
+      const result1 = await limiter.increment("user");
+      expect(result1.allowed).toBe(true);
+      expect(result1.remaining).toBe(0);
+
+      const result2 = await limiter.increment("user");
+      expect(result2.allowed).toBe(false);
+      expect(result2.remaining).toBe(0);
+
+      await limiter.disconnect();
+    });
+
+    it("should handle very small window", async () => {
+      const limiter = new RateLimiter({
+        maxRequests: 2,
+        windowMs: 10, // 10ms window
+        keyPrefix: "tiny:",
+      });
+
+      await limiter.increment("user");
+      await limiter.increment("user");
+
+      // Should be blocked
+      const blocked = await limiter.increment("user");
+      expect(blocked.allowed).toBe(false);
+
+      // Wait for window to expire
+      await new Promise((resolve) => setTimeout(resolve, 15));
+
+      // Should be allowed again
+      const allowed = await limiter.increment("user");
+      expect(allowed.allowed).toBe(true);
+
+      await limiter.disconnect();
+    });
+
+    it("should track multiple different keys independently", async () => {
+      const limiter = new RateLimiter({
+        maxRequests: 2,
+        windowMs: 60000,
+        keyPrefix: "multi:",
+      });
+
+      // Use up key1
+      await limiter.increment("key1");
+      await limiter.increment("key1");
+
+      // key1 should be blocked
+      expect((await limiter.increment("key1")).allowed).toBe(false);
+
+      // key2 should still be allowed
+      expect((await limiter.increment("key2")).allowed).toBe(true);
+
+      await limiter.disconnect();
+    });
+
+    it("should correctly calculate remaining after partial usage", async () => {
+      const limiter = new RateLimiter({
+        maxRequests: 10,
+        windowMs: 60000,
+        keyPrefix: "partial:",
+      });
+
+      // Use 3 requests
+      await limiter.increment("user");
+      await limiter.increment("user");
+      await limiter.increment("user");
+
+      const result = await limiter.increment("user");
+      expect(result.remaining).toBe(6); // 10 - 4 = 6
+
+      await limiter.disconnect();
+    });
+
+    it("should handle increment at exactly maxRequests", async () => {
+      const limiter = new RateLimiter({
+        maxRequests: 2,
+        windowMs: 60000,
+        keyPrefix: "boundary:",
+      });
+
+      const result1 = await limiter.increment("user");
+      expect(result1.allowed).toBe(true);
+      expect(result1.remaining).toBe(1);
+
+      const result2 = await limiter.increment("user");
+      expect(result2.allowed).toBe(true); // exactly at limit
+      expect(result2.remaining).toBe(0);
+
+      await limiter.disconnect();
+    });
+  });
+
+  describe("check behavior consistency", () => {
+    it("check should not increment counter", async () => {
+      const limiter = new RateLimiter({
+        maxRequests: 5,
+        windowMs: 60000,
+        keyPrefix: "checkonly:",
+      });
+
+      // Call check multiple times - it should not consume the limit
+      await limiter.check("user");
+      await limiter.check("user");
+      await limiter.check("user");
+
+      // Now increment - should still have full limit
+      const result = await limiter.increment("user");
+      expect(result.remaining).toBe(4); // 5 - 1 = 4
+
+      await limiter.disconnect();
+    });
+
+    it("should allow exactly maxRequests via checkAndIncrement", async () => {
+      const limiter = new RateLimiter({
+        maxRequests: 3,
+        windowMs: 60000,
+        keyPrefix: "exact:",
+      });
+
+      const results = [];
+      for (let i = 0; i < 3; i++) {
+        results.push(await limiter.checkAndIncrement("user"));
+      }
+
+      expect(results[0].allowed).toBe(true);
+      expect(results[0].remaining).toBe(2); // 3 - 1 = 2
+      expect(results[1].allowed).toBe(true);
+      expect(results[1].remaining).toBe(1); // 3 - 2 = 1
+      expect(results[2].allowed).toBe(true);
+      expect(results[2].remaining).toBe(0); // 3 - 3 = 0
+
+      // Fourth request should be blocked
+      const fourth = await limiter.checkAndIncrement("user");
+      expect(fourth.allowed).toBe(false);
+
+      await limiter.disconnect();
+    });
   });
 });
