@@ -90,8 +90,7 @@ describe("EmailService", () => {
     it("should send requirement submitted email", async () => {
       const result = await emailService.sendRequirementSubmittedEmail(
         mockRecipient,
-        "Test Requirement",
-        "req-123"
+        "Test Requirement"
       );
       expect(result.success).toBe(true);
     });
@@ -104,12 +103,7 @@ describe("EmailService", () => {
     };
 
     it("should send milestone email", async () => {
-      const result = await emailService.sendMilestoneEmail(
-        mockRecipient,
-        "First Requirement",
-        "milestone-1",
-        "completed"
-      );
+      const result = await emailService.sendMilestoneEmail(mockRecipient, "milestone-1", 5);
       expect(result.success).toBe(true);
     });
   });
@@ -228,9 +222,9 @@ describe("EmailService", () => {
     });
 
     it("should skip recipients without email", async () => {
-      const admins = [
+      const admins: EmailRecipient[] = [
         { email: "admin1@example.com", name: "Admin 1" },
-        { name: "Admin Without Email" }, // missing email
+        { email: "", name: "Admin Without Email" }, // empty email
       ];
       const result = await emailService.sendAdminNotification(admins, {
         subject: "Test Admin Email",

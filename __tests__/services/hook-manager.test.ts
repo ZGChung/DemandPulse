@@ -111,7 +111,7 @@ describe("HookManager", () => {
 
       const handler = {
         event: "message_sent" as HookEvent,
-        handler: async (data) => {
+        handler: async (data: Record<string, unknown>) => {
           receivedData = data;
         },
       };
