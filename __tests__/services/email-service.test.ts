@@ -134,11 +134,22 @@ describe("EmailService", () => {
     });
   });
 
-  describe("sendRealEmail", () => {
+  describe("sendRealEmail error handling", () => {
     const mockRecipient: EmailRecipient = {
       email: "user@example.com",
       name: "User",
     };
+
+    it("should handle Resend client not initialized (null client)", async () => {
+      // Create service with useMock=false but no API key (so resendClient is null)
+      const service = new EmailService({ enabled: true, useMock: false });
+      const result = await service.sendEmail({
+        to: mockRecipient,
+        template: { subject: "Test", body: "Test body" },
+      });
+      // Should fallback to mock
+      expect(result.success).toBe(true);
+    });
 
     it("should fallback to mock when resend client not available", async () => {
       const service = new EmailService({ enabled: true, useMock: false, resendApiKey: undefined });
