@@ -396,8 +396,6 @@ describe("AutoCompactService", () => {
 
       // This should trigger showNotification
       notificationService.notify("Test notification", "info");
-
-      notificationService.disconnect();
     });
   });
 
