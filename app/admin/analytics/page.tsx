@@ -1,51 +1,42 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-
-import { apiLogger } from "@/lib/logger";
-
-interface UserStats {
-  total: number;
-  active: number;
-  newThisMonth: number;
-}
-
-interface RequirementStats {
-  total: number;
-  pending: number;
-  completed: number;
-}
-
-interface ClusterStats {
-  total: number;
-  active: number;
-  avgSize: number;
-}
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts";
 
 interface TopCluster {
   id: string;
   name: string;
   description: string;
-  count: number;
   requirementCount: number;
-  trend: number;
   createdAt: string;
 }
 
-interface SystemMetrics {
-  nodeVersion: string;
-  uptime: number;
-  cpuUsage: number;
-  memoryUsage: { heapUsed: number };
-  databaseSize: string;
+interface StatusEntry {
+  status: string;
+  count: number;
+}
+
+interface DailyCount {
+  date: string;
+  count: number;
 }
 
 interface AnalyticsData {
-  timeRange: {
-    startDate: string;
-    endDate: string;
-  };
+  timeRange: { startDate: string; endDate: string };
   summary: {
     totalUsers: number;
     totalRequirements: number;
@@ -57,12 +48,57 @@ interface AnalyticsData {
     avgRequirementsPerCluster: number;
   };
   details: {
-    userStats: UserStats;
-    requirementStats: RequirementStats;
-    clusterStats: ClusterStats;
     topClusters: TopCluster[];
-    systemMetrics: SystemMetrics;
+    statusDistribution: StatusEntry[];
+    dailyCounts: DailyCount[];
+    systemMetrics: {
+      nodeVersion: string;
+      uptime: number;
+      memoryUsage: { heapUsed: number };
+      databaseSize: string;
+    };
   };
+}
+
+const STATUS_COLORS: Record<string, string> = {
+  PENDING: "#f59e0b",
+  PROCESSED: "#22c55e",
+  REJECTED: "#ef4444",
+  ARCHIVED: "#6b7280",
+};
+
+const STAT_LABEL: Record<string, string> = {
+  PENDING: "Pending",
+  PROCESSED: "Processed",
+  REJECTED: "Rejected",
+  ARCHIVED: "Archived",
+};
+
+function StatCard({
+  label,
+  value,
+  sub,
+  color,
+}: {
+  label: string;
+  value: string | number;
+  sub?: string;
+  color: string;
+}) {
+  return (
+    <div className="bg-white shadow rounded-lg p-5">
+      <div className="flex items-center gap-3">
+        <div className={`h-10 w-10 rounded-full ${color} flex items-center justify-center`}>
+          <span className="text-lg font-bold text-white">{String(value).charAt(0)}</span>
+        </div>
+        <div>
+          <p className="text-sm text-gray-500">{label}</p>
+          <p className="text-xl font-semibold text-gray-900">{value}</p>
+          {sub && <p className="text-xs text-gray-400">{sub}</p>}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function AdminAnalyticsPage() {
@@ -78,27 +114,20 @@ export default function AdminAnalyticsPage() {
     try {
       setIsLoading(true);
       setError(null);
+      const params = new URLSearchParams();
+      if (timeRange.startDate) params.append("startDate", timeRange.startDate);
+      if (timeRange.endDate) params.append("endDate", timeRange.endDate);
 
-      const queryParams = new URLSearchParams();
-      if (timeRange.startDate) queryParams.append("startDate", timeRange.startDate);
-      if (timeRange.endDate) queryParams.append("endDate", timeRange.endDate);
-
-      const response = await fetch(`/api/admin/analytics?${queryParams}`);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Failed to fetch analytics: ${response.status}`);
+      const res = await fetch(`/api/admin/analytics?${params}`);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || `HTTP ${res.status}`);
       }
-
-      const result = await response.json();
-      if (result.success) {
-        setData(result.data);
-      } else {
-        throw new Error(result.error || "Failed to fetch analytics");
-      }
+      const result = await res.json();
+      if (result.success) setData(result.data);
+      else throw new Error(result.error || "Failed");
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Unknown error";
-      setError(errorMessage);
-      apiLogger.error("Failed to fetch analytics", { error: errorMessage });
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setIsLoading(false);
     }
@@ -109,392 +138,310 @@ export default function AdminAnalyticsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleTimeRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setTimeRange((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleTimeRangeSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     fetchAnalytics();
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">System Analytics</h2>
-          <p className="mt-1 text-sm text-gray-600">
-            View system metrics, usage statistics, and growth trends.
-          </p>
+          <h2 className="text-2xl font-bold text-gray-900">Analytics</h2>
+          <p className="mt-1 text-sm text-gray-500">Usage statistics, trends, and system health.</p>
         </div>
-        <div className="flex space-x-4">
-          <a
-            href="/admin"
-            className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Back to Dashboard
-          </a>
-        </div>
+        <a
+          href="/admin"
+          className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          Back to Dashboard
+        </a>
       </div>
 
-      {/* Time Range Filter */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <form onSubmit={handleTimeRangeSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Time Range */}
+      <div className="bg-white shadow rounded-lg p-4">
+        <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-4">
           <div>
-            <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-2">
-              Start Date
+            <label htmlFor="startDate" className="block text-xs font-medium text-gray-500 mb-1">
+              From
             </label>
             <input
               type="date"
               id="startDate"
-              name="startDate"
               value={timeRange.startDate}
-              onChange={handleTimeRangeChange}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              onChange={(e) => setTimeRange((p) => ({ ...p, startDate: e.target.value }))}
+              className="border border-gray-300 rounded-md px-3 py-1.5 text-sm"
             />
           </div>
           <div>
-            <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2">
-              End Date
+            <label htmlFor="endDate" className="block text-xs font-medium text-gray-500 mb-1">
+              To
             </label>
             <input
               type="date"
               id="endDate"
-              name="endDate"
               value={timeRange.endDate}
-              onChange={handleTimeRangeChange}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              onChange={(e) => setTimeRange((p) => ({ ...p, endDate: e.target.value }))}
+              className="border border-gray-300 rounded-md px-3 py-1.5 text-sm"
             />
           </div>
-          <div className="flex items-end">
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Update Range
-            </button>
-          </div>
+          <button
+            type="submit"
+            className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Update
+          </button>
         </form>
       </div>
 
-      {/* Loading State */}
+      {/* Loading */}
       {isLoading && (
         <div className="bg-white shadow rounded-lg p-12 text-center">
-          <div className="text-gray-400 mb-4">
-            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600"></div>
-          </div>
-          <p className="text-gray-600">Loading analytics data...</p>
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600 mb-4" />
+          <p className="text-gray-500">Loading analytics...</p>
         </div>
       )}
 
-      {/* Error State */}
+      {/* Error */}
       {error && !isLoading && (
         <div className="bg-white shadow rounded-lg p-6">
-          <div className="text-red-600 mb-2 font-medium">Error loading analytics</div>
-          <p className="text-gray-700">{error}</p>
+          <p className="text-red-600 font-medium mb-2">Error loading analytics</p>
+          <p className="text-gray-700 text-sm">{error}</p>
           <button
             onClick={fetchAnalytics}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            className="mt-3 px-4 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
           >
             Retry
           </button>
         </div>
       )}
 
-      {/* Analytics Data */}
+      {/* Data */}
       {!isLoading && !error && data && (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                      <svg
-                        className="h-6 w-6 text-blue-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm-4 3c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Total Users</dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {data.summary.totalUsers}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                      <svg
-                        className="h-6 w-6 text-green-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Total Requirements
-                      </dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {data.summary.totalRequirements}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                      <svg
-                        className="h-6 w-6 text-yellow-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">Total Clusters</dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {data.summary.totalClusters}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
-                      <svg
-                        className="h-6 w-6 text-purple-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">User Growth</dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {data.summary.userGrowthRate > 0 ? "+" : ""}
-                        {data.summary.userGrowthRate.toFixed(2)}%
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              label="Total Users"
+              value={data.summary.totalUsers}
+              sub={`${data.summary.activeUsers} active`}
+              color="bg-blue-500"
+            />
+            <StatCard
+              label="Requirements"
+              value={data.summary.totalRequirements}
+              sub={`${data.summary.avgRequirementsPerUser.toFixed(1)} per user`}
+              color="bg-green-500"
+            />
+            <StatCard
+              label="Clusters"
+              value={data.summary.totalClusters}
+              sub={`${data.summary.avgRequirementsPerCluster.toFixed(1)} avg size`}
+              color="bg-amber-500"
+            />
+            <StatCard
+              label="Growth"
+              value={`${data.summary.userGrowthRate > 0 ? "+" : ""}${data.summary.userGrowthRate.toFixed(1)}%`}
+              sub="vs previous period"
+              color="bg-purple-500"
+            />
           </div>
 
-          {/* Overview bar chart */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Overview</h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={[
-                    { name: "Users", value: data.summary.totalUsers, fill: "#3b82f6" },
-                    {
-                      name: "Requirements",
-                      value: data.summary.totalRequirements,
-                      fill: "#22c55e",
-                    },
-                    { name: "Clusters", value: data.summary.totalClusters, fill: "#eab308" },
-                  ]}
-                  margin={{ top: 8, right: 24, left: 0, bottom: 8 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-                  <Tooltip />
-                  <Bar dataKey="value" name="Count" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+          {/* Charts Row: Trend + Status Distribution */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Daily Trend (area chart) */}
+            <div className="lg:col-span-2 bg-white shadow rounded-lg p-6">
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">Daily Requirements</h3>
+              {data.details.dailyCounts.length > 0 ? (
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={data.details.dailyCounts}
+                      margin={{ top: 4, right: 16, left: 0, bottom: 4 }}
+                    >
+                      <defs>
+                        <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                      <XAxis
+                        dataKey="date"
+                        tick={{ fontSize: 11 }}
+                        tickFormatter={(v) => v.slice(5)}
+                      />
+                      <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                      <Tooltip
+                        labelFormatter={(v) => `Date: ${v}`}
+                        formatter={(v: number) => [v, "Requirements"]}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="count"
+                        stroke="#3b82f6"
+                        strokeWidth={2}
+                        fill="url(#colorCount)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <p className="text-gray-400 text-sm text-center py-16">
+                  No requirement data in this period.
+                </p>
+              )}
             </div>
-          </div>
 
-          {/* Top Clusters bar chart */}
-          {data.details.topClusters && data.details.topClusters.length > 0 && (
+            {/* Status Distribution (pie chart) */}
             <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">Status Distribution</h3>
+              {data.details.statusDistribution.length > 0 ? (
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={data.details.statusDistribution.map((s) => ({
+                          name: STAT_LABEL[s.status] || s.status,
+                          value: s.count,
+                          status: s.status,
+                        }))}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={80}
+                        paddingAngle={3}
+                        dataKey="value"
+                      >
+                        {data.details.statusDistribution.map((s) => (
+                          <Cell key={s.status} fill={STATUS_COLORS[s.status] || "#6b7280"} />
+                        ))}
+                      </Pie>
+                      <Legend
+                        verticalAlign="bottom"
+                        iconType="circle"
+                        iconSize={8}
+                        wrapperStyle={{ fontSize: 12 }}
+                      />
+                      <Tooltip formatter={(v: number) => [v, "Requirements"]} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <p className="text-gray-400 text-sm text-center py-16">No data.</p>
+              )}
+            </div>
+          </div>
+
+          {/* Top Clusters (horizontal bar chart) */}
+          {data.details.topClusters.length > 0 && (
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">
                 Top Clusters by Requirement Count
               </h3>
-              <div className="h-80">
+              <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={data.details.topClusters.map((c) => ({
-                      name: c.name.length > 20 ? c.name.slice(0, 20) + "…" : c.name,
+                      name: c.name.length > 25 ? c.name.slice(0, 25) + "…" : c.name,
                       fullName: c.name,
-                      count: c.count,
+                      count: c.requirementCount,
                     }))}
                     layout="vertical"
-                    margin={{ top: 8, right: 24, left: 120, bottom: 8 }}
+                    margin={{ top: 4, right: 24, left: 120, bottom: 4 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis type="number" tick={{ fontSize: 12 }} allowDecimals={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                    <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
                     <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={115} />
                     <Tooltip
-                      formatter={(value: number | undefined) => [value ?? 0, "Requirements"]}
+                      formatter={(v: number) => [v, "Requirements"]}
                       labelFormatter={(_, payload) => payload[0]?.payload?.fullName ?? ""}
                     />
-                    <Bar dataKey="count" name="Requirements" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="count" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
           )}
 
-          {/* Detailed Metrics */}
+          {/* Bottom Row: Averages + System Info */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Average Metrics */}
             <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Average Metrics</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Requirements per User</span>
-                  <span className="font-medium">
-                    {data.summary.avgRequirementsPerUser.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Tokens per Requirement</span>
-                  <span className="font-medium">
-                    {data.summary.avgTokensPerRequirement.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Requirements per Cluster</span>
-                  <span className="font-medium">
-                    {data.summary.avgRequirementsPerCluster.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Active Users</span>
-                  <span className="font-medium">{data.summary.activeUsers}</span>
-                </div>
-              </div>
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">Average Metrics</h3>
+              <dl className="space-y-3">
+                {[
+                  ["Requirements per User", data.summary.avgRequirementsPerUser.toFixed(2)],
+                  ["Tokens per Requirement", data.summary.avgTokensPerRequirement.toFixed(0)],
+                  ["Requirements per Cluster", data.summary.avgRequirementsPerCluster.toFixed(2)],
+                  ["Active Users", data.summary.activeUsers],
+                ].map(([k, v]) => (
+                  <div key={String(k)} className="flex justify-between text-sm">
+                    <dt className="text-gray-500">{k}</dt>
+                    <dd className="font-medium text-gray-900">{v}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
 
-            {/* Time Range Info */}
             <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Time Range</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Start Date</span>
-                  <span className="font-medium">
-                    {new Date(data.timeRange.startDate).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">End Date</span>
-                  <span className="font-medium">
-                    {new Date(data.timeRange.endDate).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Duration</span>
-                  <span className="font-medium">
-                    {Math.ceil(
-                      (new Date(data.timeRange.endDate).getTime() -
-                        new Date(data.timeRange.startDate).getTime()) /
-                        (1000 * 60 * 60 * 24)
-                    )}{" "}
-                    days
-                  </span>
-                </div>
-              </div>
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">System</h3>
+              <dl className="space-y-3">
+                {[
+                  ["Node Version", data.details.systemMetrics.nodeVersion],
+                  [
+                    "Uptime",
+                    `${Math.floor(data.details.systemMetrics.uptime / 3600)}h ${Math.floor((data.details.systemMetrics.uptime % 3600) / 60)}m`,
+                  ],
+                  [
+                    "Memory (Heap)",
+                    data.details.systemMetrics.memoryUsage
+                      ? `${Math.round(data.details.systemMetrics.memoryUsage.heapUsed / 1024 / 1024)} MB`
+                      : "N/A",
+                  ],
+                  ["Database Size", data.details.systemMetrics.databaseSize],
+                ].map(([k, v]) => (
+                  <div key={String(k)} className="flex justify-between text-sm">
+                    <dt className="text-gray-500">{k}</dt>
+                    <dd className="font-mono text-gray-900">{v}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
           </div>
 
-          {/* Top Clusters */}
-          {data.details.topClusters && data.details.topClusters.length > 0 && (
+          {/* Clusters Table */}
+          {data.details.topClusters.length > 0 && (
             <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Top Clusters</h3>
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">Top Clusters</h3>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="min-w-full divide-y divide-gray-200 text-sm">
                   <thead>
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                         Name
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                         Description
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
                         Requirements
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
                         Created
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {data.details.topClusters.map((cluster) => (
-                      <tr key={cluster.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {cluster.name}
+                  <tbody className="divide-y divide-gray-100">
+                    {data.details.topClusters.map((c) => (
+                      <tr key={c.id}>
+                        <td className="px-4 py-3 font-medium text-gray-900">{c.name}</td>
+                        <td className="px-4 py-3 text-gray-500 truncate max-w-xs">
+                          {c.description}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-500 truncate max-w-xs">
-                          {cluster.description}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {cluster.requirementCount}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(cluster.createdAt).toLocaleDateString()}
+                        <td className="px-4 py-3 text-right text-gray-900">{c.requirementCount}</td>
+                        <td className="px-4 py-3 text-right text-gray-500">
+                          {new Date(c.createdAt).toLocaleDateString()}
                         </td>
                       </tr>
                     ))}
@@ -503,43 +450,6 @@ export default function AdminAnalyticsPage() {
               </div>
             </div>
           )}
-
-          {/* System Metrics */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">System Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Node Version</span>
-                  <span className="font-mono text-sm">
-                    {data.details.systemMetrics.nodeVersion}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Uptime</span>
-                  <span className="font-mono text-sm">
-                    {Math.floor(data.details.systemMetrics.uptime)} seconds
-                  </span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Memory Usage</span>
-                  <span className="font-mono text-sm">
-                    {data.details.systemMetrics.memoryUsage
-                      ? `${Math.round(data.details.systemMetrics.memoryUsage.heapUsed / 1024 / 1024)}MB`
-                      : "N/A"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Database Size</span>
-                  <span className="font-mono text-sm">
-                    {data.details.systemMetrics.databaseSize}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
         </>
       )}
     </div>

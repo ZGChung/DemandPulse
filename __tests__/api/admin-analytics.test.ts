@@ -42,6 +42,8 @@ jest.mock("@/lib/prisma", () => ({
     },
     requirement: {
       aggregate: jest.fn(),
+      groupBy: jest.fn(),
+      findMany: jest.fn(),
     },
     requirementCluster: {
       aggregate: jest.fn(),
@@ -81,6 +83,16 @@ function createMockRequest(
 describe("Admin Analytics API", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Default mocks for new analytics fields
+    (mockPrisma.requirement.groupBy as jest.Mock).mockResolvedValue([
+      { status: "PENDING", _count: { id: 10 } },
+      { status: "PROCESSED", _count: { id: 40 } },
+    ]);
+    (mockPrisma.requirement.findMany as jest.Mock).mockResolvedValue([
+      { createdAt: new Date("2026-03-01") },
+      { createdAt: new Date("2026-03-01") },
+      { createdAt: new Date("2026-03-02") },
+    ]);
   });
 
   describe("GET /api/admin/analytics", () => {

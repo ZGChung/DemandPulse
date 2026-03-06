@@ -58,64 +58,75 @@ export async function GET(request: NextRequest) {
     const endDate = endDateStr ? new Date(endDateStr) : new Date();
 
     // Fetch analytics data in parallel
-    const [userStats, requirementStats, clusterStats, activeUsers, topClusters, systemMetrics] =
-      await Promise.all([
-        // User statistics
-        prisma.user.aggregate({
-          _count: { id: true },
-          where: {
-            createdAt: { gte: startDate, lte: endDate },
-          },
-        }),
-        // Requirement statistics
-        prisma.requirement.aggregate({
-          _count: { id: true },
-          where: {
-            createdAt: { gte: startDate, lte: endDate },
-          },
-        }),
-        // Cluster statistics
-        prisma.requirementCluster.aggregate({
-          _count: { id: true },
-          _avg: { requirementCount: true },
-          where: {
-            createdAt: { gte: startDate, lte: endDate },
-          },
-        }),
-        // Active users (users with requirements in period)
-        prisma.user.count({
-          where: {
-            requirements: {
-              some: {
-                createdAt: { gte: startDate, lte: endDate },
-              },
-            },
-          },
-        }),
-        // Top clusters by requirement count
-        prisma.requirementCluster.findMany({
-          take: 10,
-          orderBy: { requirementCount: "desc" },
-          where: {
-            createdAt: { gte: startDate, lte: endDate },
-          },
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            requirementCount: true,
-            createdAt: true,
-          },
-        }),
-        // System metrics (database size, etc.)
-        Promise.resolve({
-          // Placeholder for actual system metrics
-          databaseSize: "N/A",
-          uptime: process.uptime(),
-          memoryUsage: process.memoryUsage(),
-          nodeVersion: process.version,
-        }),
-      ]);
+    const [
+      userStats,
+      requirementStats,
+      clusterStats,
+      activeUsers,
+      topClusters,
+      systemMetrics,
+      statusDistribution,
+      dailyRequirements,
+    ] = await Promise.all([
+      prisma.user.aggregate({
+        _count: { id: true },
+        where: { createdAt: { gte: startDate, lte: endDate } },
+      }),
+      prisma.requirement.aggregate({
+        _count: { id: true },
+        where: { createdAt: { gte: startDate, lte: endDate } },
+      }),
+      prisma.requirementCluster.aggregate({
+        _count: { id: true },
+        _avg: { requirementCount: true },
+        where: { createdAt: { gte: startDate, lte: endDate } },
+      }),
+      prisma.user.count({
+        where: {
+          requirements: { some: { createdAt: { gte: startDate, lte: endDate } } },
+        },
+      }),
+      prisma.requirementCluster.findMany({
+        take: 10,
+        orderBy: { requirementCount: "desc" },
+        where: { createdAt: { gte: startDate, lte: endDate } },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          requirementCount: true,
+          createdAt: true,
+        },
+      }),
+      Promise.resolve({
+        databaseSize: "N/A",
+        uptime: process.uptime(),
+        memoryUsage: process.memoryUsage(),
+        nodeVersion: process.version,
+      }),
+      // Status distribution
+      prisma.requirement.groupBy({
+        by: ["status"],
+        _count: { id: true },
+        where: { createdAt: { gte: startDate, lte: endDate } },
+      }),
+      // Daily requirement counts for trend chart
+      prisma.requirement.findMany({
+        where: { createdAt: { gte: startDate, lte: endDate } },
+        select: { createdAt: true },
+        orderBy: { createdAt: "asc" },
+      }),
+    ]);
+
+    // Aggregate daily counts from raw timestamps
+    const dailyMap = new Map<string, number>();
+    for (const r of dailyRequirements) {
+      const day = r.createdAt.toISOString().slice(0, 10);
+      dailyMap.set(day, (dailyMap.get(day) || 0) + 1);
+    }
+    const dailyCounts = Array.from(dailyMap.entries())
+      .map(([date, count]) => ({ date, count }))
+      .sort((a, b) => a.date.localeCompare(b.date));
 
     // Calculate growth rates (simplified)
     const previousStartDate = new Date(
@@ -155,6 +166,11 @@ export async function GET(request: NextRequest) {
           clusterStats,
           topClusters,
           systemMetrics,
+          statusDistribution: statusDistribution.map((s) => ({
+            status: s.status,
+            count: s._count.id,
+          })),
+          dailyCounts,
         },
       },
     });
