@@ -1,6 +1,8 @@
 // Referral system for DemandPulse
 // Tracks user referrals and rewards
 
+import { apiLogger } from "@/lib/logger";
+
 export interface Referral {
   id: string;
   referrerUserId: string;
@@ -55,7 +57,7 @@ export class ReferralService {
     userRefs.push(referral.id);
     this.userReferrals.set(userId, userRefs);
 
-    console.log(`[ReferralService] Generated referral code ${code} for user ${userId}`);
+    apiLogger.info("Generated referral code", { code, userId });
     return code;
   }
 
@@ -90,12 +92,12 @@ export class ReferralService {
   processReferralSignup(referralCode: string, referredUserId: string): boolean {
     const referral = this.getReferralByCode(referralCode);
     if (!referral) {
-      console.log(`[ReferralService] Referral code ${referralCode} not found`);
+      apiLogger.info("Referral code not found", { referralCode });
       return false;
     }
 
     if (referral.status !== "pending") {
-      console.log(`[ReferralService] Referral ${referralCode} already processed or expired`);
+      apiLogger.info("Referral already processed or expired", { referralCode });
       return false;
     }
 
@@ -109,13 +111,14 @@ export class ReferralService {
     if (referrerStats.completedReferrals >= 3 && !referral.rewardGranted) {
       referral.rewardGranted = true;
       referral.rewardType = "badge";
-      console.log(
-        `[ReferralService] Reward granted to referrer ${referral.referrerUserId} for referral ${referralCode}`
-      );
+      apiLogger.info("Reward granted to referrer", {
+        referrerUserId: referral.referrerUserId,
+        referralCode,
+      });
     }
 
     this.referrals.set(referral.id, referral);
-    console.log(`[ReferralService] Referral ${referralCode} completed for user ${referredUserId}`);
+    apiLogger.info("Referral completed for user", { referralCode, referredUserId });
     return true;
   }
 

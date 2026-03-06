@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
+import { apiLogger } from "@/lib/logger";
 import { sanitizeText } from "@/lib/validation";
 import {
   requirementSubmissionSchema,
@@ -109,11 +110,9 @@ export async function POST(request: NextRequest) {
     if (databaseUrl.startsWith("file:")) {
       // SQLite database - use mock storage to avoid Prisma 7.3.0 adapter issues
       storedRequirementId = "plugin-" + randomUUID().slice(0, 8);
-      console.log("[Plugin] Requirement collected with mock storage (SQLite):", {
+      apiLogger.info("[Plugin] Requirement collected with mock storage (SQLite)", {
         id: storedRequirementId,
         summary: result.collectedRequirement?.summarizedRequirement,
-        consent: result.collectedRequirement?.consent.consentOptions,
-        note: "Using mock storage due to SQLite adapter limitations",
       });
     } else {
       // Use real database service for PostgreSQL (dynamic import to avoid Prisma issues)
@@ -154,23 +153,28 @@ export async function POST(request: NextRequest) {
                   });
                 }
               } catch (clusterErr) {
-                console.error("[Plugin] Assign to cluster failed (non-fatal):", clusterErr);
+                apiLogger.warn("[Plugin] Assign to cluster failed (non-fatal)", {
+                  error: (clusterErr as Error).message,
+                });
               }
             }
           } catch (aiError) {
-            console.error("[Plugin] Failed to generate AI analysis or embeddings:", aiError);
+            apiLogger.warn("[Plugin] Failed to generate AI analysis or embeddings", {
+              error: (aiError as Error).message,
+            });
             // Don't fail the request if AI processing fails
           }
         }
 
         // Log successful collection
-        console.log("[Plugin] Requirement collected and stored:", {
+        apiLogger.info("[Plugin] Requirement collected and stored", {
           id: storedRequirementId,
           summary: result.collectedRequirement?.summarizedRequirement,
-          consent: result.collectedRequirement?.consent.consentOptions,
         });
       } catch (error) {
-        console.error("[Plugin] Failed to store requirement:", error);
+        apiLogger.error("[Plugin] Failed to store requirement", {
+          error: (error as Error).message,
+        });
         return NextResponse.json(
           {
             error: "Failed to store requirement",
@@ -194,7 +198,9 @@ export async function POST(request: NextRequest) {
       }
     );
   } catch (error) {
-    console.error("[Plugin] Error processing requirement submission:", error);
+    apiLogger.error("[Plugin] Error processing requirement submission", {
+      error: (error as Error).message,
+    });
 
     return NextResponse.json(
       {
@@ -303,7 +309,9 @@ export async function GET(request: NextRequest) {
       note: "This endpoint requires valid API key authentication",
     });
   } catch (error) {
-    console.error("[Plugin] Error generating plugin requirements:", error);
+    apiLogger.error("[Plugin] Error generating plugin requirements", {
+      error: (error as Error).message,
+    });
     return NextResponse.json(
       {
         error: "Internal server error",

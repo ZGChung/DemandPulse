@@ -24,6 +24,26 @@ function isPublicRoute(req: NextRequest): boolean {
     return true;
   }
 
+  // Plugin endpoints (API key auth, not session)
+  if (pathname.startsWith("/api/plugin/")) {
+    return true;
+  }
+
+  // Cron endpoints (CRON_SECRET auth, not session)
+  if (pathname.startsWith("/api/cron/")) {
+    return true;
+  }
+
+  // OpenAPI spec
+  if (pathname === "/api/openapi") {
+    return true;
+  }
+
+  // Locale API
+  if (pathname === "/api/locale") {
+    return true;
+  }
+
   // OPTIONS requests (CORS preflight)
   if (method === "OPTIONS") {
     return true;
@@ -117,7 +137,7 @@ export default withAuth(
     );
 
     // Add response time header
-    response.headers.set('x-response-time', `${Date.now() - startTime}ms`);
+    response.headers.set("x-response-time", `${Date.now() - startTime}ms`);
 
     return response;
   },

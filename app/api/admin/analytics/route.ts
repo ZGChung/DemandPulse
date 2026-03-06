@@ -27,7 +27,7 @@ async function checkRateLimit(session: Session, request: NextRequest) {
     }
     return rateLimitResult;
   } catch (rateLimitError) {
-    console.error("Rate limiting error:", rateLimitError);
+    apiLogger.warn("Rate limiting error", { error: (rateLimitError as Error).message });
     // Fail open for admin endpoints
     return {
       allowed: true,
@@ -41,9 +41,6 @@ export async function GET(request: NextRequest) {
   try {
     if (!prisma) throw new Error("Database not available");
     const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

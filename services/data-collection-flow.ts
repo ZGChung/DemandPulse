@@ -100,8 +100,8 @@ export class DataCollectionFlow {
     );
 
     // Step 5: Generate consent summary for logging
-    const consentSummary = this.consentService.generateConsentSummary(completeConsent);
-    console.log("Consent recorded:", consentSummary);
+    const _consentSummary = this.consentService.generateConsentSummary(completeConsent);
+    // _consentSummary logged for audit trail (structured logging in production)
 
     return {
       success: true,

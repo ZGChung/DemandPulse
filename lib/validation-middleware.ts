@@ -10,6 +10,8 @@ import {
   ValidationError,
 } from "./validation";
 
+import { apiLogger } from "@/lib/logger";
+
 // Zod schemas for type-safe validation
 export const claudeCodeContextSchema = z.object({
   conversationId: z.string().min(1, "Conversation ID is required"),
@@ -112,7 +114,7 @@ export function withValidation<T extends z.ZodSchema>(
         );
       }
 
-      console.error("Validation middleware error:", error);
+      apiLogger.error("Validation middleware error", { error: (error as Error).message });
       return NextResponse.json({ error: "Internal validation error" }, { status: 500 });
     }
   };

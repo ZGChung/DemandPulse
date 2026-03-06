@@ -6,6 +6,7 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { cacheGet, cacheKey, cacheSet } from "@/lib/cache";
 import { env } from "@/lib/env";
+import { apiLogger } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { defaultRateLimiter } from "@/lib/rate-limiter";
 import { ValidationError } from "@/lib/validation";
@@ -45,7 +46,9 @@ export async function POST(request: NextRequest) {
     try {
       rateLimitResult = await defaultRateLimiter.checkAndIncrement(rateLimitKey);
     } catch (rateLimitError) {
-      console.error("Rate limiting error, allowing request:", rateLimitError);
+      apiLogger.warn("Rate limiting error, allowing request", {
+        error: (rateLimitError as Error).message,
+      });
       // Fail open: if rate limiting fails, allow the request
       rateLimitResult = {
         allowed: true,
@@ -132,11 +135,9 @@ export async function POST(request: NextRequest) {
         session.user.id
       );
 
-      // Log successful collection
-      console.log("Requirement collected and stored:", {
+      apiLogger.info("Requirement collected and stored", {
         id: storedRequirementId,
         summary: result.collectedRequirement?.summarizedRequirement,
-        consent: result.collectedRequirement?.consent.consentOptions,
       });
 
       // Generate AI analysis and embeddings for the requirement
@@ -157,12 +158,16 @@ export async function POST(request: NextRequest) {
                 embedding: analysis.embeddings,
               });
             } catch (clusterErr) {
-              console.error("Assign to cluster failed (non-fatal):", clusterErr);
+              apiLogger.warn("Assign to cluster failed (non-fatal)", {
+                error: (clusterErr as Error).message,
+              });
             }
           }
         }
       } catch (aiError) {
-        console.error("Failed to generate AI analysis or embeddings:", aiError);
+        apiLogger.warn("Failed to generate AI analysis or embeddings", {
+          error: (aiError as Error).message,
+        });
         // Don't fail the request if AI processing fails
       }
 
@@ -177,9 +182,11 @@ export async function POST(request: NextRequest) {
             },
             result.collectedRequirement.summarizedRequirement
           );
-          console.log("Requirement submitted email sent to:", session.user.email);
+          apiLogger.info("Requirement submitted email sent", { to: session.user.email });
         } catch (emailError) {
-          console.error("Failed to send email notification:", emailError);
+          apiLogger.warn("Failed to send email notification", {
+            error: (emailError as Error).message,
+          });
           // Don't fail the request if email fails
         }
       }
@@ -204,10 +211,14 @@ export async function POST(request: NextRequest) {
           }
         }
       } catch (adminEmailErr) {
-        console.error("Failed to send admin notification:", adminEmailErr);
+        apiLogger.warn("Failed to send admin notification", {
+          error: (adminEmailErr as Error).message,
+        });
       }
     } catch (error) {
-      console.error("Failed to store requirement:", error);
+      apiLogger.error("Failed to store requirement", {
+        error: (error as Error).message,
+      });
       return NextResponse.json(
         {
           error: "Failed to store requirement",
@@ -235,7 +246,9 @@ export async function POST(request: NextRequest) {
       }
     );
   } catch (error) {
-    console.error("Error processing requirement submission:", error);
+    apiLogger.error("Error processing requirement submission", {
+      error: (error as Error).message,
+    });
 
     return NextResponse.json(
       {
@@ -334,7 +347,9 @@ export async function GET(request: NextRequest) {
         : undefined,
     });
   } catch (error) {
-    console.error("Error fetching requirements:", error);
+    apiLogger.error("Error fetching requirements", {
+      error: (error as Error).message,
+    });
 
     return NextResponse.json(
       {

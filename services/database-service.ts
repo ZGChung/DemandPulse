@@ -7,6 +7,7 @@ import {
 } from "@prisma/client";
 
 import { encryptionService } from "@/lib/encryption";
+import { dbLogger } from "@/lib/logger";
 import { maskRequirementsForAdmin, canViewUnmaskedData } from "@/lib/masking";
 import { prisma } from "@/lib/prisma";
 import { CollectedRequirement } from "@/types/claude-code";
@@ -71,13 +72,15 @@ export class DatabaseService {
       // Check if client is valid (has required methods) or use mock
       if (client && typeof client === "object" && "requirement" in client) {
         this.prisma = client;
-        console.log("DatabaseService: Using Prisma client");
+        dbLogger.info("DatabaseService: Using Prisma client");
       } else {
         this.prisma = null;
-        console.log("DatabaseService: Using mock storage (invalid or null prisma client)");
+        dbLogger.info("DatabaseService: Using mock storage (invalid or null prisma client)");
       }
     } catch (error) {
-      console.warn("DatabaseService: Prisma client failed, using mock storage", error);
+      dbLogger.warn("DatabaseService: Prisma client failed, using mock storage", {
+        error: (error as Error).message,
+      });
       this.prisma = null;
     }
   }
@@ -267,11 +270,11 @@ export class DatabaseService {
           updatedAt: new Date(),
         };
         this.mockRequirements.push(mockRequirement);
-        console.log("DatabaseService: Stored requirement in mock storage", mockId);
+        dbLogger.info("DatabaseService: Stored requirement in mock storage", { mockId });
         return mockId;
       }
     } catch (error) {
-      console.error("Error storing requirement:", error);
+      dbLogger.error("Error storing requirement", { error: (error as Error).message });
       throw new Error("Failed to store requirement");
     }
   }
@@ -289,11 +292,15 @@ export class DatabaseService {
         if (mockRequirement) {
           mockRequirement.embedding = embedding;
           mockRequirement.updatedAt = new Date();
-          console.log("DatabaseService: Updated embedding for requirement in mock storage", id);
+          dbLogger.info("DatabaseService: Updated embedding for requirement in mock storage", {
+            id,
+          });
         }
       }
     } catch (error) {
-      console.error("Error updating requirement embedding:", error);
+      dbLogger.error("Error updating requirement embedding", {
+        error: (error as Error).message,
+      });
       throw new Error("Failed to update requirement embedding");
     }
   }
@@ -320,7 +327,7 @@ export class DatabaseService {
         return await this.applyPrivacyControls(mockRequirement, includeAnonymized);
       }
     } catch (error) {
-      console.error("Error fetching requirement:", error);
+      dbLogger.error("Error fetching requirement", { error: (error as Error).message });
       throw new Error("Failed to fetch requirement");
     }
   }
@@ -366,7 +373,9 @@ export class DatabaseService {
       }
       return this.getRequirementsByStatus("PROCESSED", limit, userId);
     } catch (error) {
-      console.error("Error fetching prioritized requirements:", error);
+      dbLogger.error("Error fetching prioritized requirements", {
+        error: (error as Error).message,
+      });
       return this.getRequirementsByStatus("PROCESSED", limit, userId);
     }
   }
@@ -399,7 +408,9 @@ export class DatabaseService {
         return Promise.all(mockRequirements.map((req) => this.applyPrivacyControls(req, false)));
       }
     } catch (error) {
-      console.error("Error fetching requirements by status:", error);
+      dbLogger.error("Error fetching requirements by status", {
+        error: (error as Error).message,
+      });
       throw new Error("Failed to fetch requirements");
     }
   }
@@ -433,11 +444,16 @@ export class DatabaseService {
         }
         mockRequirement.status = status;
         mockRequirement.updatedAt = new Date();
-        console.log("DatabaseService: Updated requirement status in mock storage", id, status);
+        dbLogger.info("DatabaseService: Updated requirement status in mock storage", {
+          id,
+          status,
+        });
         return mockRequirement;
       }
     } catch (error) {
-      console.error("Error updating requirement status:", error);
+      dbLogger.error("Error updating requirement status", {
+        error: (error as Error).message,
+      });
       throw new Error("Failed to update requirement status");
     }
   }
@@ -484,11 +500,11 @@ export class DatabaseService {
         mockRequirement.status = "DELETED";
         mockRequirement.scheduledDeletionAt = new Date();
         mockRequirement.updatedAt = new Date();
-        console.log("DatabaseService: Deleted requirement from mock storage", id, reason);
+        dbLogger.info("DatabaseService: Deleted requirement from mock storage", { id, reason });
         return mockRequirement;
       }
     } catch (error) {
-      console.error("Error deleting requirement:", error);
+      dbLogger.error("Error deleting requirement", { error: (error as Error).message });
       throw new Error("Failed to delete requirement");
     }
   }
@@ -583,7 +599,7 @@ export class DatabaseService {
         };
       }
     } catch (error) {
-      console.error("Error fetching statistics:", error);
+      dbLogger.error("Error fetching statistics", { error: (error as Error).message });
       throw new Error("Failed to fetch statistics");
     }
   }
@@ -619,7 +635,9 @@ export class DatabaseService {
         return requirementsToDelete.length;
       }
     } catch (error) {
-      console.error("Error processing scheduled deletions:", error);
+      dbLogger.error("Error processing scheduled deletions", {
+        error: (error as Error).message,
+      });
       throw new Error("Failed to process scheduled deletions");
     }
   }
@@ -708,10 +726,10 @@ export class DatabaseService {
         });
       } else {
         // Mock implementation - just log to console
-        console.log("DatabaseService: Privacy action logged (mock)", params);
+        dbLogger.info("DatabaseService: Privacy action logged (mock)", { params });
       }
     } catch (error) {
-      console.error("Error logging privacy action:", error);
+      dbLogger.error("Error logging privacy action", { error: (error as Error).message });
       // Don't throw - privacy logging shouldn't break main functionality
     }
   }
@@ -781,7 +799,7 @@ export class DatabaseService {
         ];
       }
     } catch (error) {
-      console.error("Error fetching clusters:", error);
+      dbLogger.error("Error fetching clusters", { error: (error as Error).message });
       throw new Error("Failed to fetch clusters");
     }
   }
@@ -795,7 +813,7 @@ export class DatabaseService {
         return 2;
       }
     } catch (error) {
-      console.error("Error counting clusters:", error);
+      dbLogger.error("Error counting clusters", { error: (error as Error).message });
       throw new Error("Failed to count clusters");
     }
   }
@@ -839,7 +857,7 @@ export class DatabaseService {
         return mockCluster;
       }
     } catch (error) {
-      console.error("Error creating cluster:", error);
+      dbLogger.error("Error creating cluster", { error: (error as Error).message });
       throw new Error("Failed to create cluster");
     }
   }
@@ -851,7 +869,9 @@ export class DatabaseService {
       }
       return 0;
     } catch (error) {
-      console.error("Error counting user requirements:", error);
+      dbLogger.error("Error counting user requirements", {
+        error: (error as Error).message,
+      });
       return 0;
     }
   }
@@ -871,7 +891,9 @@ export class DatabaseService {
       }
       return [];
     } catch (error) {
-      console.error("Error fetching clusters for user:", error);
+      dbLogger.error("Error fetching clusters for user", {
+        error: (error as Error).message,
+      });
       return [];
     }
   }
@@ -909,7 +931,9 @@ export class DatabaseService {
         };
       }
     } catch (error) {
-      console.error("Error fetching public statistics:", error);
+      dbLogger.error("Error fetching public statistics", {
+        error: (error as Error).message,
+      });
       return {
         totalRequirements: 0,
         totalClusters: 0,
@@ -982,7 +1006,9 @@ export class DatabaseService {
 
       return processedRequirements;
     } catch (error) {
-      console.error("Error fetching requirements for admin:", error);
+      dbLogger.error("Error fetching requirements for admin", {
+        error: (error as Error).message,
+      });
       throw new Error("Failed to fetch requirements for admin view");
     }
   }
@@ -1014,7 +1040,9 @@ export class DatabaseService {
         }).length;
       }
     } catch (error) {
-      console.error("Error counting requirements for admin:", error);
+      dbLogger.error("Error counting requirements for admin", {
+        error: (error as Error).message,
+      });
       throw new Error("Failed to count requirements for admin view");
     }
   }
