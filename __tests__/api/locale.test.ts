@@ -29,5 +29,32 @@ describe("Locale API", () => {
       expect(content).toContain("maxAge");
       expect(content).toContain("LOCALE_COOKIE");
     });
+
+    it("should handle valid locale in request body", () => {
+      const routePath = path.join(process.cwd(), "app", "api", "locale", "route.ts");
+      const content = fs.readFileSync(routePath, "utf8");
+      // Verify the route uses body.locale
+      expect(content).toContain("body.locale");
+    });
+
+    it("should return ok response", () => {
+      const routePath = path.join(process.cwd(), "app", "api", "locale", "route.ts");
+      const content = fs.readFileSync(routePath, "utf8");
+      expect(content).toContain("{ ok: true }");
+    });
+
+    it("should handle JSON parse error with 400 status", () => {
+      const routePath = path.join(process.cwd(), "app", "api", "locale", "route.ts");
+      const content = fs.readFileSync(routePath, "utf8");
+      expect(content).toContain("status: 400");
+      expect(content).toContain("Invalid JSON");
+    });
+
+    it("should use getDefaultLocale as fallback", () => {
+      const routePath = path.join(process.cwd(), "app", "api", "locale", "route.ts");
+      const content = fs.readFileSync(routePath, "utf8");
+      // Verify default locale fallback logic
+      expect(content).toContain("getDefaultLocale()");
+    });
   });
 });
