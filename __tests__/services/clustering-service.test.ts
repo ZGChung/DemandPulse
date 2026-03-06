@@ -1028,4 +1028,41 @@ describe("ClusteringService", () => {
       expect(Array.isArray(result)).toBe(true);
     });
   });
+
+  describe("cosineSimilarity NaN handling", () => {
+    it("should use fallback when library returns NaN", async () => {
+      const mockCosineSimilarity = require("compute-cosine-similarity");
+      // Make the library return NaN to trigger fallback
+      (mockCosineSimilarity as jest.Mock).mockReturnValueOnce(NaN);
+
+      const similarity = service.cosineSimilarity([1, 0, 0], [1, 0, 0]);
+      expect(similarity).toBe(1); // Should fallback to manual calculation
+
+      // Restore
+      (mockCosineSimilarity as jest.Mock).mockReturnValue(0.8);
+    });
+
+    it("should return 0 for zero vectors in fallback", async () => {
+      const mockCosineSimilarity = require("compute-cosine-similarity");
+      // Make the library return null to trigger fallback
+      (mockCosineSimilarity as jest.Mock).mockReturnValueOnce(null);
+
+      const similarity = service.cosineSimilarity([0, 0, 0], [0, 0, 0]);
+      expect(similarity).toBe(0);
+
+      // Restore
+      (mockCosineSimilarity as jest.Mock).mockReturnValue(0.8);
+    });
+
+    it("should return 0 when one vector is zero in fallback", async () => {
+      const mockCosineSimilarity = require("compute-cosine-similarity");
+      (mockCosineSimilarity as jest.Mock).mockReturnValueOnce(undefined);
+
+      const similarity = service.cosineSimilarity([0, 0, 0], [1, 2, 3]);
+      expect(similarity).toBe(0);
+
+      // Restore
+      (mockCosineSimilarity as jest.Mock).mockReturnValue(0.8);
+    });
+  });
 });
