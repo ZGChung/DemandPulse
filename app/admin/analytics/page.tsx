@@ -275,7 +275,7 @@ export default function AdminAnalyticsPage() {
                       <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                       <Tooltip
                         labelFormatter={(v) => `Date: ${v}`}
-                        formatter={(v: number) => [v, "Requirements"]}
+                        formatter={(v) => [v ?? 0, "Requirements"]}
                       />
                       <Area
                         type="monotone"
@@ -324,7 +324,7 @@ export default function AdminAnalyticsPage() {
                         iconSize={8}
                         wrapperStyle={{ fontSize: 12 }}
                       />
-                      <Tooltip formatter={(v: number) => [v, "Requirements"]} />
+                      <Tooltip formatter={(v) => [v ?? 0, "Requirements"]} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -355,7 +355,7 @@ export default function AdminAnalyticsPage() {
                     <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
                     <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={115} />
                     <Tooltip
-                      formatter={(v: number) => [v, "Requirements"]}
+                      formatter={(v) => [v ?? 0, "Requirements"]}
                       labelFormatter={(_, payload) => payload[0]?.payload?.fullName ?? ""}
                     />
                     <Bar dataKey="count" fill="#8b5cf6" radius={[0, 4, 4, 0]} />

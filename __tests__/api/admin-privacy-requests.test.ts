@@ -60,7 +60,7 @@ import { GET, PATCH } from "@/app/api/admin/privacy-requests/route";
 import { prisma } from "@/lib/prisma";
 
 const mockGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>;
-const mockPrisma = prisma as jest.MockedObject<typeof prisma>;
+const mockPrisma = prisma as any;
 
 function createMockRequest(
   options: {
