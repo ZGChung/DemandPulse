@@ -250,6 +250,10 @@ describe("Mock Requirements API", () => {
     });
 
     it("should handle consent validation failure", async () => {
+      // Reset the schema parse mock first (set by previous test)
+      const { requirementSubmissionSchema } = await import("@/lib/validation-middleware");
+      (requirementSubmissionSchema.parse as jest.Mock).mockImplementation((data) => data);
+
       const { DataCollectionFlow } = await import("@/services/data-collection-flow");
       (DataCollectionFlow as jest.Mock).mockImplementation(() => ({
         handleUserConsent: jest.fn().mockResolvedValue({

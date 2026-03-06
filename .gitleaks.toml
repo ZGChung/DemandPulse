@@ -37,12 +37,10 @@ paths = [
   ".env.local.example",
   "jest.setup.js",
   "jest.config.js",
-  "DEPLOYMENT.md",
-  "**/.next/**",
-  "**/node_modules/**",
-  "**/coverage/**"
+  "DEPLOYMENT.md"
 ]
 
+# Use regex for paths that need glob-style matching
 allowlist.regexes = [
   '''sk-test-.*''',
   '''process\.env''',
@@ -52,5 +50,8 @@ allowlist.regexes = [
   '''.*\.test\.ts''',
   '''.*\.test\.tsx''',
   '''.*\.spec\.ts''',
-  '''.*\.spec\.tsx'''
+  '''.*\.spec\.tsx''',
+  '''.*/\.next/.*''',
+  '''.*/node_modules/.*''',
+  '''.*/coverage/.*'''
 ]

@@ -6,13 +6,14 @@ const createJestConfig = nextJest({
 
 const customJestConfig = {
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
-  testEnvironment: "jest-environment-jsdom",
+  testEnvironment: "node",
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
     "^jose$": "<rootDir>/__mocks__/jose.js",
     "^openid-client$": "<rootDir>/__mocks__/openid-client.js",
     "^ml-kmeans$": "<rootDir>/__mocks__/ml-kmeans.js",
     "^compute-cosine-similarity$": "<rootDir>/__mocks__/compute-cosine-similarity.js",
+    "^entities$": "<rootDir>/__mocks__/entities.js",
   },
   collectCoverageFrom: [
     "app/**/*.{js,jsx,ts,tsx}",
@@ -29,7 +30,7 @@ const customJestConfig = {
   ],
   testPathIgnorePatterns: ["<rootDir>/node_modules/", "<rootDir>/.next/"],
   transformIgnorePatterns: [
-    "/node_modules/(?!jose|openid-client|next-auth|@auth/prisma-adapter|ml-kmeans|compute-cosine-similarity)",
+    "/node_modules/(?!jose|openid-client|next-auth|@auth/prisma-adapter|ml-kmeans|compute-cosine-similarity|entities)",
   ],
 };
 

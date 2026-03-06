@@ -81,9 +81,13 @@ describe("Plugin Requirements API", () => {
     it("should return 400 for invalid schema", async () => {
       const { POST } = await import("@/app/api/plugin/requirements/route");
       const { requirementSubmissionSchema } = require("@/lib/validation-middleware");
+      const { z } = require("zod");
 
+      // Throw a ZodError to trigger the 400 response
       (requirementSubmissionSchema.parse as jest.Mock).mockImplementation(() => {
-        throw new Error("Invalid");
+        throw new z.ZodError([
+          { path: ["originalRequirement"], message: "Invalid", code: "invalid_type" },
+        ]);
       });
 
       const request = new Request("http://localhost:3000/api/plugin/requirements", {
@@ -102,7 +106,7 @@ describe("Plugin Requirements API", () => {
 
       (validateRequirementSubmission as jest.Mock).mockReturnValue({
         valid: false,
-        errors: [{ path: "originalRequirement", message: "Required" }],
+        errors: ["originalRequirement: Required"],
       });
 
       const request = new Request("http://localhost:3000/api/plugin/requirements", {
