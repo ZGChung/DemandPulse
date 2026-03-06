@@ -326,8 +326,15 @@ export class ContextMonitorService {
 
     this.isMonitoring = true;
     this.monitoringInterval = setInterval(() => {
-      this.checkContextStatus().catch(console.error);
+      this.checkContextStatus().catch(() => {});
     }, this.config.checkInterval);
+    if (
+      this.monitoringInterval &&
+      typeof this.monitoringInterval === "object" &&
+      "unref" in this.monitoringInterval
+    ) {
+      (this.monitoringInterval as NodeJS.Timeout).unref();
+    }
 
     console.log("Context monitoring started");
   }

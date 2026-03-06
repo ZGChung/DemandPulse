@@ -21,6 +21,10 @@ describe("ContextMonitorService", () => {
     });
   });
 
+  afterEach(() => {
+    service.stopMonitoring();
+  });
+
   describe("constructor", () => {
     it("should use custom config when provided", () => {
       const customService = new ContextMonitorService({

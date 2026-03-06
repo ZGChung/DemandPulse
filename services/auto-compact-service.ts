@@ -275,7 +275,10 @@ export class AutoCompactService {
     // In a real implementation, this would actually compact the conversation
     // For now, we'll just log it and return success
 
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate delay
+    await new Promise((resolve) => {
+      const t = setTimeout(resolve, 100);
+      if (t && typeof t === "object" && "unref" in t) (t as NodeJS.Timeout).unref();
+    });
 
     return {
       success: true,
