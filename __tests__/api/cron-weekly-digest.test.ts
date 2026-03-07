@@ -71,7 +71,7 @@ describe("Cron Weekly Digest API", () => {
 
   describe("GET /api/cron/weekly-digest", () => {
     it("should return 401 when no authorization in production", async () => {
-      process.env.NODE_ENV = "production";
+      (process.env as any).NODE_ENV = "production";
       process.env.CRON_SECRET = "";
 
       const { GET } = await import("@/app/api/cron/weekly-digest/route");
@@ -82,7 +82,7 @@ describe("Cron Weekly Digest API", () => {
     });
 
     it("should return 401 when wrong secret provided", async () => {
-      process.env.NODE_ENV = "development";
+      (process.env as any).NODE_ENV = "development";
       process.env.CRON_SECRET = "correct-secret";
 
       const { GET } = await import("@/app/api/cron/weekly-digest/route");
@@ -95,7 +95,7 @@ describe("Cron Weekly Digest API", () => {
     });
 
     it("should return 401 when wrong Bearer token provided", async () => {
-      process.env.NODE_ENV = "development";
+      (process.env as any).NODE_ENV = "development";
       process.env.CRON_SECRET = "correct-secret";
 
       const { GET } = await import("@/app/api/cron/weekly-digest/route");
@@ -108,7 +108,7 @@ describe("Cron Weekly Digest API", () => {
     });
 
     it("should process digest successfully with correct secret", async () => {
-      process.env.NODE_ENV = "development";
+      (process.env as any).NODE_ENV = "development";
       process.env.CRON_SECRET = "correct-secret";
 
       const { GET } = await import("@/app/api/cron/weekly-digest/route");
@@ -125,7 +125,7 @@ describe("Cron Weekly Digest API", () => {
     });
 
     it("should handle empty clusters", async () => {
-      process.env.NODE_ENV = "development";
+      (process.env as any).NODE_ENV = "development";
       process.env.CRON_SECRET = "correct-secret";
 
       // This test verifies the API handles empty cluster arrays correctly
@@ -143,7 +143,7 @@ describe("Cron Weekly Digest API", () => {
     });
 
     it("should handle users without email", async () => {
-      process.env.NODE_ENV = "development";
+      (process.env as any).NODE_ENV = "development";
       process.env.CRON_SECRET = "correct-secret";
 
       const { prisma } = await import("@/lib/prisma");
@@ -163,7 +163,7 @@ describe("Cron Weekly Digest API", () => {
     });
 
     it("should handle email send failures", async () => {
-      process.env.NODE_ENV = "development";
+      (process.env as any).NODE_ENV = "development";
       process.env.CRON_SECRET = "correct-secret";
 
       const { emailService } = await import("@/services/email-service");
@@ -187,7 +187,7 @@ describe("Cron Weekly Digest API", () => {
 
   describe("POST /api/cron/weekly-digest", () => {
     it("should handle POST as GET", async () => {
-      process.env.NODE_ENV = "development";
+      (process.env as any).NODE_ENV = "development";
       process.env.CRON_SECRET = "correct-secret";
 
       const { POST } = await import("@/app/api/cron/weekly-digest/route");

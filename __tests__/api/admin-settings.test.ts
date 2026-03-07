@@ -42,7 +42,7 @@ jest.mock("@/services/settings-service", () => ({
   DEFAULT_SETTINGS: {
     clusteringEnabled: true,
     clusteringThreshold: 0.7,
-    autoClusterFrequency: "daily",
+    autoClusterFrequency: "daily" as const,
     emailNotifications: true,
     adminEmail: "admin@example.com",
     notificationThreshold: 10,
@@ -122,7 +122,7 @@ describe("Admin Settings API", () => {
       const mockSettings = {
         clusteringEnabled: true,
         clusteringThreshold: 0.7,
-        autoClusterFrequency: "daily",
+        autoClusterFrequency: "daily" as const,
         emailNotifications: true,
         adminEmail: "admin@example.com",
         notificationThreshold: 10,
@@ -214,7 +214,7 @@ describe("Admin Settings API", () => {
       const mockUpdatedSettings = {
         clusteringEnabled: false,
         clusteringThreshold: 0.5,
-        autoClusterFrequency: "daily",
+        autoClusterFrequency: "daily" as const,
         emailNotifications: true,
         adminEmail: "admin@example.com",
         notificationThreshold: 10,

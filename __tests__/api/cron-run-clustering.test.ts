@@ -55,7 +55,7 @@ describe("Cron Run Clustering API", () => {
       const originalEnv = process.env.NODE_ENV;
       const originalSecret = process.env.CRON_SECRET;
 
-      process.env.NODE_ENV = "production";
+      (process.env as any).NODE_ENV = "production";
       delete process.env.CRON_SECRET;
 
       const { GET } = await import("@/app/api/cron/run-clustering/route");
@@ -66,7 +66,7 @@ describe("Cron Run Clustering API", () => {
       expect(response.status).toBe(401);
 
       // Restore env
-      process.env.NODE_ENV = originalEnv;
+      (process.env as any).NODE_ENV = originalEnv;
       if (originalSecret) process.env.CRON_SECRET = originalSecret;
     });
 
@@ -75,7 +75,7 @@ describe("Cron Run Clustering API", () => {
       const originalEnv = process.env.NODE_ENV;
 
       // Set development mode
-      process.env.NODE_ENV = "development";
+      (process.env as any).NODE_ENV = "development";
       delete process.env.CRON_SECRET;
 
       const { GET } = await import("@/app/api/cron/run-clustering/route");
@@ -87,14 +87,14 @@ describe("Cron Run Clustering API", () => {
       expect([200, 503]).toContain(response.status);
 
       // Restore env
-      process.env.NODE_ENV = originalEnv;
+      (process.env as any).NODE_ENV = originalEnv;
     });
 
     it("should return unauthorized with wrong secret", async () => {
       const originalEnv = process.env.NODE_ENV;
       const originalSecret = process.env.CRON_SECRET;
 
-      process.env.NODE_ENV = "production";
+      (process.env as any).NODE_ENV = "production";
       process.env.CRON_SECRET = "correct-secret";
 
       const { GET } = await import("@/app/api/cron/run-clustering/route");
@@ -107,7 +107,7 @@ describe("Cron Run Clustering API", () => {
       expect(response.status).toBe(401);
 
       // Restore env
-      process.env.NODE_ENV = originalEnv;
+      (process.env as any).NODE_ENV = originalEnv;
       if (originalSecret) process.env.CRON_SECRET = originalSecret;
       else delete process.env.CRON_SECRET;
     });
@@ -116,7 +116,7 @@ describe("Cron Run Clustering API", () => {
       const originalEnv = process.env.NODE_ENV;
       const originalSecret = process.env.CRON_SECRET;
 
-      process.env.NODE_ENV = "production";
+      (process.env as any).NODE_ENV = "production";
       process.env.CRON_SECRET = "correct-secret";
 
       const { GET } = await import("@/app/api/cron/run-clustering/route");
@@ -129,7 +129,7 @@ describe("Cron Run Clustering API", () => {
       expect(response.status).toBe(200);
 
       // Restore env
-      process.env.NODE_ENV = originalEnv;
+      (process.env as any).NODE_ENV = originalEnv;
       if (originalSecret) process.env.CRON_SECRET = originalSecret;
       else delete process.env.CRON_SECRET;
     });
@@ -138,7 +138,7 @@ describe("Cron Run Clustering API", () => {
       const originalEnv = process.env.NODE_ENV;
       const originalSecret = process.env.CRON_SECRET;
 
-      process.env.NODE_ENV = "production";
+      (process.env as any).NODE_ENV = "production";
       process.env.CRON_SECRET = "correct-secret";
 
       const { GET } = await import("@/app/api/cron/run-clustering/route");
@@ -151,7 +151,7 @@ describe("Cron Run Clustering API", () => {
       expect(response.status).toBe(200);
 
       // Restore env
-      process.env.NODE_ENV = originalEnv;
+      (process.env as any).NODE_ENV = originalEnv;
       if (originalSecret) process.env.CRON_SECRET = originalSecret;
       else delete process.env.CRON_SECRET;
     });
@@ -163,7 +163,7 @@ describe("Cron Run Clustering API", () => {
       const originalEnv = process.env.NODE_ENV;
 
       // Set development mode
-      process.env.NODE_ENV = "development";
+      (process.env as any).NODE_ENV = "development";
       delete process.env.CRON_SECRET;
 
       const { POST } = await import("@/app/api/cron/run-clustering/route");
@@ -177,7 +177,7 @@ describe("Cron Run Clustering API", () => {
       expect([200, 503]).toContain(response.status);
 
       // Restore env
-      process.env.NODE_ENV = originalEnv;
+      (process.env as any).NODE_ENV = originalEnv;
     });
   });
 });

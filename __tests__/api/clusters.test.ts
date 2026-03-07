@@ -7,12 +7,12 @@ jest.mock("@/services/database-service", () => {
       getClusters: jest.fn().mockResolvedValue([
         { id: "cluster-1", name: "Cluster 1", count: 10 },
         { id: "cluster-2", name: "Cluster 2", count: 5 },
-      ]),
+      ] as never),
       getPublicStatistics: jest.fn().mockResolvedValue({
         totalClusters: 2,
         totalRequirements: 100,
         activeUsers: 50,
-      }),
+      } as never),
     })),
   };
 });

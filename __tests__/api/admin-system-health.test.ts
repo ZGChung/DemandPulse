@@ -78,7 +78,11 @@ import { GET } from "@/app/api/admin/system-health/route";
 import { prisma } from "@/lib/prisma";
 
 const mockGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>;
-const mockPrisma = prisma as jest.MockedObject<typeof prisma>;
+const mockPrisma = prisma as jest.MockedObject<typeof prisma> & {
+  user: { count: jest.Mock };
+  requirement: { count: jest.Mock };
+  requirementCluster: { count: jest.Mock };
+};
 
 function createMockRequest(
   options: {
