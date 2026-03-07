@@ -14,6 +14,11 @@ function isPublicRoute(req: NextRequest): boolean {
     return true;
   }
 
+  // NextAuth endpoints must be accessible without session
+  if (pathname.startsWith("/api/auth/")) {
+    return true;
+  }
+
   // Mock endpoints (development only)
   if (pathname.startsWith("/api/mock/")) {
     return true;
@@ -133,7 +138,7 @@ export default withAuth(
     response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
     response.headers.set(
       "Content-Security-Policy",
-      "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self';"
+      "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://avatars.githubusercontent.com; font-src 'self'; connect-src 'self' https://github.com;"
     );
 
     // Add response time header
