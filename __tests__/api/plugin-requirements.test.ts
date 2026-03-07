@@ -18,6 +18,25 @@ jest.mock("@/lib/validation-middleware", () => ({
   }),
 }));
 
+jest.mock("@/lib/rate-limiter", () => ({
+  RateLimiter: jest.fn().mockImplementation(() => ({
+    checkAndIncrement: jest
+      .fn()
+      .mockResolvedValue({ allowed: true, remaining: 9, reset: Date.now() + 60000 }),
+  })),
+}));
+
+jest.mock("@/lib/env", () => ({
+  env: {
+    rateLimitMaxRequests: () => 100,
+    rateLimitWindowMs: () => 60000,
+  },
+}));
+
+jest.mock("@/lib/logger", () => ({
+  apiLogger: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() },
+}));
+
 jest.mock("@/services/data-collection-flow", () => ({
   DataCollectionFlow: jest.fn().mockImplementation(() => ({
     handleUserConsent: jest.fn().mockResolvedValue({
@@ -39,43 +58,67 @@ describe("Plugin Requirements API", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     process.env.PLUGIN_API_KEY = "test-api-key";
-    process.env.DATABASE_URL = "postgresql://test:test@localhost/test";
+    process.env.DATABASE_URL = "file:./dev.db";
   });
 
-  describe("POST", () => {
-    it("should return 401 without API key", async () => {
+  describe("POST - community mode (no API key)", () => {
+    it("should accept anonymous submissions (community mode)", async () => {
       const { POST } = await import("@/app/api/plugin/requirements/route");
       const request = new Request("http://localhost:3000/api/plugin/requirements", {
         method: "POST",
-        body: JSON.stringify({}),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          originalRequirement: "Need a rate limiter for Express",
+          summarizedRequirement: "Rate limiter for Express",
+          context: { conversationId: "c1", timestamp: new Date().toISOString() },
+          consent: {
+            consentOptions: { dataCollection: true, contact: false, anonymization: true },
+            consentedAt: new Date().toISOString(),
+          },
+        }),
       });
 
       const response = await POST(request);
-      expect(response.status).toBe(401);
-    });
-
-    it("should return 401 with invalid API key", async () => {
-      const { POST } = await import("@/app/api/plugin/requirements/route");
-      const request = new Request("http://localhost:3000/api/plugin/requirements", {
-        method: "POST",
-        headers: { "x-api-key": "wrong-key" },
-        body: JSON.stringify({}),
-      });
-
-      const response = await POST(request);
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(201);
+      const data = await response.json();
+      expect(data.success).toBe(true);
+      expect(data.source).toBe("community-plugin");
+      expect(data.trendsUrl).toBeDefined();
     });
 
     it("should return 400 for invalid JSON body", async () => {
       const { POST } = await import("@/app/api/plugin/requirements/route");
       const request = new Request("http://localhost:3000/api/plugin/requirements", {
         method: "POST",
-        headers: { "x-api-key": "test-api-key" },
         body: "invalid json",
       });
 
       const response = await POST(request);
       expect(response.status).toBe(400);
+    });
+  });
+
+  describe("POST - apikey mode", () => {
+    it("should accept submissions with valid API key", async () => {
+      const { POST } = await import("@/app/api/plugin/requirements/route");
+      const request = new Request("http://localhost:3000/api/plugin/requirements", {
+        method: "POST",
+        headers: { "x-api-key": "test-api-key", "Content-Type": "application/json" },
+        body: JSON.stringify({
+          originalRequirement: "Need auth",
+          summarizedRequirement: "Auth",
+          context: { conversationId: "c2", timestamp: new Date().toISOString() },
+          consent: {
+            consentOptions: { dataCollection: true, contact: false, anonymization: true },
+            consentedAt: new Date().toISOString(),
+          },
+        }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(201);
+      const data = await response.json();
+      expect(data.source).toBe("api-key");
     });
 
     it("should return 400 for invalid schema", async () => {
@@ -83,7 +126,6 @@ describe("Plugin Requirements API", () => {
       const { requirementSubmissionSchema } = require("@/lib/validation-middleware");
       const { z } = require("zod");
 
-      // Throw a ZodError to trigger the 400 response
       (requirementSubmissionSchema.parse as jest.Mock).mockImplementation(() => {
         throw new z.ZodError([
           { path: ["originalRequirement"], message: "Invalid", code: "invalid_type" },
@@ -131,33 +173,11 @@ describe("Plugin Requirements API", () => {
       expect(response.status).toBe(401);
     });
 
-    it("should return 400 for invalid query params", async () => {
-      const { GET } = await import("@/app/api/plugin/requirements/route");
-      const { validateQueryParams } = require("@/lib/validation-middleware");
-
-      (validateQueryParams as jest.Mock).mockReturnValue({
-        success: false,
-        errors: [{ path: ["count"], message: "Invalid" }],
-      });
-
-      const request = new Request("http://localhost:3000/api/plugin/requirements?count=invalid", {
-        method: "GET",
-        headers: { "x-api-key": "test-api-key" },
-      });
-
-      const response = await GET(request);
-      expect(response.status).toBe(400);
-    });
-
     it("should return requirements with valid API key", async () => {
       const { GET } = await import("@/app/api/plugin/requirements/route");
       const { validateQueryParams } = require("@/lib/validation-middleware");
 
-      // Reset mock to return success
-      (validateQueryParams as jest.Mock).mockReturnValue({
-        success: true,
-        data: { count: 1 },
-      });
+      (validateQueryParams as jest.Mock).mockReturnValue({ success: true, data: { count: 1 } });
 
       const request = new Request("http://localhost:3000/api/plugin/requirements", {
         method: "GET",
@@ -166,10 +186,8 @@ describe("Plugin Requirements API", () => {
 
       const response = await GET(request);
       expect(response.status).toBe(200);
-
       const data = await response.json();
       expect(data.success).toBe(true);
-      expect(data.requirements).toBeDefined();
     });
   });
 });

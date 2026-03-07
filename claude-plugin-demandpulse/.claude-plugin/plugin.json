@@ -1,15 +1,22 @@
 {
   "name": "demandpulse",
-  "description": "Real-time demand radar for AI-native developers. Detects requirements from Claude Code conversations and sends them to DemandPulse backend for analysis and clustering.",
-  "version": "1.0.0",
+  "description": "Share developer requirements with the DemandPulse community. Use /demandpulse:share to contribute what you're building to the public trends dashboard — zero config, fully anonymous.",
+  "version": "2.0.0",
   "author": {
     "name": "DemandPulse Team"
   },
-  "homepage": "https://github.com/ZGChung/DemandPulse",
+  "homepage": "https://demand-pulse.vercel.app",
   "repository": {
     "type": "git",
     "url": "https://github.com/ZGChung/DemandPulse.git"
   },
   "license": "MIT",
-  "keywords": ["product-management", "requirements", "analytics", "claude-code", "developer-tools"]
+  "keywords": [
+    "product-management",
+    "requirements",
+    "analytics",
+    "claude-code",
+    "developer-tools",
+    "community"
+  ]
 }

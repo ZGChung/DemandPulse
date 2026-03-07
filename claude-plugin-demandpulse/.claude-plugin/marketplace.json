@@ -1,0 +1,23 @@
+{
+  "name": "demandpulse-marketplace",
+  "owner": {
+    "name": "DemandPulse Team",
+    "email": "zijie@demandpulse.dev"
+  },
+  "metadata": {
+    "description": "DemandPulse plugin marketplace — share developer requirements with the community"
+  },
+  "plugins": [
+    {
+      "name": "demandpulse",
+      "source": ".",
+      "description": "Share developer requirements with the DemandPulse community. Zero config, fully anonymous.",
+      "version": "2.0.0",
+      "author": {
+        "name": "DemandPulse Team"
+      },
+      "homepage": "https://demand-pulse.vercel.app",
+      "keywords": ["requirements", "analytics", "community", "developer-tools"]
+    }
+  ]
+}
