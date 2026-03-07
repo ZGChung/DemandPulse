@@ -5,14 +5,11 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 const databaseUrl = process.env.DATABASE_URL || "";
-const isBuild =
-  process.env.NEXT_PHASE === "phase-production-build" ||
-  (process.env.NODE_ENV === "production" &&
-    typeof window === "undefined" &&
-    !databaseUrl.startsWith("file:"));
+// Only skip creating the client during Next.js build (no DB available). At Vercel runtime we need the client.
+const isBuild = process.env.NEXT_PHASE === "phase-production-build";
 
 function createPrismaClient(): PrismaClient | null {
-  if (isBuild) return null;
+  if (isBuild || !databaseUrl.trim()) return null;
 
   const logLevel: Prisma.LogLevel[] =
     process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"];
