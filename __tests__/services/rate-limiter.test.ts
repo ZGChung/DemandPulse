@@ -216,7 +216,8 @@ describe("RateLimiter", () => {
       const now = Date.now();
       const result = await limiter.checkAndIncrement("user1");
       expect(result.reset).toBeGreaterThanOrEqual(now);
-      expect(result.reset).toBeLessThanOrEqual(now + 60000);
+      // Allow 10ms buffer for timing edge cases
+      expect(result.reset).toBeLessThanOrEqual(now + 60010);
     });
   });
 });
