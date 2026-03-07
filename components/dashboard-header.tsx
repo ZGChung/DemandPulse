@@ -12,9 +12,9 @@ interface DashboardHeaderProps {
 }
 
 const navItems = [
+  { href: "/trends", label: "Trends" },
   { href: "/", label: "Dashboard" },
   { href: "/requirements", label: "Requirements" },
-  { href: "/trends", label: "Trends" },
   { href: "/teams", label: "Teams" },
 ] as const;
 

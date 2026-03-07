@@ -61,7 +61,7 @@ export default function ApiDocsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link href="/" className="text-xl font-bold text-gray-900 hover:text-gray-700">
+              <Link href="/landing" className="text-xl font-bold text-gray-900 hover:text-gray-700">
                 DemandPulse
               </Link>
               <span className="text-gray-500">/</span>

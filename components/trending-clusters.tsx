@@ -119,12 +119,14 @@ export default function TrendingClusters() {
       <div className="px-6 py-5 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">Trending Clusters</h3>
-          <a
-            href="/trends"
-            className="text-sm font-medium text-blue-600 hover:text-blue-500 cursor-pointer"
+          <button
+            type="button"
+            onClick={showUnderDev}
+            title={UNDER_DEV_MSG}
+            className="text-sm font-medium text-gray-400 cursor-not-allowed"
           >
             Analyze trends →
-          </a>
+          </button>
         </div>
         <p className="mt-1 text-sm text-gray-500">Groups of similar developer requirements</p>
       </div>
@@ -171,12 +173,14 @@ export default function TrendingClusters() {
                   >
                     <FaShareAlt className="w-4 h-4" />
                   </button>
-                  <a
-                    href={`/trends#${cluster.id}`}
-                    className="text-sm font-medium text-blue-600 hover:text-blue-500 cursor-pointer"
+                  <button
+                    type="button"
+                    onClick={showUnderDev}
+                    title={UNDER_DEV_MSG}
+                    className="text-sm font-medium text-gray-400 cursor-not-allowed"
                   >
                     View
-                  </a>
+                  </button>
                 </div>
               </div>
             </li>
@@ -186,9 +190,11 @@ export default function TrendingClusters() {
 
       <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
         <div className="text-center flex flex-wrap justify-center gap-3">
-          <a
-            href="/trends"
-            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+          <button
+            type="button"
+            onClick={showUnderDev}
+            title={UNDER_DEV_MSG}
+            className="inline-flex items-center px-4 py-2 border border-gray-200 shadow-sm text-sm font-medium rounded-md text-gray-400 bg-gray-100 cursor-not-allowed"
           >
             <svg
               className="mr-2 h-4 w-4 text-gray-400"
@@ -204,7 +210,7 @@ export default function TrendingClusters() {
               />
             </svg>
             View all trends
-          </a>
+          </button>
           <button
             type="button"
             onClick={showUnderDev}
