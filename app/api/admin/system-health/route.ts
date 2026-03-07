@@ -176,7 +176,9 @@ async function checkExternalServices() {
 
 export async function GET(request: NextRequest) {
   try {
-    if (!prisma) throw new Error("Database not available");
+    if (!prisma) {
+      return NextResponse.json({ error: "Database not available" }, { status: 503 });
+    }
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
