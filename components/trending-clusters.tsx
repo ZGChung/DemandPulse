@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FaShareAlt } from "react-icons/fa";
+
+const UNDER_DEV_MSG = "Under development";
 
 interface ClusterItem {
   id: string;
@@ -97,6 +98,12 @@ export default function TrendingClusters() {
     getClusters().then(setClusters);
   }, []);
 
+  const showUnderDev = () => {
+    if (typeof globalThis !== "undefined" && "alert" in globalThis) {
+      (globalThis as { alert: (s: string) => void }).alert(UNDER_DEV_MSG);
+    }
+  };
+
   const handleShare = async (cluster: ClusterItem) => {
     const text = `Check out this trending developer need: ${cluster.name} - ${cluster.description}. Discover more on DemandPulse!`;
     try {
@@ -112,9 +119,12 @@ export default function TrendingClusters() {
       <div className="px-6 py-5 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">Trending Clusters</h3>
-          <Link href="/trends" className="text-sm font-medium text-blue-600 hover:text-blue-500">
+          <a
+            href="/trends"
+            className="text-sm font-medium text-blue-600 hover:text-blue-500 cursor-pointer"
+          >
             Analyze trends →
-          </Link>
+          </a>
         </div>
         <p className="mt-1 text-sm text-gray-500">Groups of similar developer requirements</p>
       </div>
@@ -155,18 +165,18 @@ export default function TrendingClusters() {
                 <div className="ml-4 flex-shrink-0 flex items-center space-x-2">
                   <button
                     onClick={() => handleShare(cluster)}
-                    className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                    className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
                     title="Share this trend"
                     type="button"
                   >
                     <FaShareAlt className="w-4 h-4" />
                   </button>
-                  <Link
+                  <a
                     href={`/trends#${cluster.id}`}
-                    className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                    className="text-sm font-medium text-blue-600 hover:text-blue-500 cursor-pointer"
                   >
                     View
-                  </Link>
+                  </a>
                 </div>
               </div>
             </li>
@@ -175,10 +185,10 @@ export default function TrendingClusters() {
       </div>
 
       <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-        <div className="text-center">
-          <Link
+        <div className="text-center flex flex-wrap justify-center gap-3">
+          <a
             href="/trends"
-            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
           >
             <svg
               className="mr-2 h-4 w-4 text-gray-400"
@@ -194,7 +204,28 @@ export default function TrendingClusters() {
               />
             </svg>
             View all trends
-          </Link>
+          </a>
+          <button
+            type="button"
+            onClick={showUnderDev}
+            title={UNDER_DEV_MSG}
+            className="inline-flex items-center px-4 py-2 border border-gray-200 shadow-sm text-sm font-medium rounded-md text-gray-400 bg-gray-100 cursor-not-allowed hover:bg-gray-100"
+          >
+            <svg
+              className="mr-2 h-4 w-4 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              />
+            </svg>
+            Create custom cluster
+          </button>
         </div>
       </div>
     </div>

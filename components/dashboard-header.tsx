@@ -27,7 +27,7 @@ export default function DashboardHeader({ session }: DashboardHeaderProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <Link href="/" className="block">
+            <Link href="/landing" className="block">
               <h1 className="text-3xl font-bold text-gray-900 hover:text-gray-700">DemandPulse</h1>
             </Link>
             <p className="mt-2 text-gray-600">Real-time demand radar for AI-native developers</p>

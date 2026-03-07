@@ -21,20 +21,18 @@ export default async function Dashboard() {
       <OnboardingModal />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Row 1: Demand Overview (4 stats) + Your Contributions */}
+        {/* Row 1: Demand Overview (4 stats only) */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Demand Overview</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <div className="lg:col-span-3">
-              <RequirementStats />
-            </div>
-            <div className="lg:col-span-1">
-              <PersonalInsights />
-            </div>
-          </div>
+          <RequirementStats />
         </div>
 
-        {/* Row 2: Recent Requirements only */}
+        {/* Row 2: Your Contributions full width */}
+        <div className="mb-8">
+          <PersonalInsights />
+        </div>
+
+        {/* Row 3: Recent Requirements */}
         <div className="mb-8">
           <RecentRequirements />
         </div>
