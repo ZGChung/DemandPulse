@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "standalone",
+  // Do not use output: "standalone" on Vercel — it can cause 500; Vercel uses its own serverless runtime
   env: {
     // Expose environment variables to the browser
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
