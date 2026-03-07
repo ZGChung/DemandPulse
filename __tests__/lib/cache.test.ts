@@ -90,4 +90,15 @@ describe("Cache Utilities", () => {
       expect(cacheGet("test:default")).toBe("value");
     });
   });
+
+  describe("Cache size limits", () => {
+    it("should trigger sweep when store is full", () => {
+      // Fill cache to trigger sweep (MAX_STORE_SIZE = 1000)
+      for (let i = 0; i < 1000; i++) {
+        cacheSet(`fill:${i}`, `value${i}`);
+      }
+      // Should still work after sweep
+      expect(cacheGet("fill:999")).toBe("value999");
+    });
+  });
 });
