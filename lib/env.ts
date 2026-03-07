@@ -1,6 +1,6 @@
 // Environment variable validation and access
-
-const requiredEnvVars = ["DEEPSEEK_API_KEY", "NEXT_PUBLIC_APP_URL"] as const;
+// NEXT_PUBLIC_APP_URL is not required so Vercel build can run without it (uses fallback).
+const requiredEnvVars = ["DEEPSEEK_API_KEY"] as const;
 
 const _optionalEnvVars = [
   "DATABASE_URL",
@@ -78,8 +78,14 @@ export function getEnvAsNumber(key: OptionalEnvVar, defaultValue = 0): number {
 export const env = {
   // Required
   deepseekApiKey: () => getEnv("DEEPSEEK_API_KEY"),
-  appUrl: () => getEnv("NEXT_PUBLIC_APP_URL"),
-  nextPublicAppUrl: () => getEnv("NEXT_PUBLIC_APP_URL"),
+  appUrl: () =>
+    process.env.NEXT_PUBLIC_APP_URL?.trim() ||
+    process.env.NEXTAUTH_URL?.trim() ||
+    (typeof window !== "undefined" ? window.location.origin : ""),
+  nextPublicAppUrl: () =>
+    process.env.NEXT_PUBLIC_APP_URL?.trim() ||
+    process.env.NEXTAUTH_URL?.trim() ||
+    (typeof window !== "undefined" ? window.location.origin : ""),
   appName: () => getEnv("NEXT_PUBLIC_APP_NAME", "DemandPulse"),
 
   // Optional with defaults

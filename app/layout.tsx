@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import React from "react";
 
@@ -11,10 +11,14 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
   title: "DemandPulse - AI Developer Demand Radar",
   description: "Real-time demand radar for AI-native developers",
-  viewport: "width=device-width, initial-scale=1",
 };
 
 export default function RootLayout({

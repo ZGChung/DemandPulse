@@ -15,23 +15,20 @@ describe("Environment Validation", () => {
   describe("validateEnv", () => {
     it("should throw error when required env vars are missing", () => {
       delete process.env.DEEPSEEK_API_KEY;
-      delete process.env.NEXT_PUBLIC_APP_URL;
 
       expect(() => validateEnv()).toThrow(
-        "Missing required environment variables: DEEPSEEK_API_KEY, NEXT_PUBLIC_APP_URL"
+        "Missing required environment variables: DEEPSEEK_API_KEY"
       );
     });
 
     it("should not throw when all required env vars are present", () => {
       process.env.DEEPSEEK_API_KEY = "sk-test-key";
-      process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000";
 
       expect(() => validateEnv()).not.toThrow();
     });
 
     it("should warn when API key format is incorrect", () => {
       process.env.DEEPSEEK_API_KEY = "invalid-key";
-      process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000";
 
       const consoleWarn = jest.spyOn(console, "warn").mockImplementation();
 
