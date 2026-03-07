@@ -67,5 +67,7 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/signin",
     error: "/auth/error",
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  // NextAuth can throw if secret is undefined; use fallback so the app doesn't 500 when env is missing (set NEXTAUTH_SECRET in production)
+  secret:
+    process.env.NEXTAUTH_SECRET?.trim() || "fallback-secret-set-NEXTAUTH_SECRET-in-production",
 };
