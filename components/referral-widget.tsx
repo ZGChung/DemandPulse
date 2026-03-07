@@ -170,18 +170,18 @@ export default function ReferralWidget({
       ) : null}
 
       {/* Referral link */}
-      <div className="mb-6">
+      <div className="mb-6 min-w-0">
         <label className="block text-sm font-medium text-gray-700 mb-2">Your referral link</label>
-        <div className="flex">
+        <div className="flex min-w-0 rounded-lg overflow-hidden border border-gray-300">
           <input
             type="text"
             readOnly
             value={referralLink}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
+            className="flex-1 min-w-0 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-900 truncate"
           />
           <button
             onClick={handleCopyLink}
-            className="px-4 py-2 bg-gray-800 text-white rounded-r-lg hover:bg-gray-900 transition-colors flex items-center"
+            className="flex-shrink-0 px-4 py-2 bg-gray-800 text-white hover:bg-gray-900 transition-colors flex items-center"
           >
             <FaCopy className="mr-2" />
             {copied ? "Copied!" : "Copy"}

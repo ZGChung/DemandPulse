@@ -41,12 +41,7 @@ export default function PersonalInsights() {
 
   const getBadge = () => {
     if (contributionCount === 0) {
-      return {
-        icon: <FaUpload className="text-gray-400" />,
-        title: "New Contributor",
-        description: "Submit your first requirement to earn a badge",
-        color: "bg-gray-100 text-gray-800",
-      };
+      return null;
     }
     if (contributionCount === 1) {
       return {
@@ -82,6 +77,12 @@ export default function PersonalInsights() {
 
   const badge = getBadge();
 
+  const openSubmitModal = () => {
+    if (typeof document !== "undefined") {
+      document.dispatchEvent(new CustomEvent("demandpulse-open-submit"));
+    }
+  };
+
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
@@ -112,12 +113,14 @@ export default function PersonalInsights() {
           <h3 className="text-lg font-semibold text-gray-900">Your Contributions</h3>
           <p className="text-sm text-gray-500">Track your impact on the community</p>
         </div>
-        <div
-          className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 ${badge.color}`}
-        >
-          {badge.icon}
-          {badge.title}
-        </div>
+        {badge && (
+          <div
+            className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 ${badge.color}`}
+          >
+            {badge.icon}
+            {badge.title}
+          </div>
+        )}
       </div>
 
       <div className="space-y-6">
@@ -226,12 +229,7 @@ export default function PersonalInsights() {
               Share a requirement you've worked on recently to help the community spot trends.
             </p>
             <button
-              onClick={() => {
-                // This would trigger the submit requirement modal
-                // We'll need to use a global state or event
-                // For now, just show a message
-                alert('Click the "Submit Requirement" button in the header to get started!');
-              }}
+              onClick={openSubmitModal}
               className="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
             >
               Submit Your First Requirement

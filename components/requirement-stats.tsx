@@ -71,7 +71,7 @@ export default function RequirementStats() {
       description: "Grouped into clusters",
     },
     {
-      name: "Privacy Compliance",
+      name: "Privacy Coverage",
       value: "100%",
       change: "",
       changeType: "neutral",
@@ -135,7 +135,7 @@ export default function RequirementStats() {
                 {stat.name === "Total Requirements" && "📊"}
                 {stat.name === "Processed" && "⚡"}
                 {stat.name === "Clustered" && "🔍"}
-                {stat.name === "Privacy Compliance" && "🔒"}
+                {stat.name === "Privacy Coverage" && "🔒"}
               </div>
             </div>
             <p className="ml-16 truncate text-sm font-medium text-gray-500">{stat.name}</p>

@@ -17,97 +17,12 @@ export default function RecentRequirements() {
     try {
       setLoading(true);
       const response = await apiClient.getRequirements({
-        status: "PROCESSED",
         limit: 10,
       });
-      setRequirements(response.data.requirements.slice(0, 5)); // Show top 5
+      setRequirements(response.data.requirements.slice(0, 5));
     } catch (err) {
-      console.error("Error fetching requirements, using mock data:", err);
-      // Fallback to mock data for development
-      const mockRequirements: Requirement[] = [
-        {
-          id: "req_001",
-          originalRequirement:
-            "Need a real-time dashboard for monitoring AI model performance with customizable widgets",
-          summarizedRequirement: "Real-time AI model performance dashboard",
-          conversationId: "conv_001",
-          workspacePath: "/projects/ai-monitoring",
-          detectedAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-          status: "processed",
-          createdAt: new Date(Date.now() - 3600000).toISOString(),
-          updatedAt: new Date(Date.now() - 1800000).toISOString(),
-          dataCollectionConsent: true,
-          contactConsent: false,
-          anonymizationConsent: true,
-          dataRetentionDays: 365,
-        },
-        {
-          id: "req_002",
-          originalRequirement:
-            "Implement authentication system with OAuth, JWT, and role-based access control",
-          summarizedRequirement: "Authentication system with OAuth and RBAC",
-          conversationId: "conv_002",
-          workspacePath: "/projects/auth-service",
-          detectedAt: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
-          status: "clustered",
-          createdAt: new Date(Date.now() - 7200000).toISOString(),
-          updatedAt: new Date(Date.now() - 3600000).toISOString(),
-          dataCollectionConsent: true,
-          contactConsent: true,
-          anonymizationConsent: false,
-          userProvidedEmail: "dev@example.com",
-          dataRetentionDays: 365,
-        },
-        {
-          id: "req_003",
-          originalRequirement:
-            "Create database backup automation with encryption and cloud storage integration",
-          summarizedRequirement: "Automated encrypted database backups",
-          conversationId: "conv_003",
-          workspacePath: "/projects/backup-system",
-          detectedAt: new Date(Date.now() - 10800000).toISOString(), // 3 hours ago
-          status: "processed",
-          createdAt: new Date(Date.now() - 10800000).toISOString(),
-          updatedAt: new Date(Date.now() - 5400000).toISOString(),
-          dataCollectionConsent: true,
-          contactConsent: false,
-          anonymizationConsent: true,
-          dataRetentionDays: 180,
-        },
-        {
-          id: "req_004",
-          originalRequirement:
-            "Build notification system with email, Slack, and push notification support",
-          summarizedRequirement: "Multi-channel notification system",
-          conversationId: "conv_004",
-          workspacePath: "/projects/notifications",
-          detectedAt: new Date(Date.now() - 14400000).toISOString(), // 4 hours ago
-          status: "pending",
-          createdAt: new Date(Date.now() - 14400000).toISOString(),
-          updatedAt: new Date(Date.now() - 7200000).toISOString(),
-          dataCollectionConsent: true,
-          contactConsent: true,
-          anonymizationConsent: true,
-          dataRetentionDays: 365,
-        },
-        {
-          id: "req_005",
-          originalRequirement:
-            "Design responsive mobile UI with dark mode support and accessibility features",
-          summarizedRequirement: "Responsive mobile UI with dark mode",
-          conversationId: "conv_005",
-          workspacePath: "/projects/mobile-app",
-          detectedAt: new Date(Date.now() - 18000000).toISOString(), // 5 hours ago
-          status: "processed",
-          createdAt: new Date(Date.now() - 18000000).toISOString(),
-          updatedAt: new Date(Date.now() - 9000000).toISOString(),
-          dataCollectionConsent: true,
-          contactConsent: false,
-          anonymizationConsent: true,
-          dataRetentionDays: 365,
-        },
-      ];
-      setRequirements(mockRequirements);
+      console.error("Error fetching requirements:", err);
+      setRequirements([]);
     } finally {
       setLoading(false);
     }

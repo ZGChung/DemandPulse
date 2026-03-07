@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FaShareAlt } from "react-icons/fa";
 
@@ -111,9 +112,9 @@ export default function TrendingClusters() {
       <div className="px-6 py-5 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">Trending Clusters</h3>
-          <button className="text-sm font-medium text-blue-600 hover:text-blue-500" type="button">
+          <Link href="/trends" className="text-sm font-medium text-blue-600 hover:text-blue-500">
             Analyze trends →
-          </button>
+          </Link>
         </div>
         <p className="mt-1 text-sm text-gray-500">Groups of similar developer requirements</p>
       </div>
@@ -160,12 +161,12 @@ export default function TrendingClusters() {
                   >
                     <FaShareAlt className="w-4 h-4" />
                   </button>
-                  <button
+                  <Link
+                    href={`/trends#${cluster.id}`}
                     className="text-sm font-medium text-blue-600 hover:text-blue-500"
-                    type="button"
                   >
                     View
-                  </button>
+                  </Link>
                 </div>
               </div>
             </li>
@@ -175,9 +176,9 @@ export default function TrendingClusters() {
 
       <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
         <div className="text-center">
-          <button
+          <Link
+            href="/trends"
             className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            type="button"
           >
             <svg
               className="mr-2 h-4 w-4 text-gray-400"
@@ -192,8 +193,8 @@ export default function TrendingClusters() {
                 d="M12 6v6m0 0v6m0-6h6m-6 0H6"
               />
             </svg>
-            Create Custom Cluster
-          </button>
+            View all trends
+          </Link>
         </div>
       </div>
     </div>

@@ -1,0 +1,24 @@
+# Optional: run periodically to surface CI failures (e.g. after dependency updates).
+# If the latest run on main failed, this workflow fails so you get a notification.
+name: Check CI status
+on:
+  schedule:
+    - cron: "0 9 * * 1-5" # 9am weekdays
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          LATEST=$(gh run list --limit 1 --json conclusion,status,name --jq '.[0]')
+          echo "$LATEST"
+          STATUS=$(echo "$LATEST" | jq -r '.status')
+          CONC=$(echo "$LATEST" | jq -r '.conclusion')
+          if [[ "$STATUS" == "completed" && "$CONC" == "failure" ]]; then
+            echo "Latest CI run failed. Run 'npm test' locally and fix, or see gh run view --log-failed"
+            exit 1
+          fi
+          echo "CI status: $CONC"
+        env:
+          GH_TOKEN: ${{ github.token }}

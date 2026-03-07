@@ -1,6 +1,9 @@
+import { getServerSession } from "next-auth";
 import { FaEye, FaChartLine, FaUsers, FaArrowRight } from "react-icons/fa";
 
+import DashboardHeader from "@/components/dashboard-header";
 import TrendingClusters from "@/components/trending-clusters";
+import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +45,21 @@ async function getPublicStatistics() {
 }
 
 export default async function PublicTrendsPage() {
+  const session = await getServerSession(authOptions);
+  if (session) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <DashboardHeader session={session} />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Trending Clusters</h2>
+          <p className="text-gray-600 mb-6">
+            Groups of similar developer requirements. Click Analyze trends or View for details.
+          </p>
+          <TrendingClusters />
+        </main>
+      </div>
+    );
+  }
   const statistics = await getPublicStatistics();
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -220,7 +238,7 @@ export default async function PublicTrendsPage() {
                   href="/auth/signin"
                   className="w-full px-4 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center justify-center"
                 >
-                  Start Free Account
+                  Start with GitHub account
                   <FaArrowRight className="ml-2" />
                 </a>
               </div>

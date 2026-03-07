@@ -1,12 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaPlus } from "react-icons/fa";
 
 import { apiClient } from "@/lib/api-client";
 
 export default function SubmitRequirementButton() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    const open = () => setIsModalOpen(true);
+    document.addEventListener("demandpulse-open-submit", open);
+    return () => document.removeEventListener("demandpulse-open-submit", open);
+  }, []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
