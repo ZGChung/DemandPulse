@@ -1,6 +1,5 @@
 import { POST, GET } from "@/app/api/plugin/requirements/route";
 
-// Mock the DataCollectionFlow
 jest.mock("@/services/data-collection-flow", () => {
   return {
     DataCollectionFlow: jest.fn().mockImplementation(() => ({
@@ -31,7 +30,6 @@ jest.mock("@/services/data-collection-flow", () => {
   };
 });
 
-// Mock database service (dynamic import in route)
 jest.mock("@/services/database-service", () => ({
   DatabaseService: jest.fn().mockImplementation(() => ({
     storeRequirement: jest.fn().mockResolvedValue("stored-test-id"),
@@ -39,7 +37,6 @@ jest.mock("@/services/database-service", () => ({
   })),
 }));
 
-// Mock AIProcessingService
 jest.mock("@/services/ai-processing", () => ({
   AIProcessingService: jest.fn().mockImplementation(() => ({
     analyzeRequirement: jest.fn().mockResolvedValue({
@@ -48,12 +45,10 @@ jest.mock("@/services/ai-processing", () => ({
   })),
 }));
 
-// Mock crypto.randomUUID
 jest.mock("crypto", () => ({
   randomUUID: jest.fn().mockReturnValue("mock-uuid"),
 }));
 
-// Helper to create a mock request object
 function createMockRequest(options: {
   method: string;
   url: string;
@@ -76,6 +71,19 @@ function createMockRequest(options: {
   };
 }
 
+const validBody = {
+  requirementId: "test-id",
+  originalRequirement: "Test requirement",
+  summarizedRequirement: "Test summary",
+  context: { conversationId: "conv-id", timestamp: new Date().toISOString() },
+  consent: {
+    requirementId: "test-id",
+    consentedAt: new Date().toISOString(),
+    consentOptions: { dataCollection: true, contact: false, anonymization: true },
+    userProvidedEmail: "",
+  },
+};
+
 describe("Plugin API Endpoint", () => {
   const originalEnv = process.env;
 
@@ -95,120 +103,55 @@ describe("Plugin API Endpoint", () => {
   });
 
   describe("POST /api/plugin/requirements", () => {
-    it("should reject requests without API key", async () => {
+    it("should accept anonymous requests as community submissions", async () => {
       const request = createMockRequest({
         method: "POST",
         url: "http://localhost:3000/api/plugin/requirements",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: {
-          requirementId: "test-id",
-          originalRequirement: "Test requirement",
-          summarizedRequirement: "Test summary",
-          context: {
-            conversationId: "conv-id",
-            timestamp: new Date().toISOString(),
-          },
-          consent: {
-            requirementId: "test-id",
-            consentedAt: new Date().toISOString(),
-            consentOptions: {
-              dataCollection: true,
-              contact: false,
-              anonymization: true,
-            },
-            userProvidedEmail: "",
-          },
-        },
-      });
-
-      const response = await POST(request as any);
-      expect(response.status).toBe(401);
-      const data = await response.json();
-      expect(data.error).toContain("API key");
-    });
-
-    it("should reject requests with invalid API key", async () => {
-      const request = createMockRequest({
-        method: "POST",
-        url: "http://localhost:3000/api/plugin/requirements",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": "wrong-key",
-        },
-        body: {
-          requirementId: "test-id",
-          originalRequirement: "Test requirement",
-          summarizedRequirement: "Test summary",
-          context: {
-            conversationId: "conv-id",
-            timestamp: new Date().toISOString(),
-          },
-          consent: {
-            requirementId: "test-id",
-            consentedAt: new Date().toISOString(),
-            consentOptions: {
-              dataCollection: true,
-              contact: false,
-              anonymization: true,
-            },
-            userProvidedEmail: "",
-          },
-        },
-      });
-
-      const response = await POST(request as any);
-      expect(response.status).toBe(401);
-      const data = await response.json();
-      expect(data.error).toContain("API key");
-    });
-
-    it("should accept valid requests with correct API key", async () => {
-      const request = createMockRequest({
-        method: "POST",
-        url: "http://localhost:3000/api/plugin/requirements",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": "test-plugin-api-key-123",
-        },
-        body: {
-          requirementId: "test-id",
-          originalRequirement: "Test requirement",
-          summarizedRequirement: "Test summary",
-          context: {
-            conversationId: "conv-id",
-            timestamp: new Date().toISOString(),
-          },
-          consent: {
-            requirementId: "test-id",
-            consentedAt: new Date().toISOString(),
-            consentOptions: {
-              dataCollection: true,
-              contact: false,
-              anonymization: true,
-            },
-            userProvidedEmail: "",
-          },
-        },
+        headers: { "Content-Type": "application/json" },
+        body: validBody,
       });
 
       const response = await POST(request as any);
       expect(response.status).toBe(201);
       const data = await response.json();
       expect(data.success).toBe(true);
-      expect(data.requirementId).toBeDefined();
-      expect(data.message).toContain("plugin");
+      expect(data.source).toBe("community-plugin");
+    });
+
+    it("should accept requests with invalid API key as community submissions", async () => {
+      const request = createMockRequest({
+        method: "POST",
+        url: "http://localhost:3000/api/plugin/requirements",
+        headers: { "Content-Type": "application/json", "x-api-key": "wrong-key" },
+        body: validBody,
+      });
+
+      const response = await POST(request as any);
+      expect(response.status).toBe(201);
+      const data = await response.json();
+      expect(data.source).toBe("community-plugin");
+    });
+
+    it("should accept valid requests with correct API key", async () => {
+      const request = createMockRequest({
+        method: "POST",
+        url: "http://localhost:3000/api/plugin/requirements",
+        headers: { "Content-Type": "application/json", "x-api-key": "test-plugin-api-key-123" },
+        body: validBody,
+      });
+
+      const response = await POST(request as any);
+      expect(response.status).toBe(201);
+      const data = await response.json();
+      expect(data.success).toBe(true);
+      expect(data.source).toBe("api-key");
     });
 
     it("should validate request body", async () => {
       const request = createMockRequest({
         method: "POST",
         url: "http://localhost:3000/api/plugin/requirements",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": "test-plugin-api-key-123",
-        },
+        headers: { "Content-Type": "application/json", "x-api-key": "test-plugin-api-key-123" },
         body: {},
       });
 
@@ -234,9 +177,7 @@ describe("Plugin API Endpoint", () => {
       const request = createMockRequest({
         method: "GET",
         url: "http://localhost:3000/api/plugin/requirements",
-        headers: {
-          "x-api-key": "test-plugin-api-key-123",
-        },
+        headers: { "x-api-key": "test-plugin-api-key-123" },
       });
 
       const response = await GET(request as any);
@@ -251,9 +192,7 @@ describe("Plugin API Endpoint", () => {
       const request = createMockRequest({
         method: "GET",
         url: "http://localhost:3000/api/plugin/requirements?count=3",
-        headers: {
-          "x-api-key": "test-plugin-api-key-123",
-        },
+        headers: { "x-api-key": "test-plugin-api-key-123" },
       });
 
       const response = await GET(request as any);
