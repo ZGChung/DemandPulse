@@ -40,7 +40,30 @@
 | `ENABLE_CLAUDE_CODE_PLUGIN` | 是否启用 Claude Code 插件能力  |
 | `ENABLE_AI_PROCESSING`      | 是否启用 AI 处理与聚类         |
 
-## 二、部署前检查清单
+## 二、GitHub OAuth（Vercel 必做）
+
+否则点击「Sign in with GitHub」会跳转到 GitHub 报错或回调 404。
+
+1. **创建 GitHub OAuth App**  
+   GitHub → Settings → Developer settings → OAuth Apps → New OAuth App。
+   - Application name: 任意（如 DemandPulse）
+   - Homepage URL: `https://demand-pulse.vercel.app`（或你的生产域名）
+   - Authorization callback URL: **必须为** `https://demand-pulse.vercel.app/api/auth/callback/github`（与 `NEXTAUTH_URL` 一致，且无多余空格）
+
+2. **拿到 Client ID 和 Client Secret**  
+   创建后复制 Client ID 和生成一个 Client secret。
+
+3. **在 Vercel 里配置**  
+   Project → Settings → Environment Variables，添加：
+   - `GITHUB_ID` = 上一步的 Client ID（不要填 `test` 或占位符）
+   - `GITHUB_SECRET` = 上一步的 Client secret
+   - `NEXTAUTH_URL` = `https://demand-pulse.vercel.app`（与 callback 同源）
+   - `NEXTAUTH_SECRET` = 随机字符串（如 `openssl rand -base64 32`）
+
+4. **重新部署**  
+   保存变量后触发一次 Redeploy，使新环境变量生效。
+
+## 三、部署前检查清单（其他）
 
 - [ ] `NEXTAUTH_SECRET`、`NEXTAUTH_URL`、`NEXT_PUBLIC_APP_URL` 已设置且 URL 一致
 - [ ] `DATABASE_URL` 指向生产数据库（已执行迁移或 `prisma db push`）
@@ -49,7 +72,7 @@
 - [ ] 若使用 Vercel Cron：在 Vercel 中配置 `CRON_SECRET`，与请求头或查询参数一致
 - [ ] 敏感变量未提交到代码库，仅通过平台环境或密钥管理配置
 
-## 三、部署方式简述
+## 四、部署方式简述
 
 - **Vercel**：在 Project Settings → Environment Variables 中配置上述变量，部署分支触发构建。
 - **Docker**：使用 `docker compose up --build` 时通过 `env_file: .env` 或 `environment` 注入；镜像内不打包 `.env`。

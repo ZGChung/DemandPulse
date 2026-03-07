@@ -7,6 +7,11 @@ jest.mock("@/lib/prisma", () => ({
   prisma: null,
 }));
 
+beforeAll(() => {
+  process.env.GITHUB_ID = "test-client-id-for-jest";
+  process.env.GITHUB_SECRET = "test-client-secret-for-jest";
+});
+
 jest.mock("@auth/prisma-adapter", () => ({
   PrismaAdapter: jest.fn(),
 }));

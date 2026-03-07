@@ -4,13 +4,27 @@ import GitHubProvider from "next-auth/providers/github";
 
 import { prisma } from "@/lib/prisma";
 
+const GITHUB_ID = process.env.GITHUB_ID?.trim() || "";
+const GITHUB_SECRET = process.env.GITHUB_SECRET?.trim() || "";
+const isProduction = process.env.NODE_ENV === "production";
+const isPlaceholder = (v: string) => !v || v === "test" || /your_|example|placeholder/i.test(v);
+const isGitHubConfigured =
+  GITHUB_ID.length > 0 &&
+  GITHUB_SECRET.length > 0 &&
+  !isPlaceholder(GITHUB_ID) &&
+  !isPlaceholder(GITHUB_SECRET);
+
 export const authOptions: NextAuthOptions = {
   adapter: prisma ? PrismaAdapter(prisma) : undefined,
   providers: [
-    GitHubProvider({
-      clientId: process.env.GITHUB_ID!,
-      clientSecret: process.env.GITHUB_SECRET!,
-    }),
+    ...(isGitHubConfigured
+      ? [
+          GitHubProvider({
+            clientId: GITHUB_ID,
+            clientSecret: GITHUB_SECRET,
+          }),
+        ]
+      : []),
   ],
   session: {
     strategy: "jwt",

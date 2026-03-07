@@ -11,11 +11,13 @@ function AuthErrorContent() {
   const getErrorMessage = (error: string | null) => {
     switch (error) {
       case "Configuration":
-        return "There is a problem with the server configuration.";
+        return "GitHub sign-in is not configured. In Vercel (or your host), set GITHUB_ID and GITHUB_SECRET from your GitHub OAuth App. In the app, set Authorization callback URL to: [your-site]/api/auth/callback/github. See doc/PRODUCTION_ENV.md.";
       case "AccessDenied":
         return "Access denied. You do not have permission to sign in.";
       case "Verification":
         return "The verification link is invalid or has expired.";
+      case "github":
+        return "GitHub sign-in failed. Ensure GITHUB_ID and GITHUB_SECRET in Vercel match your GitHub OAuth App, and the callback URL is exactly [your-site]/api/auth/callback/github.";
       default:
         return "An error occurred during authentication.";
     }
