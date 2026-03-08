@@ -2,6 +2,28 @@
 
 The app uses PostgreSQL in production (Vercel) with Prisma 7 and the `@prisma/adapter-pg` adapter. Set `DATABASE_URL` to your Neon (or any Postgres) connection string.
 
+## Production (Vercel): Create tables in Neon once
+
+If you see **"The table \`public.User\` does not exist"** in Vercel logs, the Neon database has no tables yet. Run this **once** from your machine (with your Neon URL in `DATABASE_URL` or inline):
+
+```bash
+# Use the same DATABASE_URL as on Vercel (from Vercel project → Settings → Environment Variables)
+npx prisma db push
+```
+
+If you use `.env.local` with your Neon URL, `npx prisma db push` will use it. That creates all tables (User, Account, Session, Requirement, etc.) in Neon. After that, the app will work.
+
+### Optional: SSL warning in logs
+
+If you see a warning about `sslmode` and future pg v9 changes, you can add to your connection string either:
+
+- `sslmode=verify-full` (recommended), or
+- `uselibpqcompat=true&sslmode=require`
+
+Example: `...neon.tech/demandpulse?sslmode=require&connect_timeout=30` → `...neon.tech/demandpulse?sslmode=verify-full&connect_timeout=30`
+
+---
+
 This guide walks you through setting up a Neon PostgreSQL database for the DemandPulse project.
 
 ## Option 1: Create a Neon PostgreSQL Database (Recommended)

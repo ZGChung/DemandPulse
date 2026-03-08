@@ -22,7 +22,12 @@ function createPrismaClient(): PrismaClient | null {
     // PostgreSQL: use @prisma/adapter-pg (required in Prisma 7 for serverless/Vercel)
     const { PrismaPg } = require("@prisma/adapter-pg");
     const { Pool } = require("pg");
-    const pool = new Pool({ connectionString: databaseUrl });
+    // Use verify-full to avoid pg driver warning about sslmode=require/prefer/verify-ca in future pg v9
+    const connectionString = databaseUrl.replace(
+      /([?&])sslmode=(require|prefer|verify-ca)(&|$)/gi,
+      (_, p, __, end) => `${p}sslmode=verify-full${end}`
+    );
+    const pool = new Pool({ connectionString });
     const adapter = new PrismaPg(pool);
     return new PrismaClient({ adapter, log: logLevel } as Prisma.PrismaClientOptions);
   }
