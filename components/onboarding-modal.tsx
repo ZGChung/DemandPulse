@@ -2,21 +2,136 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { FaChartLine, FaUpload, FaEye, FaRocket, FaTimes } from "react-icons/fa";
+
+import { useLocale } from "@/components/LocaleProvider";
 
 const ONBOARDING_KEY = "demandpulse_onboarding_completed";
 
 export default function OnboardingModal() {
   const router = useRouter();
+  const { t } = useLocale();
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
 
+  const steps = useMemo(
+    () => [
+      {
+        title: t("onboarding.welcomeTitle"),
+        icon: <FaRocket className="text-blue-500 text-2xl" />,
+        description: t("onboarding.welcomeDesc"),
+        content: (
+          <div className="space-y-4">
+            <p className="text-gray-600">{t("onboarding.welcomeContent1")}</p>
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <p className="text-blue-800 text-sm font-medium">{t("onboarding.welcomeHelp")}</p>
+              <ul className="text-blue-700 text-sm mt-2 list-disc list-inside space-y-1">
+                <li>{t("onboarding.welcomeHelp1")}</li>
+                <li>{t("onboarding.welcomeHelp2")}</li>
+                <li>{t("onboarding.welcomeHelp3")}</li>
+              </ul>
+            </div>
+          </div>
+        ),
+      },
+      {
+        title: t("onboarding.discoverTitle"),
+        icon: <FaChartLine className="text-green-500 text-2xl" />,
+        description: t("onboarding.discoverDesc"),
+        content: (
+          <div className="space-y-4">
+            <p className="text-gray-600">{t("onboarding.discoverContent")}</p>
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <div className="text-sm font-medium text-gray-900">
+                  {t("onboarding.recentReqs")}
+                </div>
+                <div className="text-xs text-gray-600 mt-1">{t("onboarding.recentReqsDesc")}</div>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <div className="text-sm font-medium text-gray-900">
+                  {t("trendingClusters.title")}
+                </div>
+                <div className="text-xs text-gray-600 mt-1">{t("onboarding.spotPatterns")}</div>
+              </div>
+            </div>
+          </div>
+        ),
+      },
+      {
+        title: t("onboarding.contributeTitle"),
+        icon: <FaUpload className="text-purple-500 text-2xl" />,
+        description: t("onboarding.contributeDesc"),
+        content: (
+          <div className="space-y-4">
+            <p className="text-gray-600">{t("onboarding.contributeContent")}</p>
+            <div className="border border-purple-200 bg-purple-50 p-4 rounded-lg">
+              <p className="text-purple-800 text-sm font-medium">
+                {t("onboarding.contributeWhat")}
+              </p>
+              <ul className="text-purple-700 text-sm mt-2 list-disc list-inside space-y-1">
+                <li>{t("onboarding.contributeWhat1")}</li>
+                <li>{t("onboarding.contributeWhat2")}</li>
+                <li>{t("onboarding.contributeWhat3")}</li>
+              </ul>
+            </div>
+            <p className="text-gray-600 text-sm">{t("onboarding.contributeAnon")}</p>
+          </div>
+        ),
+      },
+      {
+        title: t("onboarding.privacyTitle"),
+        icon: <FaEye className="text-orange-500 text-2xl" />,
+        description: t("onboarding.privacyDesc"),
+        content: (
+          <div className="space-y-4">
+            <p className="text-gray-600">{t("onboarding.privacyIntro")}</p>
+            <div className="space-y-3">
+              <div className="flex items-start">
+                <div className="flex-shrink-0 h-5 w-5 flex items-center justify-center rounded-full bg-orange-100 text-orange-600">
+                  <FaEye className="text-xs" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">
+                    {t("onboarding.optInConsent")}
+                  </p>
+                  <p className="text-xs text-gray-600">{t("onboarding.optInDesc")}</p>
+                </div>
+              </div>
+              <div className="flex items-start">
+                <div className="flex-shrink-0 h-5 w-5 flex items-center justify-center rounded-full bg-orange-100 text-orange-600">
+                  <FaEye className="text-xs" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">
+                    {t("onboarding.anonymization")}
+                  </p>
+                  <p className="text-xs text-gray-600">{t("onboarding.anonymizationDesc")}</p>
+                </div>
+              </div>
+              <div className="flex items-start">
+                <div className="flex-shrink-0 h-5 w-5 flex items-center justify-center rounded-full bg-orange-100 text-orange-600">
+                  <FaEye className="text-xs" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">
+                    {t("onboarding.dataRetention")}
+                  </p>
+                  <p className="text-xs text-gray-600">{t("onboarding.dataRetentionDesc")}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ),
+      },
+    ],
+    [t]
+  );
+
   useEffect(() => {
-    // Check if onboarding has been completed
     const hasCompleted = localStorage.getItem(ONBOARDING_KEY) === "true";
     if (!hasCompleted) {
-      // Small delay to ensure page is loaded
       const timer = setTimeout(() => setIsOpen(true), 1000);
       return () => clearTimeout(timer);
     }
@@ -45,119 +160,6 @@ export default function OnboardingModal() {
   const handleSkip = () => {
     handleComplete(false);
   };
-
-  const steps = [
-    {
-      title: "Welcome to DemandPulse!",
-      icon: <FaRocket className="text-blue-500 text-2xl" />,
-      description:
-        "See what developers are building in real-time by aggregating needs from AI coding workflows.",
-      content: (
-        <div className="space-y-4">
-          <p className="text-gray-600">
-            You're now part of a network of developers sharing insights about what they're building
-            with AI assistants like Claude Code.
-          </p>
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <p className="text-blue-800 text-sm font-medium">Your contributions help:</p>
-            <ul className="text-blue-700 text-sm mt-2 list-disc list-inside space-y-1">
-              <li>Identify emerging trends and technologies</li>
-              <li>Spot market opportunities before competitors</li>
-              <li>Learn from thousands of developers worldwide</li>
-            </ul>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: "Discover Trends",
-      icon: <FaChartLine className="text-green-500 text-2xl" />,
-      description: "See real-time demand signals from the developer community.",
-      content: (
-        <div className="space-y-4">
-          <p className="text-gray-600">
-            The dashboard shows aggregated requirements organized by category, popularity, and
-            recency.
-          </p>
-          <div className="grid grid-cols-2 gap-3 mt-4">
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <div className="text-sm font-medium text-gray-900">Recent Requirements</div>
-              <div className="text-xs text-gray-600 mt-1">
-                See what others are building right now
-              </div>
-            </div>
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <div className="text-sm font-medium text-gray-900">Trending Clusters</div>
-              <div className="text-xs text-gray-600 mt-1">Spot emerging patterns</div>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: "Contribute Requirements",
-      icon: <FaUpload className="text-purple-500 text-2xl" />,
-      description: "Share your own requirements to help the community.",
-      content: (
-        <div className="space-y-4">
-          <p className="text-gray-600">
-            Use the <span className="font-semibold">"Submit Requirement"</span> button in the header
-            to share requirements you encounter while using Claude Code or other AI tools.
-          </p>
-          <div className="border border-purple-200 bg-purple-50 p-4 rounded-lg">
-            <p className="text-purple-800 text-sm font-medium">What to share:</p>
-            <ul className="text-purple-700 text-sm mt-2 list-disc list-inside space-y-1">
-              <li>Technical requirements you ask Claude to implement</li>
-              <li>Pain points you're trying to solve</li>
-              <li>Tools or features you need</li>
-            </ul>
-          </div>
-          <p className="text-gray-600 text-sm">
-            All submissions are anonymized by default and you control what you share.
-          </p>
-        </div>
-      ),
-    },
-    {
-      title: "Privacy First",
-      icon: <FaEye className="text-orange-500 text-2xl" />,
-      description: "Full control over your data.",
-      content: (
-        <div className="space-y-4">
-          <p className="text-gray-600">DemandPulse is built with privacy as a core principle:</p>
-          <div className="space-y-3">
-            <div className="flex items-start">
-              <div className="flex-shrink-0 h-5 w-5 flex items-center justify-center rounded-full bg-orange-100 text-orange-600">
-                <FaEye className="text-xs" />
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">Opt-in Consent</p>
-                <p className="text-xs text-gray-600">You choose exactly what to share</p>
-              </div>
-            </div>
-            <div className="flex items-start">
-              <div className="flex-shrink-0 h-5 w-5 flex items-center justify-center rounded-full bg-orange-100 text-orange-600">
-                <FaEye className="text-xs" />
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">Anonymization</p>
-                <p className="text-xs text-gray-600">Personal data is removed by default</p>
-              </div>
-            </div>
-            <div className="flex items-start">
-              <div className="flex-shrink-0 h-5 w-5 flex items-center justify-center rounded-full bg-orange-100 text-orange-600">
-                <FaEye className="text-xs" />
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">Data Retention Control</p>
-                <p className="text-xs text-gray-600">You decide how long your data is kept</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-  ];
 
   if (!isOpen) return null;
 
@@ -202,7 +204,7 @@ export default function OnboardingModal() {
                   className={`h-2 w-2 rounded-full transition-colors ${
                     index === currentStep ? "bg-blue-600" : "bg-gray-300"
                   }`}
-                  aria-label={`Go to step ${index + 1}`}
+                  aria-label={`${t("onboarding.goToStep")} ${index + 1}`}
                 />
               ))}
             </div>
@@ -218,7 +220,7 @@ export default function OnboardingModal() {
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
-                Previous
+                {t("onboarding.previous")}
               </button>
 
               <div className="flex items-center space-x-3">
@@ -226,7 +228,7 @@ export default function OnboardingModal() {
                   onClick={handleSkip}
                   className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  Skip Tour
+                  {t("onboarding.skipTour")}
                 </button>
                 {currentStep === steps.length - 1 ? (
                   <Link
@@ -235,14 +237,14 @@ export default function OnboardingModal() {
                     className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors inline-flex items-center gap-2"
                   >
                     <FaRocket className="text-sm" />
-                    View Trends
+                    {t("onboarding.viewTrends")}
                   </Link>
                 ) : (
                   <button
                     onClick={handleNext}
                     className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-2"
                   >
-                    Next
+                    {t("onboarding.next")}
                   </button>
                 )}
               </div>

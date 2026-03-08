@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { FaShareAlt } from "react-icons/fa";
 
-const UNDER_DEV_MSG = "Under development";
+import { useLocale } from "@/components/LocaleProvider";
 
 interface ClusterItem {
   id: string;
@@ -93,6 +93,7 @@ async function getClusters(): Promise<ClusterItem[]> {
 
 export default function TrendingClusters() {
   const [clusters, setClusters] = useState<ClusterItem[]>([]);
+  const { t } = useLocale();
 
   useEffect(() => {
     getClusters().then(setClusters);
@@ -100,7 +101,7 @@ export default function TrendingClusters() {
 
   const showUnderDev = () => {
     if (typeof globalThis !== "undefined" && "alert" in globalThis) {
-      (globalThis as { alert: (s: string) => void }).alert(UNDER_DEV_MSG);
+      (globalThis as { alert: (s: string) => void }).alert(t("trendingClusters.underDev"));
     }
   };
 
@@ -108,7 +109,7 @@ export default function TrendingClusters() {
     const text = `Check out this trending developer need: ${cluster.name} - ${cluster.description}. Discover more on DemandPulse!`;
     try {
       await navigator.clipboard.writeText(text);
-      alert("Copied to clipboard!");
+      (globalThis as { alert?: (s: string) => void }).alert?.(t("trendingClusters.copied"));
     } catch (err) {
       console.error("Failed to copy:", err);
     }
@@ -118,17 +119,17 @@ export default function TrendingClusters() {
     <div className="bg-white shadow rounded-lg">
       <div className="px-6 py-5 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Trending Clusters</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t("trendingClusters.title")}</h3>
           <button
             type="button"
             onClick={showUnderDev}
-            title={UNDER_DEV_MSG}
+            title={t("trendingClusters.underDev")}
             className="text-sm font-medium text-gray-400 cursor-not-allowed"
           >
             Analyze trends →
           </button>
         </div>
-        <p className="mt-1 text-sm text-gray-500">Groups of similar developer requirements</p>
+        <p className="mt-1 text-sm text-gray-500">{t("trendingClusters.subtitle")}</p>
       </div>
 
       <div className="flow-root">
@@ -168,7 +169,7 @@ export default function TrendingClusters() {
                   <button
                     onClick={() => handleShare(cluster)}
                     className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
-                    title="Share this trend"
+                    title={t("trendingClusters.shareTitle")}
                     type="button"
                   >
                     <FaShareAlt className="w-4 h-4" />
@@ -176,7 +177,7 @@ export default function TrendingClusters() {
                   <button
                     type="button"
                     onClick={showUnderDev}
-                    title={UNDER_DEV_MSG}
+                    title={t("trendingClusters.underDev")}
                     className="text-sm font-medium text-gray-400 cursor-not-allowed"
                   >
                     View
@@ -193,7 +194,7 @@ export default function TrendingClusters() {
           <button
             type="button"
             onClick={showUnderDev}
-            title={UNDER_DEV_MSG}
+            title={t("trendingClusters.underDev")}
             className="inline-flex items-center px-4 py-2 border border-gray-200 shadow-sm text-sm font-medium rounded-md text-gray-400 bg-gray-100 cursor-not-allowed"
           >
             <svg
@@ -214,7 +215,7 @@ export default function TrendingClusters() {
           <button
             type="button"
             onClick={showUnderDev}
-            title={UNDER_DEV_MSG}
+            title={t("trendingClusters.underDev")}
             className="inline-flex items-center px-4 py-2 border border-gray-200 shadow-sm text-sm font-medium rounded-md text-gray-400 bg-gray-100 cursor-not-allowed hover:bg-gray-100"
           >
             <svg

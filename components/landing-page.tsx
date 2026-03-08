@@ -203,7 +203,7 @@ export default function LandingPage({ stats }: { stats?: LandingStats | null }) 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
-              <span className="text-xl font-bold text-gray-900">DemandPulse</span>
+              <span className="text-xl font-bold text-gray-900">{t("common.brand")}</span>
               <p className="text-gray-600 text-sm mt-1">{t("footer.tagline")}</p>
             </div>
             <div className="flex items-center space-x-6">
@@ -214,7 +214,7 @@ export default function LandingPage({ stats }: { stats?: LandingStats | null }) 
                 {t("footer.terms")}
               </a>
               <a href="#" className="text-gray-600 hover:text-gray-900 text-sm">
-                GitHub
+                {t("footer.github")}
               </a>
               <a href="#" className="text-gray-600 hover:text-gray-900 text-sm">
                 {t("footer.contact")}
@@ -222,7 +222,7 @@ export default function LandingPage({ stats }: { stats?: LandingStats | null }) 
             </div>
           </div>
           <div className="mt-8 text-center text-gray-500 text-sm">
-            © {new Date().getFullYear()} DemandPulse. {t("footer.copyright")}
+            © {new Date().getFullYear()} {t("common.brand")}. {t("footer.copyright")}
           </div>
         </div>
       </footer>

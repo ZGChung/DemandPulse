@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { FaShareAlt, FaUserFriends, FaTrophy, FaCopy } from "react-icons/fa";
 
+import { useLocale } from "@/components/LocaleProvider";
 import { referralService } from "@/services/referral-service";
 
 interface ReferralWidgetProps {
@@ -23,6 +24,7 @@ export default function ReferralWidget({
   userName: _userName,
   userEmail,
 }: ReferralWidgetProps) {
+  const { t } = useLocale();
   const [referralCode, setReferralCode] = useState<string>("");
   const [referralLink, setReferralLink] = useState<string>("");
   const [stats, setStats] = useState<ReferralStats | null>(null);
@@ -76,7 +78,7 @@ export default function ReferralWidget({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "Join DemandPulse",
+          title: t("referral.joinTitle"),
           text: message,
           url: referralLink,
         });
@@ -84,11 +86,10 @@ export default function ReferralWidget({
         console.log("Share cancelled or failed:", err);
       }
     } else {
-      // Fallback to clipboard
       await navigator.clipboard.writeText(message);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-      alert("Referral message copied to clipboard! Share it with your friends.");
+      alert(t("referral.copiedShare"));
     }
   };
 

@@ -4,20 +4,21 @@ import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Suspense } from "react";
 
+import { useLocale } from "@/components/LocaleProvider";
+
 function SignInForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const { t } = useLocale();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to DemandPulse
+            {t("auth.signinTitle")}
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Track and analyze Claude Code requirements
-          </p>
+          <p className="mt-2 text-center text-sm text-gray-600">{t("auth.signinSubtitle")}</p>
         </div>
         <div className="mt-8 space-y-6">
           <button
@@ -37,11 +38,11 @@ function SignInForm() {
                 />
               </svg>
             </span>
-            Sign in with GitHub
+            {t("auth.signInWithGitHub")}
           </button>
 
           <div className="text-center text-sm text-gray-600">
-            <p>By signing in, you agree to our Terms of Service and Privacy Policy.</p>
+            <p>{t("auth.termsNote")}</p>
           </div>
         </div>
       </div>
@@ -50,10 +51,13 @@ function SignInForm() {
 }
 
 export default function SignInPage() {
+  const { t } = useLocale();
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">Loading...</div>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          {t("auth.loading")}
+        </div>
       }
     >
       <SignInForm />

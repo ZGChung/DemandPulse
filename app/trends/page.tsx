@@ -3,6 +3,7 @@ import { FaEye, FaChartLine, FaUsers, FaArrowRight } from "react-icons/fa";
 
 import DashboardHeader from "@/components/dashboard-header";
 import TrendingClusters from "@/components/trending-clusters";
+import TrendsPageIntro from "@/components/trends-page-intro";
 import { authOptions } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -51,10 +52,7 @@ export default async function PublicTrendsPage() {
       <div className="min-h-screen bg-gray-50">
         <DashboardHeader session={session} />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Trending Clusters</h2>
-          <p className="text-gray-600 mb-6">
-            Groups of similar developer requirements. Click Analyze trends or View for details.
-          </p>
+          <TrendsPageIntro />
           <TrendingClusters />
         </main>
       </div>

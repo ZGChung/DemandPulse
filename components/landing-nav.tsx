@@ -15,7 +15,7 @@ export default function LandingNav() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-14 sm:h-16">
           <div className="flex items-center">
-            <span className="text-xl sm:text-2xl font-bold text-gray-900">DemandPulse</span>
+            <span className="text-xl sm:text-2xl font-bold text-gray-900">{t("common.brand")}</span>
             <span className="ml-2 px-2 py-0.5 sm:py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
               {t("nav.beta")}
             </span>
@@ -59,7 +59,7 @@ export default function LandingNav() {
             onClick={() => setOpen((o) => !o)}
             className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100"
             aria-expanded={open}
-            aria-label="Toggle menu"
+            aria-label={t("common.toggleMenu")}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {open ? (
