@@ -46,6 +46,23 @@ export default async function ConnectPluginPage() {
           contribute to real-time demand signals.
         </p>
 
+        {session?.user?.email && (
+          <section className="mb-10 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h2 className="text-sm font-semibold text-blue-900 mb-1">
+              Your DemandPulse account (for linking)
+            </h2>
+            <p className="text-sm text-gray-700">
+              When the plugin asks, use this so submissions count under your account:{" "}
+              <strong className="text-gray-900">{session.user.email}</strong>
+              {session.user.name && (
+                <span className="block mt-1 text-gray-600">
+                  or your username: <strong className="text-gray-900">{session.user.name}</strong>
+                </span>
+              )}
+            </p>
+          </section>
+        )}
+
         <section className="mb-10">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">1. Install the plugin</h2>
           <p className="text-gray-600 mb-3">In your terminal (with Claude Code installed), run:</p>
@@ -71,8 +88,9 @@ export default async function ConnectPluginPage() {
           </pre>
           <p className="text-gray-600 mt-3">
             Claude will extract and summarize the requirement, show you the summary for
-            confirmation, then submit it anonymously to the DemandPulse community. No API keys or
-            config required.
+            confirmation, then submit to the DemandPulse community. When prompted, enter your
+            DemandPulse account (email or username above) to link submissions to your account, or
+            skip to submit anonymously. No API keys required.
           </p>
         </section>
 

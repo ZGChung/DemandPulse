@@ -37,6 +37,7 @@ export const requirementSubmissionSchema = z.object({
   summarizedRequirement: z.string().min(1, "Summarized requirement text is required"),
   context: claudeCodeContextSchema,
   consent: userConsentSchema,
+  demandpulseAccount: z.string().trim().optional(),
 });
 
 // Type inference from schemas

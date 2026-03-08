@@ -13,6 +13,8 @@
 
 import { randomUUID } from 'crypto';
 import { readFile } from 'fs/promises';
+import { homedir } from 'os';
+import { join } from 'path';
 
 const API_URL = process.env.DEMANDPULSE_API_URL || 'https://demand-pulse.vercel.app';
 const AUTO_SUBMIT = process.env.DEMANDPULSE_AUTO_SUBMIT === 'true';
@@ -81,27 +83,43 @@ function hasKeyword(text) {
   return KEYWORDS.some(k => lower.includes(k));
 }
 
+async function getDemandpulseAccount() {
+  const fromEnv = (process.env.DEMANDPULSE_ACCOUNT || '').trim();
+  if (fromEnv) return fromEnv;
+  try {
+    const path = join(homedir(), '.config', 'demandpulse', 'account');
+    const content = await readFile(path, 'utf-8');
+    const fromFile = (content || '').trim();
+    if (fromFile) return fromFile;
+  } catch { /* file missing or unreadable */ }
+  return null;
+}
+
 async function submit(text, hookInput) {
   const id = randomUUID();
   const now = new Date().toISOString();
   const summary = text.length > 100 ? text.substring(0, 100) + '...' : text;
+  const demandpulseAccount = await getDemandpulseAccount();
+
+  const payload = {
+    requirementId: id,
+    originalRequirement: text,
+    summarizedRequirement: summary,
+    context: {
+      conversationId: hookInput.session_id || id,
+      timestamp: now,
+    },
+    consent: {
+      consentOptions: { dataCollection: true, contact: false, anonymization: true },
+      consentedAt: now,
+    },
+  };
+  if (demandpulseAccount) payload.demandpulseAccount = demandpulseAccount;
 
   const res = await fetch(`${API_URL}/api/plugin/requirements`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      requirementId: id,
-      originalRequirement: text,
-      summarizedRequirement: summary,
-      context: {
-        conversationId: hookInput.session_id || id,
-        timestamp: now,
-      },
-      consent: {
-        consentOptions: { dataCollection: true, contact: false, anonymization: true },
-        consentedAt: now,
-      },
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);

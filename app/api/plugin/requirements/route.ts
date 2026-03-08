@@ -126,6 +126,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const rawAccount = validatedData.demandpulseAccount?.trim();
+    const demandpulseAccount =
+      rawAccount && rawAccount.length > 0 ? rawAccount.toLowerCase() : null;
+
+    let linkedUserId: string | null = null;
+    if (demandpulseAccount) {
+      try {
+        const { prisma } = await import("@/lib/prisma");
+        if (prisma) {
+          const user = await prisma.user.findFirst({
+            where: {
+              OR: [
+                { email: { equals: demandpulseAccount, mode: "insensitive" } },
+                { name: { equals: demandpulseAccount, mode: "insensitive" } },
+              ],
+            },
+            select: { id: true },
+          });
+          if (user) linkedUserId = user.id;
+        }
+      } catch (err) {
+        apiLogger.warn("[Plugin] demandpulseAccount lookup failed", {
+          error: (err as Error).message,
+        });
+      }
+    }
+
     let storedRequirementId: string;
     const databaseUrl = process.env.DATABASE_URL || "";
     const source = authMode === "community" ? "community-plugin" : "api-key";
@@ -135,12 +162,13 @@ export async function POST(request: NextRequest) {
       apiLogger.info("[Plugin] Requirement collected (SQLite mock)", {
         id: storedRequirementId,
         source,
+        linkedUserId: linkedUserId ?? undefined,
       });
     } else {
       try {
         const { DatabaseService } = await import("@/services/database-service");
         const databaseService = new DatabaseService();
-        const pluginUserId = "plugin-user-" + randomUUID().slice(0, 8);
+        const pluginUserId = linkedUserId ?? "plugin-user-" + randomUUID().slice(0, 8);
 
         storedRequirementId = await databaseService.storeRequirement(
           result.collectedRequirement!,
@@ -185,6 +213,7 @@ export async function POST(request: NextRequest) {
         apiLogger.info("[Plugin] Requirement stored", {
           id: storedRequirementId,
           source,
+          linkedUserId: linkedUserId ?? undefined,
         });
       } catch (error) {
         apiLogger.error("[Plugin] Failed to store requirement", {
