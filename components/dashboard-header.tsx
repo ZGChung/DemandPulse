@@ -17,7 +17,6 @@ const navItems = [
   { href: "/trends", labelKey: "nav.trends" },
   { href: "/", labelKey: "nav.dashboard" },
   { href: "/requirements", labelKey: "nav.requirements" },
-  { href: "/teams", labelKey: "nav.teams" },
 ] as const;
 
 export default function DashboardHeader({ session }: DashboardHeaderProps) {

@@ -115,12 +115,6 @@ describe("Middleware", () => {
       expect(url.pathname).toBe("/api/requirements");
     });
 
-    it("should identify organization routes", () => {
-      const pathname = "/api/organizations/123/requirements";
-      const isOrgRoute = pathname.startsWith("/api/organizations/");
-      expect(isOrgRoute).toBe(true);
-    });
-
     it("should identify admin routes", () => {
       const pathname = "/api/admin/users";
       const isAdminRoute = pathname.startsWith("/api/admin/");

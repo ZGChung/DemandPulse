@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth";
 
 import DashboardHeader from "@/components/dashboard-header";
-import MyTeamsWidget from "@/components/my-teams-widget";
 import OnboardingModal from "@/components/onboarding-modal";
 import PersonalInsights from "@/components/personal-insights";
 import RecentRequirements from "@/components/recent-requirements";
