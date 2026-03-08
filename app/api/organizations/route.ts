@@ -63,6 +63,17 @@ export async function POST(request: NextRequest) {
       { status: 409 }
     );
   }
+  // Ensure user exists (e.g. JWT session may reference user created elsewhere or before DB was ready)
+  await prisma.user.upsert({
+    where: { id: session.user.id },
+    create: {
+      id: session.user.id,
+      name: session.user.name ?? null,
+      email: session.user.email ?? null,
+      image: session.user.image ?? null,
+    },
+    update: {},
+  });
   const org = await prisma.organization.create({
     data: {
       name: body.name,

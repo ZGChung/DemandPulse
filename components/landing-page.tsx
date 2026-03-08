@@ -33,10 +33,6 @@ export default function LandingPage({ stats }: { stats?: LandingStats | null }) 
       ? `${formatStat(stats.totalRequirements)} ${t("social.requirementsSuffix")}`
       : t("social.requirementsAnalyzed")
     : t("social.requirementsInsights");
-  const ctaCopy =
-    stats && stats.totalUsers > 0
-      ? `${t("cta.joinCountPrefix")}${formatStat(stats.totalUsers) || stats.totalUsers}${t("cta.joinCountSuffix")}`
-      : t("cta.joinNetwork");
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -49,9 +45,10 @@ export default function LandingPage({ stats }: { stats?: LandingStats | null }) 
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6">
               {t("hero.title")} <span className="text-blue-600">{t("hero.titleHighlight")}</span>
             </h1>
-            <p className="text-base sm:text-xl text-gray-600 mb-10 max-w-3xl mx-auto px-1">
-              {t("hero.subtitle")}
-            </p>
+            <div className="text-base sm:text-xl text-gray-600 mb-10 max-w-3xl mx-auto px-1">
+              <p>{t("hero.subtitle")}</p>
+              {t("hero.subtitleLine2") ? <p className="mt-1">{t("hero.subtitleLine2")}</p> : null}
+            </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/auth/signin"
@@ -172,29 +169,6 @@ export default function LandingPage({ stats }: { stats?: LandingStats | null }) 
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 bg-gray-900">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-white mb-6">{t("cta.title")}</h2>
-          <p className="text-gray-300 mb-10 text-lg">{ctaCopy}</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/auth/signin"
-              className="px-8 py-4 bg-white text-gray-900 font-semibold rounded-lg hover:bg-gray-100 transition-colors text-lg"
-            >
-              {t("cta.getStarted")}
-            </Link>
-            <Link
-              href="/#how-it-works"
-              className="px-8 py-4 bg-transparent text-white font-semibold rounded-lg border border-gray-600 hover:bg-gray-800 transition-colors text-lg"
-            >
-              {t("cta.learnMore")}
-            </Link>
-          </div>
-          <p className="mt-8 text-gray-400 text-sm">{t("cta.footer")}</p>
         </div>
       </section>
 
