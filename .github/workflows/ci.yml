@@ -188,7 +188,7 @@ jobs:
         continue-on-error: true
 
       - name: Check license compliance
-        run: npx license-checker --summary
+        run: npx license-checker-evergreen --summary
         continue-on-error: true
 
       - name: Check for secrets
