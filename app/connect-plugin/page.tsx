@@ -14,11 +14,6 @@ export const metadata = {
 
 export default async function ConnectPluginPage() {
   const session = await getServerSession(authOptions);
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.NEXTAUTH_URL ||
-    "https://demand-pulse.vercel.app";
-  const trendsUrl = `${baseUrl.replace(/\/$/, "")}/trends`;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -88,14 +83,12 @@ export default async function ConnectPluginPage() {
           <p className="text-gray-600 mb-4">
             View aggregated trends and clusters from the community:
           </p>
-          <a
-            href={trendsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/trends"
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700"
           >
             Open public trends →
-          </a>
+          </Link>
         </section>
 
         <section className="mb-10">
@@ -107,15 +100,6 @@ export default async function ConnectPluginPage() {
             <li>Data is only sent after you confirm</li>
           </ul>
         </section>
-
-        <div className="pt-6 border-t border-gray-200">
-          <Link
-            href={session ? "/" : "/landing"}
-            className="text-blue-600 hover:text-blue-800 font-medium"
-          >
-            ← Back to {session ? "Dashboard" : "home"}
-          </Link>
-        </div>
       </main>
     </div>
   );
