@@ -5,7 +5,6 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 const databaseUrl = process.env.DATABASE_URL || "";
-// Only skip creating the client during Next.js build (no DB available). At Vercel runtime we need the client.
 const isBuild = process.env.NEXT_PHASE === "phase-production-build";
 
 function createPrismaClient(): PrismaClient | null {
@@ -14,24 +13,22 @@ function createPrismaClient(): PrismaClient | null {
   const logLevel: Prisma.LogLevel[] =
     process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"];
 
-  if (databaseUrl.startsWith("file:")) {
-    // SQLite — requires adapter in Prisma 7
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const Database = require("better-sqlite3");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { PrismaBetterSqlite3 } = require("@prisma/adapter-better-sqlite3");
-    const dbPath = databaseUrl.replace("file:", "").replace("./", "prisma/");
-    const sqlite = new Database(dbPath);
-    const adapter = new PrismaBetterSqlite3(sqlite);
-    return new PrismaClient({ adapter, log: logLevel } as Prisma.PrismaClientOptions);
-  }
-
+  // Prisma 7 with engine type "client" requires adapter or accelerateUrl
   if (databaseUrl.includes("prisma+postgres://")) {
     return new PrismaClient({ accelerateUrl: databaseUrl, log: logLevel });
   }
 
-  // Standard PostgreSQL — works natively with Prisma 7 client engine
-  return new PrismaClient({ log: logLevel });
+  if (databaseUrl.startsWith("postgresql://") || databaseUrl.startsWith("postgres://")) {
+    // PostgreSQL: use @prisma/adapter-pg (required in Prisma 7 for serverless/Vercel)
+    const { PrismaPg } = require("@prisma/adapter-pg");
+    const { Pool } = require("pg");
+    const pool = new Pool({ connectionString: databaseUrl });
+    const adapter = new PrismaPg(pool);
+    return new PrismaClient({ adapter, log: logLevel } as Prisma.PrismaClientOptions);
+  }
+
+  // Schema is now PostgreSQL-only; file:/SQLite not supported with this client
+  return null;
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();

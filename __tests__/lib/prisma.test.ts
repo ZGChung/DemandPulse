@@ -1,40 +1,35 @@
-import { PrismaClient } from "@prisma/client";
-
-// Mock prisma module for testing
-jest.mock("@prisma/client", () => ({
-  PrismaClient: jest.fn().mockImplementation(() => ({
-    $connect: jest.fn().mockResolvedValue(undefined),
-    $disconnect: jest.fn().mockResolvedValue(undefined),
-  })),
-}));
-
 describe("prisma", () => {
-  let prisma: PrismaClient;
+  const originalEnv = process.env;
 
-  beforeAll(async () => {
-    // Import after mocking
-    const prismaModule = await import("../../lib/prisma");
-    prisma = prismaModule.prisma as PrismaClient;
+  beforeAll(() => {
+    process.env.DATABASE_URL = "postgresql://user:pass@localhost:5432/testdb";
+    delete (globalThis as unknown as { prisma?: unknown }).prisma;
   });
 
-  afterAll(async () => {
-    if (prisma) {
-      await prisma.$disconnect();
-    }
+  afterAll(() => {
+    process.env = originalEnv;
   });
 
-  it("should export a PrismaClient instance", () => {
+  it("should export a PrismaClient instance when DATABASE_URL is postgres", async () => {
+    const { prisma } = await import("../../lib/prisma");
     expect(prisma).toBeDefined();
-    expect(prisma.$connect).toBeDefined();
-    expect(prisma.$disconnect).toBeDefined();
+    expect(prisma).not.toBeNull();
+    expect(typeof (prisma as { $connect?: unknown }).$connect).toBe("function");
+    expect(typeof (prisma as { $disconnect?: unknown }).$disconnect).toBe("function");
   });
 
   it("should be able to connect", async () => {
-    await expect(prisma.$connect()).resolves.not.toThrow();
+    const { prisma } = await import("../../lib/prisma");
+    if (prisma) {
+      await expect(prisma.$connect()).resolves.not.toThrow();
+    }
   });
 
   it("should be able to disconnect", async () => {
-    await expect(prisma.$disconnect()).resolves.not.toThrow();
+    const { prisma } = await import("../../lib/prisma");
+    if (prisma) {
+      await expect(prisma.$disconnect()).resolves.not.toThrow();
+    }
   });
 });
 
@@ -52,260 +47,90 @@ describe("prisma configuration - PostgreSQL", () => {
     if (originalDatabaseUrl !== undefined) {
       process.env.DATABASE_URL = originalDatabaseUrl;
     }
+    delete (globalThis as unknown as { prisma?: unknown }).prisma;
   });
 
-  it("should handle PostgreSQL URL configuration", async () => {
+  it("should create client for PostgreSQL URL", async () => {
     process.env.DATABASE_URL = "postgresql://user:pass@localhost:5432/db";
-    Object.defineProperty(process.env, "NODE_ENV", { value: "development" });
-
-    // Clear the global prisma instance to force re-initialization
-    const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null | undefined };
-    delete globalForPrisma.prisma;
 
     const { prisma } = await import("../../lib/prisma");
     expect(prisma).toBeDefined();
+    expect(prisma).not.toBeNull();
   });
 
-  it("should handle Prisma Data Platform URL", async () => {
+  it("should create client for Prisma Data Platform URL", async () => {
     process.env.DATABASE_URL =
       "prisma+postgres://abcd1234@aws.connect.prisma-data.com/?api_key=your_api_key";
-    Object.defineProperty(process.env, "NODE_ENV", { value: "development" });
-
-    // Clear the global prisma instance to force re-initialization
-    const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null | undefined };
-    delete globalForPrisma.prisma;
 
     const { prisma } = await import("../../lib/prisma");
     expect(prisma).toBeDefined();
+    expect(prisma).not.toBeNull();
   });
 });
 
 describe("prisma build-time initialization", () => {
-  let originalEnv: NodeJS.ProcessEnv;
-  let originalDatabaseUrl: string | undefined;
-
-  beforeEach(() => {
-    originalEnv = { ...process.env };
-    originalDatabaseUrl = process.env.DATABASE_URL;
-  });
-
-  afterEach(() => {
-    process.env = originalEnv;
-    if (originalDatabaseUrl !== undefined) {
-      process.env.DATABASE_URL = originalDatabaseUrl;
-    }
-  });
-
   it("should skip initialization during production build phase", async () => {
+    const prevPhase = process.env.NEXT_PHASE;
+    const prevNodeEnv = process.env.NODE_ENV;
     process.env.NEXT_PHASE = "phase-production-build";
-    Object.defineProperty(process.env, "NODE_ENV", { value: "production" });
+    process.env.NODE_ENV = "production";
     process.env.DATABASE_URL = "postgresql://user:pass@localhost:5432/db";
-
-    // Clear the global prisma instance to force re-initialization
-    const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null | undefined };
-    delete globalForPrisma.prisma;
-
-    // This tests the build-time initialization skip logic
-    expect(process.env.NEXT_PHASE).toBe("phase-production-build");
+    delete (globalThis as unknown as { prisma?: unknown }).prisma;
+    jest.resetModules();
+    const { prisma } = await import("../../lib/prisma");
+    expect(prisma).toBeNull();
+    process.env.NEXT_PHASE = prevPhase;
+    process.env.NODE_ENV = prevNodeEnv;
   });
 });
 
-describe("prisma SQLite configuration", () => {
+describe("prisma - schema is PostgreSQL only", () => {
   let originalEnv: NodeJS.ProcessEnv;
-  let originalDatabaseUrl: string | undefined;
 
   beforeEach(() => {
     originalEnv = { ...process.env };
-    originalDatabaseUrl = process.env.DATABASE_URL;
+    delete (globalThis as unknown as { prisma?: unknown }).prisma;
+    jest.resetModules();
   });
 
   afterEach(() => {
     process.env = originalEnv;
-    if (originalDatabaseUrl !== undefined) {
-      process.env.DATABASE_URL = originalDatabaseUrl;
-    }
   });
 
-  it("should configure for SQLite database", async () => {
+  it("should return null for file: URL (SQLite not supported with current schema)", async () => {
     process.env.DATABASE_URL = "file:./dev.db";
-    Object.defineProperty(process.env, "NODE_ENV", { value: "development" });
-
-    // Clear the global prisma instance
-    const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null | undefined };
-    delete globalForPrisma.prisma;
 
     const { prisma } = await import("../../lib/prisma");
-    expect(prisma).toBeDefined();
+    expect(prisma).toBeNull();
   });
 
-  it("should handle SQLite with relative path", async () => {
-    process.env.DATABASE_URL = "file:../relative/path/to/db";
-    Object.defineProperty(process.env, "NODE_ENV", { value: "development" });
-
-    const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null | undefined };
-    delete globalForPrisma.prisma;
-
-    const { prisma } = await import("../../lib/prisma");
-    expect(prisma).toBeDefined();
-  });
-});
-
-describe("prisma production configuration", () => {
-  let originalEnv: NodeJS.ProcessEnv;
-  let originalDatabaseUrl: string | undefined;
-
-  beforeEach(() => {
-    originalEnv = { ...process.env };
-    originalDatabaseUrl = process.env.DATABASE_URL;
-  });
-
-  afterEach(() => {
-    process.env = originalEnv;
-    if (originalDatabaseUrl !== undefined) {
-      process.env.DATABASE_URL = originalDatabaseUrl;
-    }
-  });
-
-  it("should use minimal logging in production", async () => {
-    process.env.DATABASE_URL = "file:./dev.db";
-    Object.defineProperty(process.env, "NODE_ENV", { value: "production" });
-
-    const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null | undefined };
-    delete globalForPrisma.prisma;
-
-    const { prisma } = await import("../../lib/prisma");
-    expect(prisma).toBeDefined();
-  });
-
-  it("should handle production with PostgreSQL and file URL", async () => {
-    process.env.DATABASE_URL = "file:./prod.db";
-    Object.defineProperty(process.env, "NODE_ENV", { value: "production" });
-
-    const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null | undefined };
-    delete globalForPrisma.prisma;
-
-    const { prisma } = await import("../../lib/prisma");
-    expect(prisma).toBeDefined();
-  });
-});
-
-describe("prisma environment handling", () => {
-  let originalEnv: NodeJS.ProcessEnv;
-
-  beforeEach(() => {
-    originalEnv = { ...process.env };
-  });
-
-  afterEach(() => {
-    process.env = originalEnv;
-  });
-
-  it("should handle missing DATABASE_URL", async () => {
+  it("should return null when DATABASE_URL is missing", async () => {
     delete process.env.DATABASE_URL;
-    Object.defineProperty(process.env, "NODE_ENV", { value: "development" });
-
-    const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null | undefined };
-    delete globalForPrisma.prisma;
 
     const { prisma } = await import("../../lib/prisma");
-    expect(prisma).toBeDefined();
+    expect(prisma).toBeNull();
   });
 });
 
 describe("prisma accelerateUrl configuration", () => {
   let originalEnv: NodeJS.ProcessEnv;
-  let originalDatabaseUrl: string | undefined;
 
   beforeEach(() => {
     originalEnv = { ...process.env };
-    originalDatabaseUrl = process.env.DATABASE_URL;
+    delete (globalThis as unknown as { prisma?: unknown }).prisma;
+    jest.resetModules();
   });
 
   afterEach(() => {
     process.env = originalEnv;
-    if (originalDatabaseUrl !== undefined) {
-      process.env.DATABASE_URL = originalDatabaseUrl;
-    }
   });
 
-  it("should set accelerateUrl for Prisma Data Platform", async () => {
+  it("should create client for Prisma Data Platform", async () => {
     process.env.DATABASE_URL =
       "prisma+postgres://abcd1234@aws.connect.prisma-data.com/?api_key=test";
-    Object.defineProperty(process.env, "NODE_ENV", { value: "development" });
-
-    const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null | undefined };
-    delete globalForPrisma.prisma;
 
     const { prisma } = await import("../../lib/prisma");
     expect(prisma).toBeDefined();
-  });
-});
-
-describe("prisma build phase handling", () => {
-  let originalEnv: NodeJS.ProcessEnv;
-
-  beforeEach(() => {
-    originalEnv = { ...process.env };
-  });
-
-  afterEach(() => {
-    process.env = originalEnv;
-  });
-
-  it("should return null during build phase", () => {
-    process.env.NEXT_PHASE = "phase-production-build";
-    process.env.NODE_ENV = "production";
-    process.env.DATABASE_URL = "postgresql://user:pass@localhost:5432/db";
-
-    const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null | undefined };
-    delete globalForPrisma.prisma;
-
-    expect(process.env.NEXT_PHASE).toBe("phase-production-build");
-  });
-
-  it("should handle production with non-file database URL", () => {
-    process.env.NODE_ENV = "production";
-    process.env.DATABASE_URL = "postgresql://user:pass@localhost:5432/db";
-
-    const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null | undefined };
-    delete globalForPrisma.prisma;
-
-    // This should trigger isBuild = true
-    expect(process.env.DATABASE_URL?.startsWith("file:")).toBe(false);
-  });
-});
-
-describe("prisma global assignment", () => {
-  let originalEnv: NodeJS.ProcessEnv;
-
-  beforeEach(() => {
-    originalEnv = { ...process.env };
-  });
-
-  afterEach(() => {
-    process.env = originalEnv;
-  });
-
-  it("should assign prisma to global in non-production", async () => {
-    process.env.DATABASE_URL = "file:./test.db";
-    Object.defineProperty(process.env, "NODE_ENV", { value: "development" });
-
-    const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null | undefined };
-    delete globalForPrisma.prisma;
-
-    const { prisma } = await import("../../lib/prisma");
-    // In non-production, global should be assigned
-    expect(prisma).toBeDefined();
-  });
-
-  it("should not assign to global in production", async () => {
-    process.env.DATABASE_URL = "file:./test.db";
-    Object.defineProperty(process.env, "NODE_ENV", { value: "production" });
-
-    const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null | undefined };
-    delete globalForPrisma.prisma;
-
-    const { prisma } = await import("../../lib/prisma");
-    expect(prisma).toBeDefined();
+    expect(prisma).not.toBeNull();
   });
 });

@@ -1,5 +1,7 @@
 # Neon PostgreSQL Database Setup for DemandPulse
 
+The app uses PostgreSQL in production (Vercel) with Prisma 7 and the `@prisma/adapter-pg` adapter. Set `DATABASE_URL` to your Neon (or any Postgres) connection string.
+
 This guide walks you through setting up a Neon PostgreSQL database for the DemandPulse project.
 
 ## Option 1: Create a Neon PostgreSQL Database (Recommended)
