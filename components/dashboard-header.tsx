@@ -15,8 +15,7 @@ interface DashboardHeaderProps {
 
 const navItems = [
   { href: "/trends", labelKey: "nav.trends" },
-  { href: "/", labelKey: "nav.dashboard" },
-  { href: "/requirements", labelKey: "nav.requirements" },
+  { href: "/", labelKey: "nav.myRequirements" },
 ] as const;
 
 export default function DashboardHeader({ session }: DashboardHeaderProps) {
@@ -49,14 +48,12 @@ export default function DashboardHeader({ session }: DashboardHeaderProps) {
 
             <SubmitRequirementButton />
 
-            <a
-              href="https://docs.anthropic.com/en/docs/claude-code/plugins"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/connect-plugin"
               className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
             >
               {t("common.connectClaudeCode")}
-            </a>
+            </Link>
           </div>
         </div>
 

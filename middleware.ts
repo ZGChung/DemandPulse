@@ -50,7 +50,13 @@ function isPublicRoute(req: NextRequest): boolean {
   }
 
   // Public pages — allow unauthenticated access so middleware never blocks or throws on these
-  if (pathname === "/" || pathname === "/landing" || pathname.startsWith("/auth/")) {
+  if (
+    pathname === "/" ||
+    pathname === "/landing" ||
+    pathname === "/connect-plugin" ||
+    pathname === "/trends" ||
+    pathname.startsWith("/auth/")
+  ) {
     return true;
   }
 

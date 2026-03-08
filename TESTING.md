@@ -131,7 +131,7 @@ See `scripts/test-e2e-flow.js` for automated end-to-end testing.
 
 - **Fallback**: Dashboard components use mock data when API fails
 - **Purpose**: Allow frontend testing without database
-- **Implementation**: See `components/requirement-stats.tsx` and `components/recent-requirements.tsx`
+- **Implementation**: See `components/my-requirements-view.tsx` and `components/my-requirements-list.tsx`
 
 ### 3. Mock API Endpoints
 
