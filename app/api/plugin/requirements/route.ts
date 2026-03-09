@@ -188,6 +188,7 @@ export async function POST(request: NextRequest) {
                 storedRequirementId,
                 analysis.embeddings
               );
+              await databaseService.updateRequirementStatus(storedRequirementId, "PROCESSED");
               try {
                 const { prisma } = await import("@/lib/prisma");
                 if (prisma) {
