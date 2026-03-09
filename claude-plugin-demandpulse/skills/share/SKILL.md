@@ -41,7 +41,10 @@ Wait for the user to confirm before proceeding.
 Before submitting, determine the **DemandPulse account** (GitHub email or username the user uses to sign in at demand-pulse.vercel.app):
 
 1. **Read from environment or file**  
-   Run in Bash:
+   **First, tell the user in chat (before running any command):**  
+   _"Checking for a saved DemandPulse account on your machine (from a config file or environment variable) so we can link this submission to your account."_  
+   This avoids surprising or intimidating non-technical users when a Bash command runs.  
+   Then run in Bash:
 
    ```bash
    ACCOUNT=$(cat ~/.config/demandpulse/account 2>/dev/null || echo "$DEMANDPULSE_ACCOUNT"); echo "${ACCOUNT:-}"

@@ -4,8 +4,11 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { FaTrophy, FaStar, FaChartLine, FaUpload } from "react-icons/fa";
 
+import { useLocale } from "@/components/LocaleProvider";
+
 export default function PersonalInsights() {
-  const [contributionCount, setContributionCount] = useState<number>(0);
+  const { t } = useLocale();
+  const [requirementCount, setRequirementCount] = useState<number>(0);
   const [clusters, setClusters] = useState<
     { id: string; name: string; requirementCount: number }[]
   >([]);
@@ -23,16 +26,16 @@ export default function PersonalInsights() {
       if (!res.ok) throw new Error("Failed to load insights");
       const json = await res.json();
       if (json.success && json.data) {
-        setContributionCount(json.data.contributionCount ?? 0);
+        setRequirementCount(json.data.contributionCount ?? 0);
         setClusters(json.data.clusters ?? []);
       } else {
-        setContributionCount(0);
+        setRequirementCount(0);
         setClusters([]);
       }
     } catch (err) {
       console.error("Failed to fetch insights:", err);
-      setError("Could not load contribution data");
-      setContributionCount(0);
+      setError("Could not load requirements");
+      setRequirementCount(0);
       setClusters([]);
     } finally {
       setLoading(false);
@@ -40,37 +43,37 @@ export default function PersonalInsights() {
   };
 
   const getBadge = () => {
-    if (contributionCount === 0) {
+    if (requirementCount === 0) {
       return null;
     }
-    if (contributionCount === 1) {
+    if (requirementCount === 1) {
       return {
         icon: <FaStar className="text-yellow-500" />,
-        title: "First Contribution",
-        description: "You've made your first contribution!",
+        title: t("dashboard.badgeFirst"),
+        description: t("dashboard.badgeFirstDesc"),
         color: "bg-yellow-100 text-yellow-800",
       };
     }
-    if (contributionCount >= 5 && contributionCount < 10) {
+    if (requirementCount >= 5 && requirementCount < 10) {
       return {
         icon: <FaChartLine className="text-green-500" />,
-        title: "Active Contributor",
-        description: "5+ contributions to the community",
+        title: t("dashboard.badgeActive"),
+        description: t("dashboard.badgeActiveDesc"),
         color: "bg-green-100 text-green-800",
       };
     }
-    if (contributionCount >= 10) {
+    if (requirementCount >= 10) {
       return {
         icon: <FaTrophy className="text-purple-500" />,
-        title: "Community Leader",
-        description: "10+ contributions - thank you!",
+        title: t("dashboard.badgeLeader"),
+        description: t("dashboard.badgeLeaderDesc"),
         color: "bg-purple-100 text-purple-800",
       };
     }
     return {
       icon: <FaUpload className="text-blue-500" />,
-      title: "Contributor",
-      description: `${contributionCount} contributions so far`,
+      title: t("dashboard.badgeContributor"),
+      description: t("dashboard.badgeContributorDesc").replace("{count}", String(requirementCount)),
       color: "bg-blue-100 text-blue-800",
     };
   };
@@ -110,8 +113,10 @@ export default function PersonalInsights() {
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Your Contributions</h3>
-          <p className="text-sm text-gray-500">Track your impact on the community</p>
+          <h3 className="text-lg font-semibold text-gray-900">
+            {t("dashboard.requirementsCardTitle")}
+          </h3>
+          <p className="text-sm text-gray-500">{t("dashboard.requirementsCardSubtitle")}</p>
         </div>
         {badge && (
           <div
@@ -124,39 +129,39 @@ export default function PersonalInsights() {
       </div>
 
       <div className="space-y-6">
-        {/* Contribution count */}
         <div>
           <div className="flex items-baseline justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">Requirements Submitted</span>
-            <span className="text-2xl font-bold text-gray-900">{contributionCount}</span>
+            <span className="text-sm font-medium text-gray-700">
+              {t("dashboard.requirementsSubmitted")}
+            </span>
+            <span className="text-2xl font-bold text-gray-900">{requirementCount}</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
               className="bg-blue-600 h-2 rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(contributionCount * 10, 100)}%` }}
+              style={{ width: `${Math.min(requirementCount * 10, 100)}%` }}
             />
           </div>
           <p className="text-xs text-gray-500 mt-2">
-            {contributionCount === 0
-              ? "Submit your first requirement to start contributing"
-              : contributionCount === 1
-                ? "Great start! Keep sharing requirements."
-                : contributionCount < 5
-                  ? `${5 - contributionCount} more to become an Active Contributor`
-                  : contributionCount < 10
-                    ? `${10 - contributionCount} more to become a Community Leader`
-                    : "Thank you for being a top contributor!"}
+            {requirementCount === 0
+              ? t("dashboard.firstRequirement")
+              : requirementCount === 1
+                ? t("dashboard.keepSharing")
+                : requirementCount < 5
+                  ? t("dashboard.moreToActive").replace("{n}", String(5 - requirementCount))
+                  : requirementCount < 10
+                    ? t("dashboard.moreToLeader").replace("{n}", String(10 - requirementCount))
+                    : t("dashboard.thankYouContributor")}
           </p>
         </div>
 
-        {/* Milestones */}
         <div>
           <h4 className="text-sm font-medium text-gray-900 mb-3">Milestones</h4>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { target: 1, label: "First", achieved: (contributionCount || 0) >= 1 },
-              { target: 5, label: "Active", achieved: (contributionCount || 0) >= 5 },
-              { target: 10, label: "Leader", achieved: (contributionCount || 0) >= 10 },
+              { target: 1, label: "First", achieved: (requirementCount || 0) >= 1 },
+              { target: 5, label: "Active", achieved: (requirementCount || 0) >= 5 },
+              { target: 10, label: "Leader", achieved: (requirementCount || 0) >= 10 },
             ].map((milestone) => (
               <div
                 key={milestone.target}
@@ -219,12 +224,9 @@ export default function PersonalInsights() {
           </div>
         )}
 
-        {/* Call to action */}
-        {contributionCount === 0 && (
+        {requirementCount === 0 && (
           <div className="p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-blue-800 font-medium mb-2">
-              Ready to make your first contribution?
-            </p>
+            <p className="text-sm text-blue-800 font-medium mb-2">{t("dashboard.readyFirst")}</p>
             <p className="text-xs text-blue-700 mb-3">
               Share a requirement you've worked on recently to help the community spot trends.
             </p>
@@ -237,11 +239,10 @@ export default function PersonalInsights() {
           </div>
         )}
 
-        {/* Community impact */}
         <div className="pt-4 border-t border-gray-200">
           <p className="text-sm text-gray-600">
-            <span className="font-medium">Community impact:</span> Each requirement you share helps
-            developers identify emerging trends and build better tools.
+            <span className="font-medium">{t("dashboard.communityImpact")}</span>{" "}
+            {t("dashboard.communityImpactDesc")}
           </p>
         </div>
       </div>

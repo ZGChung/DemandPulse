@@ -65,12 +65,12 @@ export default async function ConnectPluginPage() {
 
         <section className="mb-10">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">1. Install the plugin</h2>
-          <p className="text-gray-600 mb-3">In your terminal (with Claude Code installed), run:</p>
+          <p className="text-gray-600 mb-3">In Claude Code, run:</p>
           <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm font-mono">
             /plugin install demandpulse
           </pre>
           <p className="text-gray-500 text-sm mt-2">
-            Or load from a local clone:{" "}
+            Or from this repo (run from the DemandPulse repo root):{" "}
             <code className="bg-gray-200 px-1 rounded">
               claude --plugin-dir ./claude-plugin-demandpulse
             </code>
@@ -87,10 +87,11 @@ export default async function ConnectPluginPage() {
             /demandpulse:share
           </pre>
           <p className="text-gray-600 mt-3">
-            Claude will extract and summarize the requirement, show you the summary for
-            confirmation, then submit to the DemandPulse community. When prompted, enter your
-            DemandPulse account (email or username above) to link submissions to your account, or
-            skip to submit anonymously. No API keys required.
+            Claude will tell you it is checking for a saved DemandPulse account on your machine
+            (from a config file or environment variable), then extract and summarize the
+            requirement, show you the summary for confirmation, and submit to the DemandPulse
+            community. When prompted, enter your DemandPulse account (email or username above) to
+            link submissions to your account, or skip to submit anonymously. No API keys required.
           </p>
         </section>
 

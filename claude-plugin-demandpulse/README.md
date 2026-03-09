@@ -2,17 +2,31 @@
 
 Share developer requirements with the DemandPulse community — zero config by default.
 
-## Install
+**Requirements:** Claude Code 1.0.33 or later. Run `claude --version` to check.
+
+## Install (recommended)
+
+**Option A — From the plugin marketplace (if available)**  
+In Claude Code, run:
 
 ```bash
 /plugin install demandpulse
 ```
 
-Or load from source:
+**Option B — Load from source**  
+From the DemandPulse repo root (the directory that contains `claude-plugin-demandpulse/`), run:
 
 ```bash
 claude --plugin-dir ./claude-plugin-demandpulse
 ```
+
+Or with an absolute path so the plugin is always found:
+
+```bash
+claude --plugin-dir "$(pwd)/claude-plugin-demandpulse"
+```
+
+Then in Claude Code, run **`/demandpulse:share`** after a conversation where you discuss a feature, bug, or improvement.
 
 ## Usage
 
@@ -69,12 +83,31 @@ If you have set `DEMANDPULSE_ACCOUNT` or saved your account to `~/.config/demand
 ```
 claude-plugin-demandpulse/
 ├── .claude-plugin/plugin.json    # Plugin manifest
+├── commands/share.md             # Slash command (same as skill)
 ├── hooks/hooks.json              # Stop hook (for optional auto-submit)
-├── skills/submit-requirement/
+├── skills/share/
 │   └── SKILL.md                  # /demandpulse:share skill
 ├── bin/hook-handler.mjs          # Hook handler
 └── README.md
 ```
+
+## Troubleshooting: `/demandpulse:share` not found
+
+If the slash command is not recognized after loading the plugin with `--plugin-dir`:
+
+1. **Run from the repo root** — `claude --plugin-dir ./claude-plugin-demandpulse` must be run from the directory that contains `claude-plugin-demandpulse/`.
+2. **Use an absolute path** — `claude --plugin-dir "$(pwd)/claude-plugin-demandpulse"` (from that same root).
+3. **Restart Claude Code** fully (quit and relaunch) after changing the plugin.
+4. **Check `/help`** — look for `demandpulse` or `demandpulse:share` in the list.
+
+If the command still does not appear, some Claude Code versions have known issues with plugin slash commands when using `--plugin-dir`. As a **fallback**, add the skill as a personal skill so you can use **`/share`** (same behavior):
+
+```bash
+mkdir -p ~/.claude/skills
+ln -s "$(pwd)/claude-plugin-demandpulse/skills/share" ~/.claude/skills/share
+```
+
+Run the above from the DemandPulse repo root. Then in Claude Code use **`/share`** instead of `/demandpulse:share`.
 
 ## License
 

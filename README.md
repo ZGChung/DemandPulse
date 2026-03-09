@@ -7,7 +7,20 @@ DemandPulse aggregates and analyzes developer needs from AI coding workflows, pr
 ## 🚀 Live Demo
 
 - **Production**: https://demand-pulse.vercel.app
+- **Connect plugin**: https://demand-pulse.vercel.app/connect-plugin — install the Claude Code plugin and link submissions to your account
 - **GitHub Actions**: CI/CD pipeline with automated testing and deployment
+
+## 🔌 Connect Claude Code (plugin)
+
+Requirements are collected from Claude Code via the DemandPulse plugin. You do **not** need to run the app locally; the plugin talks to the live site by default.
+
+1. **Install** (in Claude Code): `/plugin install demandpulse`  
+   Or from this repo (run from repo root): `claude --plugin-dir ./claude-plugin-demandpulse`
+2. **Share a requirement**: In a conversation, run **`/demandpulse:share`**.
+3. When prompted, enter your DemandPulse account (GitHub email or username) to link the submission to your account; or skip to submit anonymously.
+4. View your submissions and trends at https://demand-pulse.vercel.app (My requirements and Trends).
+
+Submissions go to the **live** database and appear on the site once processed.
 
 ## 📋 Features
 
@@ -35,6 +48,10 @@ DemandPulse aggregates and analyzes developer needs from AI coding workflows, pr
 - 🔄 Developer opt-in connection layer
 - 🔄 B2B subscription dashboard
 - 🔄 API for demand intelligence
+
+## 📐 Design note (requirement vs contribution)
+
+In the backend there is only one concept: **requirement** (one row in the `Requirement` table per submission). In the UI we often say **contribution** (“You have contributed X requirements”) to emphasize that the user is contributing to the community; the count is still the number of requirements linked to that user. See [doc/DESIGN.md](doc/DESIGN.md) for details.
 
 ## 🏗️ Architecture
 

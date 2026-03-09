@@ -15,7 +15,7 @@ export default function MyRequirementsView() {
   }, []);
 
   const count = stats?.total ?? 0;
-  const summaryText = t("dashboard.contributedCount").replace("{count}", String(count));
+  const summaryText = t("dashboard.requirementCount").replace("{count}", String(count));
 
   return (
     <>

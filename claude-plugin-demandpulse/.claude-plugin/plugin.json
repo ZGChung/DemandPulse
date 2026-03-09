@@ -1,5 +1,7 @@
 {
   "name": "demandpulse",
+  "commands": "./commands",
+  "skills": "./skills",
   "description": "Share developer requirements with the DemandPulse community. Use /demandpulse:share to contribute what you're building to the public trends dashboard — zero config, fully anonymous.",
   "version": "2.0.0",
   "author": {

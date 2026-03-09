@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 
+import { useLocale } from "@/components/LocaleProvider";
 import { apiClient, Requirement } from "@/lib/api-client";
 
 export default function RecentRequirements() {
+  const { t } = useLocale();
   const [requirements, setRequirements] = useState<Requirement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error] = useState<string | null>(null);
@@ -100,13 +102,13 @@ export default function RecentRequirements() {
   const getStatusText = (status: string) => {
     switch (status) {
       case "processed":
-        return "Processed";
+        return t("status.processed");
       case "clustered":
-        return "Clustered";
+        return t("status.clustered");
       case "pending":
-        return "Pending";
+        return t("status.pending");
       default:
-        return "Unknown";
+        return status;
     }
   };
 
@@ -256,6 +258,11 @@ export default function RecentRequirements() {
                         className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
                           req.status.toLowerCase()
                         )}`}
+                        title={
+                          req.status.toLowerCase() === "pending"
+                            ? t("status.pendingHint")
+                            : undefined
+                        }
                       >
                         {getStatusText(req.status.toLowerCase())}
                       </span>

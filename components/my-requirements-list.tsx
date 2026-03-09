@@ -2,14 +2,10 @@
 
 import { useCallback, useEffect, useState, useRef } from "react";
 
+import { useLocale } from "@/components/LocaleProvider";
 import { apiClient, Requirement } from "@/lib/api-client";
 
 const PAGE_SIZE = 20;
-const STATUS_OPTIONS = [
-  { value: "", label: "All" },
-  { value: "pending", label: "Pending" },
-  { value: "processed", label: "Processed" },
-];
 
 function downloadCsv(requirements: Requirement[]) {
   const headers = ["Summary", "Status", "Submitted"];
@@ -38,7 +34,16 @@ interface MyRequirementsListProps {
   onStats?: (stats: MyRequirementsStats) => void;
 }
 
+function getStatusDisplay(status: string, t: (k: string) => string) {
+  const s = status.toLowerCase();
+  if (s === "pending") return { label: t("status.pending"), hint: t("status.pendingHint") };
+  if (s === "processed") return { label: t("status.processed"), hint: "" };
+  if (s === "clustered") return { label: t("status.clustered"), hint: "" };
+  return { label: status, hint: "" };
+}
+
 export default function MyRequirementsList({ onStats }: MyRequirementsListProps) {
+  const { t } = useLocale();
   const [all, setAll] = useState<Requirement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +51,12 @@ export default function MyRequirementsList({ onStats }: MyRequirementsListProps)
   const [page, setPage] = useState(0);
   const onStatsRef = useRef(onStats);
   onStatsRef.current = onStats;
+
+  const STATUS_OPTIONS = [
+    { value: "", label: "All" },
+    { value: "pending", label: t("status.pending") },
+    { value: "processed", label: t("status.processed") },
+  ];
 
   const fetchAll = useCallback(async () => {
     try {
@@ -178,17 +189,23 @@ export default function MyRequirementsList({ onStats }: MyRequirementsListProps)
                       {r.summarizedRequirement || r.originalRequirement?.slice(0, 120) || "—"}
                     </td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
-                          r.status.toLowerCase() === "processed"
-                            ? "bg-green-100 text-green-800"
-                            : r.status.toLowerCase() === "pending"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {r.status}
-                      </span>
+                      {(() => {
+                        const { label, hint } = getStatusDisplay(r.status, t);
+                        return (
+                          <span
+                            className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
+                              r.status.toLowerCase() === "processed"
+                                ? "bg-green-100 text-green-800"
+                                : r.status.toLowerCase() === "pending"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-gray-100 text-gray-800"
+                            }`}
+                            title={hint || undefined}
+                          >
+                            {label}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500">
                       {new Date(r.createdAt).toLocaleDateString()}
