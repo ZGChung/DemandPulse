@@ -27,12 +27,13 @@ describe("Env Module", () => {
       expect(validateEnv()).toBe(true);
     });
 
-    it("should throw when required env vars are missing", async () => {
+    it("should not throw when only MINIMAX is set (no required vars)", async () => {
       process.env.DEEPSEEK_API_KEY = undefined;
+      process.env.MINIMAX_API_KEY = "minimax-key";
       jest.resetModules();
 
       const { validateEnv } = await import("@/lib/env");
-      expect(() => validateEnv()).toThrow("Missing required environment variables");
+      expect(() => validateEnv()).not.toThrow();
     });
   });
 
@@ -47,12 +48,12 @@ describe("Env Module", () => {
       expect(getEnv("DATABASE_URL", "default-db")).toBe("postgresql://localhost:5432/test");
     });
 
-    it("should throw for missing required env var", async () => {
+    it("should return empty string for missing optional env var when no default", async () => {
       process.env.DEEPSEEK_API_KEY = undefined;
       jest.resetModules();
 
       const { getEnv } = await import("@/lib/env");
-      expect(() => getEnv("DEEPSEEK_API_KEY")).toThrow();
+      expect(getEnv("DEEPSEEK_API_KEY")).toBe("");
     });
   });
 

@@ -13,6 +13,8 @@
   "nav.settings": "Settings",
   "dashboard.myRequirementsTitle": "My requirements",
   "dashboard.requirementCount": "You have {count} requirements.",
+  "dashboard.requirementUnitOne": "requirement",
+  "dashboard.requirementUnitMany": "requirements",
   "dashboard.requirementsCardTitle": "Your requirements",
   "dashboard.requirementsCardSubtitle": "Track your submitted requirements",
   "dashboard.requirementsSubmitted": "Requirements submitted",

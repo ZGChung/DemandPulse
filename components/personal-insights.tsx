@@ -111,16 +111,18 @@ export default function PersonalInsights() {
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">
-            {t("dashboard.requirementsCardTitle")}
-          </h3>
-          <p className="text-sm text-gray-500">{t("dashboard.requirementsCardSubtitle")}</p>
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <div className="flex items-baseline gap-2 min-w-0">
+          <span className="text-2xl font-bold text-gray-900">{requirementCount}</span>
+          <span className="text-sm text-gray-500">
+            {requirementCount === 1
+              ? t("dashboard.requirementUnitOne")
+              : t("dashboard.requirementUnitMany")}
+          </span>
         </div>
         {badge && (
           <div
-            className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 ${badge.color}`}
+            className={`shrink-0 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 ${badge.color}`}
           >
             {badge.icon}
             {badge.title}
@@ -128,13 +130,10 @@ export default function PersonalInsights() {
         )}
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-5">
         <div>
-          <div className="flex items-baseline justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">
-              {t("dashboard.requirementsSubmitted")}
-            </span>
-            <span className="text-2xl font-bold text-gray-900">{requirementCount}</span>
+          <div className="flex items-baseline justify-between mb-1">
+            <span className="text-xs text-gray-500">Submitted</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div

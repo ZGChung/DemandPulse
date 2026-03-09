@@ -13,15 +13,14 @@ describe("Environment Validation", () => {
   });
 
   describe("validateEnv", () => {
-    it("should throw error when required env vars are missing", () => {
+    it("should not throw when no required env vars (DEEPSEEK/MINIMAX optional)", () => {
       delete process.env.DEEPSEEK_API_KEY;
+      delete process.env.MINIMAX_API_KEY;
 
-      expect(() => validateEnv()).toThrow(
-        "Missing required environment variables: DEEPSEEK_API_KEY"
-      );
+      expect(() => validateEnv()).not.toThrow();
     });
 
-    it("should not throw when all required env vars are present", () => {
+    it("should not throw when DEEPSEEK or MINIMAX is set", () => {
       process.env.DEEPSEEK_API_KEY = "sk-test-key";
 
       expect(() => validateEnv()).not.toThrow();
@@ -48,11 +47,9 @@ describe("Environment Validation", () => {
       expect(getEnv("DATABASE_URL")).toBe("test-value");
     });
 
-    it("should throw for missing required env var", () => {
+    it("should return empty string for missing optional env var", () => {
       delete process.env.DEEPSEEK_API_KEY;
-      expect(() => getEnv("DEEPSEEK_API_KEY")).toThrow(
-        "Required environment variable DEEPSEEK_API_KEY is not set"
-      );
+      expect(getEnv("DEEPSEEK_API_KEY")).toBe("");
     });
 
     it("should return default value for missing optional env var", () => {

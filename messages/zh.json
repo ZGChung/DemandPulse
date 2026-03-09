@@ -13,6 +13,8 @@
   "nav.settings": "设置",
   "dashboard.myRequirementsTitle": "我的需求",
   "dashboard.requirementCount": "你有 {count} 条需求。",
+  "dashboard.requirementUnitOne": "条需求",
+  "dashboard.requirementUnitMany": "条需求",
   "dashboard.requirementsCardTitle": "你的需求",
   "dashboard.requirementsCardSubtitle": "查看你已提交的需求",
   "dashboard.requirementsSubmitted": "已提交需求",

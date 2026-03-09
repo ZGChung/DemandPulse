@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
           pluginUserId
         );
 
-        if (process.env.ENABLE_AI_PROCESSING === "true") {
+        if (process.env.ENABLE_AI_PROCESSING?.toLowerCase() === "true") {
           try {
             const { AIProcessingService } = await import("@/services/ai-processing");
             const aiProcessingService = new AIProcessingService();

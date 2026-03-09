@@ -1,9 +1,11 @@
 // Environment variable validation and access
 // NEXT_PUBLIC_APP_URL is not required so Vercel build can run without it (uses fallback).
-const requiredEnvVars = ["DEEPSEEK_API_KEY"] as const;
+// At least one of DEEPSEEK_API_KEY or MINIMAX_API_KEY should be set for AI (embedding); both optional here.
+const requiredEnvVars = [] as const;
 
 const _optionalEnvVars = [
   "DATABASE_URL",
+  "DEEPSEEK_API_KEY",
   "NEXTAUTH_SECRET",
   "NEXTAUTH_URL",
   "RATE_LIMIT_MAX_REQUESTS",
@@ -12,6 +14,8 @@ const _optionalEnvVars = [
   "ENABLE_AI_PROCESSING",
   "NEXT_PUBLIC_APP_NAME",
   "REDIS_URL",
+  "MINIMAX_API_KEY",
+  "MINIMAX_GROUP_ID",
 ] as const;
 
 type RequiredEnvVar = (typeof requiredEnvVars)[number];
@@ -37,9 +41,14 @@ export function validateEnv() {
     throw new EnvValidationError(`Missing required environment variables: ${missing.join(", ")}`);
   }
 
-  // Validate API key format (basic check)
-  const apiKey = process.env.DEEPSEEK_API_KEY;
-  if (apiKey && !apiKey.startsWith("sk-")) {
+  const deepseek = process.env.DEEPSEEK_API_KEY;
+  const minimax = process.env.MINIMAX_API_KEY;
+  if (!deepseek && !minimax) {
+    console.warn(
+      "Warning: Neither DEEPSEEK_API_KEY nor MINIMAX_API_KEY is set; AI processing (e.g. embedding) will be disabled."
+    );
+  }
+  if (deepseek && !deepseek.startsWith("sk-")) {
     console.warn('Warning: DEEPSEEK_API_KEY does not start with "sk-"');
   }
 
@@ -97,4 +106,6 @@ export const env = {
   rateLimitWindowMs: () => getEnvAsNumber("RATE_LIMIT_WINDOW_MS", 900000),
   enableClaudeCodePlugin: () => getEnvAsBoolean("ENABLE_CLAUDE_CODE_PLUGIN", true),
   enableAiProcessing: () => getEnvAsBoolean("ENABLE_AI_PROCESSING", true),
+  minimaxApiKey: () => getEnv("MINIMAX_API_KEY", ""),
+  minimaxGroupId: () => getEnv("MINIMAX_GROUP_ID", ""),
 };

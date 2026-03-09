@@ -10,14 +10,19 @@ export interface AIAnalysisResult {
   processingLog: string[];
 }
 
+const MINIMAX_EMBED_BASE = "https://api.minimax.chat/v1";
+
 export class AIProcessingService {
   private apiKey: string;
   private baseUrl = "https://api.deepseek.com/v1";
 
   constructor() {
     this.apiKey = env.deepseekApiKey();
-    if (!this.apiKey) {
-      throw new Error("DeepSeek API key is not configured");
+    const minimaxKey = env.minimaxApiKey();
+    if (!this.apiKey && !minimaxKey) {
+      throw new Error(
+        "At least one of DEEPSEEK_API_KEY or MINIMAX_API_KEY must be set for AI processing"
+      );
     }
   }
 
@@ -73,6 +78,50 @@ export class AIProcessingService {
   }
 
   async getEmbeddings(text: string): Promise<number[] | null> {
+    const minimaxKey = env.minimaxApiKey();
+    if (minimaxKey) {
+      return this.getEmbeddingsMiniMax(text, minimaxKey);
+    }
+    return this.getEmbeddingsDeepSeek(text);
+  }
+
+  private async getEmbeddingsMiniMax(text: string, apiKey: string): Promise<number[] | null> {
+    try {
+      const groupId = env.minimaxGroupId();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      };
+      if (groupId) headers["Group-Id"] = groupId;
+
+      const body: { model: string; texts: string[]; type: string; group_id?: string } = {
+        model: "embo-01",
+        texts: [text],
+        type: "db",
+      };
+      if (groupId) body.group_id = groupId;
+
+      const response = await fetch(`${MINIMAX_EMBED_BASE}/embeddings`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`MiniMax embeddings API error: ${response.status} ${errText}`);
+      }
+
+      const data = await response.json();
+      const vec = data.vectors?.[0] ?? data.data?.[0]?.embedding ?? null;
+      return Array.isArray(vec) ? vec : null;
+    } catch (error) {
+      console.error("Error getting MiniMax embeddings:", error);
+      return null;
+    }
+  }
+
+  private async getEmbeddingsDeepSeek(text: string): Promise<number[] | null> {
     try {
       const response = await fetch(`${this.baseUrl}/embeddings`, {
         method: "POST",
@@ -99,6 +148,7 @@ export class AIProcessingService {
   }
 
   async categorizeRequirement(text: string): Promise<{ categories: string[]; confidence: number }> {
+    if (!this.apiKey) return { categories: ["other"], confidence: 0.1 };
     try {
       const prompt = `
         Analyze this developer requirement and categorize it. 
@@ -173,6 +223,7 @@ export class AIProcessingService {
   }
 
   async extractKeywords(text: string): Promise<string[]> {
+    if (!this.apiKey) return this.extractFallbackKeywords(text);
     try {
       const prompt = `
         Extract the most important keywords from this developer requirement.
@@ -226,6 +277,7 @@ export class AIProcessingService {
   }
 
   async generateSummary(text: string): Promise<string> {
+    if (!this.apiKey) return text.substring(0, 200);
     try {
       const prompt = `
         Summarize this developer requirement in one concise sentence.
