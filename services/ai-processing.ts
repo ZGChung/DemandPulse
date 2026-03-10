@@ -93,11 +93,11 @@ export class AIProcessingService {
 
   private async getEmbeddingsGemini(text: string, apiKey: string): Promise<number[] | null> {
     try {
-      const response = await fetch(GEMINI_EMBED_URL, {
+      const url = `${GEMINI_EMBED_URL}?key=${encodeURIComponent(apiKey)}`;
+      const response = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-goog-api-key": apiKey,
         },
         body: JSON.stringify({
           model: "models/gemini-embedding-001",
@@ -482,12 +482,10 @@ export class AIProcessingService {
   async testConnection(): Promise<boolean> {
     try {
       if (this.geminiApiKey) {
-        const response = await fetch(GEMINI_EMBED_URL, {
+        const url = `${GEMINI_EMBED_URL}?key=${encodeURIComponent(this.geminiApiKey)}`;
+        const response = await fetch(url, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": this.geminiApiKey,
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             model: "models/gemini-embedding-001",
             content: { parts: [{ text: "health check" }] },

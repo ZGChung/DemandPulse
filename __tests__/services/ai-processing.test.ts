@@ -125,11 +125,11 @@ describe("AIProcessingService", () => {
 
       expect(result).toEqual(mockEmbeddings);
       expect(fetch).toHaveBeenCalledWith(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent",
+        expect.stringContaining("gemini-embedding-001:embedContent?key=gemini-test-key"),
         expect.objectContaining({
           method: "POST",
           headers: expect.objectContaining({
-            "x-goog-api-key": "gemini-test-key",
+            "Content-Type": "application/json",
           }),
         })
       );

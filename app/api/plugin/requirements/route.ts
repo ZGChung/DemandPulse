@@ -203,6 +203,14 @@ export async function POST(request: NextRequest) {
                   error: (clusterErr as Error).message,
                 });
               }
+            } else {
+              apiLogger.warn(
+                "[Plugin] No embeddings from AI (Gemini may have failed); marking PROCESSED anyway",
+                {
+                  id: storedRequirementId,
+                }
+              );
+              await databaseService.updateRequirementStatus(storedRequirementId, "PROCESSED");
             }
           } catch (aiError) {
             apiLogger.warn("[Plugin] AI processing failed (non-fatal)", {
