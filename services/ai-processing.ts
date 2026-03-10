@@ -114,11 +114,25 @@ export class AIProcessingService {
 
       const data = await response.json();
       const vec = data.vectors?.[0] ?? data.data?.[0]?.embedding ?? null;
-      return Array.isArray(vec) ? vec : null;
+      if (Array.isArray(vec)) {
+        return vec;
+      }
+      // If MiniMax returns no usable vector, fall through to DeepSeek (if configured)
+      console.warn("MiniMax embeddings returned no vector, falling back to DeepSeek if available.");
     } catch (error) {
       console.error("Error getting MiniMax embeddings:", error);
-      return null;
     }
+
+    // Fallback: try DeepSeek embeddings when MiniMax is unavailable (e.g. insufficient balance)
+    if (this.apiKey) {
+      try {
+        return await this.getEmbeddingsDeepSeek(text);
+      } catch (fallbackError) {
+        console.error("Fallback to DeepSeek embeddings failed:", fallbackError);
+      }
+    }
+
+    return null;
   }
 
   private async getEmbeddingsDeepSeek(text: string): Promise<number[] | null> {
