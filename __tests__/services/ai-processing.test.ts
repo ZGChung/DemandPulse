@@ -6,7 +6,9 @@ global.fetch = jest.fn();
 // Mock environment
 jest.mock("@/lib/env", () => ({
   env: {
-    deepseekApiKey: () => "test-api-key",
+    geminiApiKey: () => "gemini-test-key",
+    minimaxApiKey: () => "minimax-test-key",
+    minimaxGroupId: () => "",
   },
 }));
 
@@ -123,11 +125,11 @@ describe("AIProcessingService", () => {
 
       expect(result).toEqual(mockEmbeddings);
       expect(fetch).toHaveBeenCalledWith(
-        "https://api.deepseek.com/v1/embeddings",
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent",
         expect.objectContaining({
           method: "POST",
           headers: expect.objectContaining({
-            Authorization: "Bearer test-api-key",
+            "x-goog-api-key": "gemini-test-key",
           }),
         })
       );
@@ -540,19 +542,22 @@ describe("AIProcessingService", () => {
   });
 });
 
-// Test constructor error with missing API key
+// Test constructor with missing API keys should not throw
 describe("AIProcessingService constructor", () => {
-  it("should throw error when API key is not configured", () => {
+  it("should not throw when API keys are not configured", () => {
     jest.resetModules();
     jest.doMock("@/lib/env", () => ({
       env: {
-        deepseekApiKey: () => undefined,
+        geminiApiKey: () => "",
+        minimaxApiKey: () => "",
+        minimaxGroupId: () => "",
       },
     }));
 
     // Re-import to trigger constructor
     expect(() => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       new (require("@/services/ai-processing").AIProcessingService)();
-    }).toThrow("DeepSeek API key is not configured");
+    }).not.toThrow();
   });
 });

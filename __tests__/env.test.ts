@@ -14,30 +14,16 @@ describe("Environment Validation", () => {
 
   describe("validateEnv", () => {
     it("should not throw when no required env vars (DEEPSEEK/MINIMAX optional)", () => {
-      delete process.env.DEEPSEEK_API_KEY;
       delete process.env.MINIMAX_API_KEY;
+      delete process.env.GEMINI_API_KEY;
 
       expect(() => validateEnv()).not.toThrow();
     });
 
-    it("should not throw when DEEPSEEK or MINIMAX is set", () => {
-      process.env.DEEPSEEK_API_KEY = "sk-test-key";
+    it("should not throw when GEMINI or MINIMAX is set", () => {
+      process.env.GEMINI_API_KEY = "test-key";
 
       expect(() => validateEnv()).not.toThrow();
-    });
-
-    it("should warn when API key format is incorrect", () => {
-      process.env.DEEPSEEK_API_KEY = "invalid-key";
-
-      const consoleWarn = jest.spyOn(console, "warn").mockImplementation();
-
-      validateEnv();
-
-      expect(consoleWarn).toHaveBeenCalledWith(
-        'Warning: DEEPSEEK_API_KEY does not start with "sk-"'
-      );
-
-      consoleWarn.mockRestore();
     });
   });
 

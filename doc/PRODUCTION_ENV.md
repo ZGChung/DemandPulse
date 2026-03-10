@@ -6,17 +6,17 @@
 
 ### 必选（无则应用或登录会失败）
 
-| 变量                  | 说明                                                                  | 示例                                                  |
-| --------------------- | --------------------------------------------------------------------- | ----------------------------------------------------- |
-| `NEXT_PUBLIC_APP_URL` | 应用对外访问地址                                                      | `https://demandpulse.example.com`                     |
-| `NEXTAUTH_SECRET`     | NextAuth 会话加密密钥，需随机长字符串                                 | 使用 `openssl rand -base64 32` 生成                   |
-| `NEXTAUTH_URL`        | 与 `NEXT_PUBLIC_APP_URL` 一致（含协议）                               | `https://demandpulse.example.com`                     |
-| `DATABASE_URL`        | 数据库连接串（生产建议 PostgreSQL）                                   | `postgresql://user:pass@host:5432/db?sslmode=require` |
-| `GITHUB_ID`           | GitHub OAuth App Client ID                                            | 在 GitHub Developer Settings 创建                     |
-| `GITHUB_SECRET`       | GitHub OAuth App Client Secret                                        | 同上                                                  |
-| `DEEPSEEK_API_KEY`    | AI 分类/摘要等（可选，若用 MiniMax 做 embedding 可只配 MiniMax）      | 以 `sk-` 开头                                         |
-| `MINIMAX_API_KEY`     | 文本向量（embedding）用 MiniMax API 密钥，设置后 embedding 走 MiniMax | 在 MiniMax 开放平台申请                               |
-| `MINIMAX_GROUP_ID`    | MiniMax 分组 ID（可选，部分账号需填）                                 | 与 MiniMax 控制台一致                                 |
+| 变量                  | 说明                                                         | 示例                                                  |
+| --------------------- | ------------------------------------------------------------ | ----------------------------------------------------- |
+| `NEXT_PUBLIC_APP_URL` | 应用对外访问地址                                             | `https://demandpulse.example.com`                     |
+| `NEXTAUTH_SECRET`     | NextAuth 会话加密密钥，需随机长字符串                        | 使用 `openssl rand -base64 32` 生成                   |
+| `NEXTAUTH_URL`        | 与 `NEXT_PUBLIC_APP_URL` 一致（含协议）                      | `https://demandpulse.example.com`                     |
+| `DATABASE_URL`        | 数据库连接串（生产建议 PostgreSQL）                          | `postgresql://user:pass@host:5432/db?sslmode=require` |
+| `GITHUB_ID`           | GitHub OAuth App Client ID                                   | 在 GitHub Developer Settings 创建                     |
+| `GITHUB_SECRET`       | GitHub OAuth App Client Secret                               | 同上                                                  |
+| `GEMINI_API_KEY`      | Embedding 用 Gemini 免费层（gemini-embedding-001），用于聚类 | 在 Google AI Studio 申请                              |
+| `MINIMAX_API_KEY`     | MiniMax Coding Plan Key，用于分类/摘要/关键词等 LLM 能力     | 在 MiniMax 开放平台申请                               |
+| `MINIMAX_GROUP_ID`    | MiniMax 分组 ID（可选，部分账号需填）                        | 与 MiniMax 控制台一致                                 |
 
 ### 推荐（功能完整、安全与可观测）
 

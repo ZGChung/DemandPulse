@@ -4,6 +4,7 @@ import { describe, it, expect, beforeEach, jest } from "@jest/globals";
 const mockEnv: Record<string, string | undefined> = {
   NODE_ENV: "test",
   DEEPSEEK_API_KEY: "sk-test-key-123",
+  GEMINI_API_KEY: "test-gemini-key",
   NEXT_PUBLIC_APP_URL: "https://example.com",
   DATABASE_URL: "postgresql://localhost:5432/test",
   NEXTAUTH_SECRET: "test-secret",
@@ -101,6 +102,10 @@ describe("Env Module", () => {
     it("should export deepseekApiKey", async () => {
       const { env } = await import("@/lib/env");
       expect(env.deepseekApiKey()).toBe("sk-test-key-123");
+    });
+    it("should export geminiApiKey", async () => {
+      const { env } = await import("@/lib/env");
+      expect(env.geminiApiKey()).toBe("test-gemini-key");
     });
 
     it("should export appUrl", async () => {

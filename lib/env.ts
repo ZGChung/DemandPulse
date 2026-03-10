@@ -1,11 +1,11 @@
 // Environment variable validation and access
 // NEXT_PUBLIC_APP_URL is not required so Vercel build can run without it (uses fallback).
-// At least one of DEEPSEEK_API_KEY or MINIMAX_API_KEY should be set for AI (embedding); both optional here.
 const requiredEnvVars = [] as const;
 
 const _optionalEnvVars = [
   "DATABASE_URL",
   "DEEPSEEK_API_KEY",
+  "GEMINI_API_KEY",
   "NEXTAUTH_SECRET",
   "NEXTAUTH_URL",
   "RATE_LIMIT_MAX_REQUESTS",
@@ -41,15 +41,14 @@ export function validateEnv() {
     throw new EnvValidationError(`Missing required environment variables: ${missing.join(", ")}`);
   }
 
-  const deepseek = process.env.DEEPSEEK_API_KEY;
+  const gemini = process.env.GEMINI_API_KEY;
   const minimax = process.env.MINIMAX_API_KEY;
-  if (!deepseek && !minimax) {
+  if (!gemini && !minimax) {
+    // AI 功能是增值项，没有这两个 key 也不影响应用基础功能。
+    // eslint-disable-next-line no-console
     console.warn(
-      "Warning: Neither DEEPSEEK_API_KEY nor MINIMAX_API_KEY is set; AI processing (e.g. embedding) will be disabled."
+      "Warning: Neither GEMINI_API_KEY nor MINIMAX_API_KEY is set; AI processing (embeddings, analysis) will be disabled."
     );
-  }
-  if (deepseek && !deepseek.startsWith("sk-")) {
-    console.warn('Warning: DEEPSEEK_API_KEY does not start with "sk-"');
   }
 
   return true;
@@ -87,6 +86,7 @@ export function getEnvAsNumber(key: OptionalEnvVar, defaultValue = 0): number {
 export const env = {
   // Required
   deepseekApiKey: () => getEnv("DEEPSEEK_API_KEY"),
+  geminiApiKey: () => getEnv("GEMINI_API_KEY", ""),
   appUrl: () =>
     process.env.NEXT_PUBLIC_APP_URL?.trim() ||
     process.env.NEXTAUTH_URL?.trim() ||

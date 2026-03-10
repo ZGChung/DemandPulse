@@ -10,18 +10,25 @@ export interface AIAnalysisResult {
   processingLog: string[];
 }
 
-const MINIMAX_EMBED_BASE = "https://api.minimax.chat/v1";
+const GEMINI_EMBED_URL =
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent";
+
+const MINIMAX_CHAT_URL = "https://api.minimax.io/v1/text/chatcompletion_v2";
+const MINIMAX_CHAT_MODEL = "MiniMax-M2.5";
 
 export class AIProcessingService {
-  private apiKey: string;
-  private baseUrl = "https://api.deepseek.com/v1";
+  private readonly geminiApiKey: string;
+  private readonly minimaxApiKey: string;
 
   constructor() {
-    this.apiKey = env.deepseekApiKey();
-    const minimaxKey = env.minimaxApiKey();
-    if (!this.apiKey && !minimaxKey) {
-      throw new Error(
-        "At least one of DEEPSEEK_API_KEY or MINIMAX_API_KEY must be set for AI processing"
+    this.geminiApiKey = env.geminiApiKey();
+    this.minimaxApiKey = env.minimaxApiKey();
+    if (!this.geminiApiKey && !this.minimaxApiKey) {
+      // In production this just means: no embeddings, no LLM-based analysis.
+      // The rest of the app still works; requirements will stay Pending.
+      // eslint-disable-next-line no-console
+      console.warn(
+        "AIProcessingService: Neither GEMINI_API_KEY nor MINIMAX_API_KEY is set; embeddings and AI analysis will be disabled."
       );
     }
   }
@@ -78,91 +85,48 @@ export class AIProcessingService {
   }
 
   async getEmbeddings(text: string): Promise<number[] | null> {
-    const minimaxKey = env.minimaxApiKey();
-    if (minimaxKey) {
-      return this.getEmbeddingsMiniMax(text, minimaxKey);
+    if (!this.geminiApiKey) {
+      return null;
     }
-    return this.getEmbeddingsDeepSeek(text);
+    return this.getEmbeddingsGemini(text, this.geminiApiKey);
   }
 
-  private async getEmbeddingsMiniMax(text: string, apiKey: string): Promise<number[] | null> {
+  private async getEmbeddingsGemini(text: string, apiKey: string): Promise<number[] | null> {
     try {
-      const groupId = env.minimaxGroupId();
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      };
-      if (groupId) headers["Group-Id"] = groupId;
-
-      const body: { model: string; texts: string[]; type: string; group_id?: string } = {
-        model: "embo-01",
-        texts: [text],
-        type: "db",
-      };
-      if (groupId) body.group_id = groupId;
-
-      const response = await fetch(`${MINIMAX_EMBED_BASE}/embeddings`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`MiniMax embeddings API error: ${response.status} ${errText}`);
-      }
-
-      const data = await response.json();
-      const vec = data.vectors?.[0] ?? data.data?.[0]?.embedding ?? null;
-      if (Array.isArray(vec)) {
-        return vec;
-      }
-      // If MiniMax returns no usable vector, fall through to DeepSeek (if configured)
-      console.warn("MiniMax embeddings returned no vector, falling back to DeepSeek if available.");
-    } catch (error) {
-      console.error("Error getting MiniMax embeddings:", error);
-    }
-
-    // Fallback: try DeepSeek embeddings when MiniMax is unavailable (e.g. insufficient balance)
-    if (this.apiKey) {
-      try {
-        return await this.getEmbeddingsDeepSeek(text);
-      } catch (fallbackError) {
-        console.error("Fallback to DeepSeek embeddings failed:", fallbackError);
-      }
-    }
-
-    return null;
-  }
-
-  private async getEmbeddingsDeepSeek(text: string): Promise<number[] | null> {
-    try {
-      const response = await fetch(`${this.baseUrl}/embeddings`, {
+      const response = await fetch(GEMINI_EMBED_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.apiKey}`,
+          "x-goog-api-key": apiKey,
         },
         body: JSON.stringify({
-          input: text,
-          model: "deepseek-embedding",
+          model: "models/gemini-embedding-001",
+          content: {
+            parts: [{ text }],
+          },
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`Embeddings API error: ${response.status}`);
+        const errText = await response.text();
+        throw new Error(`Gemini embeddings API error: ${response.status} ${errText}`);
       }
 
       const data = await response.json();
-      return data.data[0]?.embedding || null;
+      // Gemini response shape: { embedding: { values: number[] } }
+      // We also support test-friendly shapes like { data: [{ embedding: [...] }] }.
+      const vec =
+        data.embedding?.values ?? data.embeddings?.[0]?.values ?? data.data?.[0]?.embedding ?? null;
+      return Array.isArray(vec) ? (vec as number[]) : null;
     } catch (error) {
-      console.error("Error getting embeddings:", error);
+      // eslint-disable-next-line no-console
+      console.error("Error getting Gemini embeddings:", error);
       return null;
     }
   }
 
   async categorizeRequirement(text: string): Promise<{ categories: string[]; confidence: number }> {
-    if (!this.apiKey) return { categories: ["other"], confidence: 0.1 };
+    if (!this.minimaxApiKey) return { categories: ["other"], confidence: 0.1 };
     try {
       const prompt = `
         Analyze this developer requirement and categorize it. 
@@ -190,14 +154,14 @@ export class AIProcessingService {
         Format: {"categories": ["category1", "category2"], "confidence": 0.95}
       `;
 
-      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+      const response = await fetch(MINIMAX_CHAT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.minimaxApiKey}`,
         },
         body: JSON.stringify({
-          model: "deepseek-chat",
+          model: MINIMAX_CHAT_MODEL,
           messages: [
             {
               role: "system",
@@ -237,7 +201,7 @@ export class AIProcessingService {
   }
 
   async extractKeywords(text: string): Promise<string[]> {
-    if (!this.apiKey) return this.extractFallbackKeywords(text);
+    if (!this.minimaxApiKey) return this.extractFallbackKeywords(text);
     try {
       const prompt = `
         Extract the most important keywords from this developer requirement.
@@ -248,14 +212,14 @@ export class AIProcessingService {
         Format: ["keyword1", "keyword2", "keyword3"]
       `;
 
-      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+      const response = await fetch(MINIMAX_CHAT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.minimaxApiKey}`,
         },
         body: JSON.stringify({
-          model: "deepseek-chat",
+          model: MINIMAX_CHAT_MODEL,
           messages: [
             {
               role: "system",
@@ -291,7 +255,7 @@ export class AIProcessingService {
   }
 
   async generateSummary(text: string): Promise<string> {
-    if (!this.apiKey) return text.substring(0, 200);
+    if (!this.minimaxApiKey) return text.substring(0, 200);
     try {
       const prompt = `
         Summarize this developer requirement in one concise sentence.
@@ -302,14 +266,14 @@ export class AIProcessingService {
         Return ONLY the summary text.
       `;
 
-      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+      const response = await fetch(MINIMAX_CHAT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.minimaxApiKey}`,
         },
         body: JSON.stringify({
-          model: "deepseek-chat",
+          model: MINIMAX_CHAT_MODEL,
           messages: [
             {
               role: "system",
@@ -517,14 +481,40 @@ export class AIProcessingService {
 
   async testConnection(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/models`, {
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-      });
+      if (this.geminiApiKey) {
+        const response = await fetch(GEMINI_EMBED_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": this.geminiApiKey,
+          },
+          body: JSON.stringify({
+            model: "models/gemini-embedding-001",
+            content: { parts: [{ text: "health check" }] },
+          }),
+        });
+        return response.ok;
+      }
 
-      return response.ok;
+      if (this.minimaxApiKey) {
+        const response = await fetch(MINIMAX_CHAT_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.minimaxApiKey}`,
+          },
+          body: JSON.stringify({
+            model: MINIMAX_CHAT_MODEL,
+            messages: [{ role: "user", content: "health check" }],
+            max_tokens: 1,
+          }),
+        });
+        return response.ok;
+      }
+
+      return false;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("AI service connection test failed:", error);
       return false;
     }
