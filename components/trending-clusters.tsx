@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FaShareAlt } from "react-icons/fa";
 
@@ -174,14 +175,12 @@ export default function TrendingClusters() {
                   >
                     <FaShareAlt className="w-4 h-4" />
                   </button>
-                  <button
-                    type="button"
-                    onClick={showUnderDev}
-                    title={t("trendingClusters.underDev")}
-                    className="text-sm font-medium text-gray-400 cursor-not-allowed"
+                  <Link
+                    href={`/trends/${cluster.id}`}
+                    className="text-sm font-medium text-blue-600 hover:text-blue-800"
                   >
                     View
-                  </button>
+                  </Link>
                 </div>
               </div>
             </li>

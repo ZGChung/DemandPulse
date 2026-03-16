@@ -891,6 +891,72 @@ export class DatabaseService {
     }
   }
 
+  async getClusterDetailsPublic(
+    clusterId: string,
+    options: {
+      limit?: number;
+      offset?: number;
+    } = {}
+  ) {
+    try {
+      const { limit = 100, offset = 0 } = options;
+
+      if (this.prisma) {
+        const cluster = await this.prisma.requirementCluster.findUnique({
+          where: { id: clusterId },
+          include: {
+            _count: {
+              select: { requirements: true },
+            },
+            requirements: {
+              take: limit,
+              skip: offset,
+              orderBy: { detectedAt: "desc" },
+              select: {
+                id: true,
+                summarizedRequirement: true,
+                detectedAt: true,
+                status: true,
+              },
+            },
+          },
+        });
+
+        if (!cluster) return null;
+
+        return {
+          id: cluster.id,
+          name: cluster.name,
+          description: cluster.description,
+          requirementCount: cluster._count.requirements,
+          firstDetectedAt: cluster.firstDetectedAt,
+          lastDetectedAt: cluster.lastDetectedAt,
+          requirements: cluster.requirements,
+        };
+      }
+
+      const mockClusters = await this.getClusters(limit, offset);
+      const cluster = mockClusters.find((item) => item.id === clusterId);
+      if (!cluster) return null;
+
+      return {
+        ...cluster,
+        requirements: cluster.sampleRequirements.map((requirement, index) => ({
+          id: `mock-requirement-${index + 1}`,
+          summarizedRequirement: requirement.summary,
+          detectedAt: requirement.detectedAt,
+          status: "CLUSTERED",
+        })),
+      };
+    } catch (error) {
+      dbLogger.error("Error fetching public cluster details", {
+        clusterId,
+        error: (error as Error).message,
+      });
+      throw new Error("Failed to fetch public cluster details");
+    }
+  }
+
   async createCluster(name: string, description: string): Promise<RequirementCluster> {
     try {
       if (this.prisma) {
