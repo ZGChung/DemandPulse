@@ -21,6 +21,11 @@ jest.mock("@/services/database-service", () => {
       }),
       getRequirementsByStatus: jest.fn().mockResolvedValue([]),
       getRequirements: jest.fn().mockResolvedValue([]),
+      updateRequirementEmbedding: jest.fn().mockResolvedValue(true),
+      updateRequirementStatus: jest.fn().mockResolvedValue({
+        id: "req-123",
+        status: "PROCESSED",
+      }),
     })),
   };
 });
@@ -245,6 +250,7 @@ describe("Requirements API Branch Coverage", () => {
     getRequirementsByStatus: jest.Mock;
     getPrioritizedRequirements: jest.Mock;
     updateRequirementEmbedding: jest.Mock;
+    updateRequirementStatus: jest.Mock;
   };
   let mockPrisma: any;
 
@@ -275,6 +281,10 @@ describe("Requirements API Branch Coverage", () => {
       ]),
       getPrioritizedRequirements: jest.fn().mockResolvedValue([]),
       updateRequirementEmbedding: jest.fn().mockResolvedValue(true),
+      updateRequirementStatus: jest.fn().mockResolvedValue({
+        id: "req-123",
+        status: "PROCESSED",
+      }),
     };
 
     mockPrisma = {

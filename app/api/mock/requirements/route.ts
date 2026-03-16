@@ -129,6 +129,12 @@ export async function POST(request: NextRequest) {
           mockUserId
         );
 
+        try {
+          await databaseService.updateRequirementStatus(storedRequirementId, "PROCESSED");
+        } catch (statusErr) {
+          console.warn("[Mock] Failed to update requirement status to PROCESSED:", statusErr);
+        }
+
         // Log successful collection
         console.log("[Mock] Requirement collected and stored:", {
           id: storedRequirementId,

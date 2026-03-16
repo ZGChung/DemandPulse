@@ -150,6 +150,7 @@ export async function POST(request: NextRequest) {
             storedRequirementId,
             analysis.embeddings
           );
+          await databaseService.updateRequirementStatus(storedRequirementId, "PROCESSED");
           if (prisma) {
             try {
               const clusteringService = new ClusteringService();
@@ -163,11 +164,20 @@ export async function POST(request: NextRequest) {
               });
             }
           }
+        } else {
+          apiLogger.warn(
+            "No embeddings generated for requirement; marking as PROCESSED to avoid stuck PENDING",
+            {
+              id: storedRequirementId,
+            }
+          );
+          await databaseService.updateRequirementStatus(storedRequirementId, "PROCESSED");
         }
       } catch (aiError) {
         apiLogger.warn("Failed to generate AI analysis or embeddings", {
           error: (aiError as Error).message,
         });
+        await databaseService.updateRequirementStatus(storedRequirementId, "PROCESSED");
         // Don't fail the request if AI processing fails
       }
 
