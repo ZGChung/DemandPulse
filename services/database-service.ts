@@ -818,6 +818,79 @@ export class DatabaseService {
     }
   }
 
+  async getClusterDetailsForAdmin(
+    clusterId: string,
+    options: {
+      limit?: number;
+      offset?: number;
+    } = {},
+    userRole?: string
+  ) {
+    try {
+      const { limit = 100, offset = 0 } = options;
+
+      if (this.prisma) {
+        const cluster = await this.prisma.requirementCluster.findUnique({
+          where: { id: clusterId },
+          include: {
+            _count: {
+              select: { requirements: true },
+            },
+            requirements: {
+              take: limit,
+              skip: offset,
+              orderBy: { detectedAt: "desc" },
+            },
+          },
+        });
+
+        if (!cluster) return null;
+
+        const requirements = await Promise.all(
+          cluster.requirements.map((req) =>
+            this.applyPrivacyControls(req as PrismaRequirement, false)
+          )
+        );
+
+        const canViewUnmasked = canViewUnmaskedData(userRole, "admin");
+        const visibleRequirements = canViewUnmasked
+          ? requirements
+          : maskRequirementsForAdmin(requirements, {
+              maskEmail: true,
+              maskRequirementText: false,
+              maskWorkspacePath: true,
+              maskConversationId: true,
+              maskUUID: false,
+            });
+
+        return {
+          id: cluster.id,
+          name: cluster.name,
+          description: cluster.description,
+          requirementCount: cluster._count.requirements,
+          firstDetectedAt: cluster.firstDetectedAt,
+          lastDetectedAt: cluster.lastDetectedAt,
+          requirements: visibleRequirements,
+        };
+      }
+
+      const mockClusters = await this.getClusters(limit, offset);
+      const cluster = mockClusters.find((item) => item.id === clusterId);
+      if (!cluster) return null;
+
+      return {
+        ...cluster,
+        requirements: [],
+      };
+    } catch (error) {
+      dbLogger.error("Error fetching cluster details for admin", {
+        clusterId,
+        error: (error as Error).message,
+      });
+      throw new Error("Failed to fetch cluster details");
+    }
+  }
+
   async createCluster(name: string, description: string): Promise<RequirementCluster> {
     try {
       if (this.prisma) {
