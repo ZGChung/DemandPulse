@@ -190,6 +190,29 @@ MIT License - see LICENSE file for details
 
 For questions or feedback, please open an issue on GitHub.
 
+## 🎯 Strategic Positioning
+
+DemandPulse is positioned as an **open-source collaborative project** rather than a traditional startup:
+
+| Aspect        | Positioning                                                |
+| ------------- | ---------------------------------------------------------- |
+| **Goal**      | Solve cold start problem through open-source collaboration |
+| **Model**     | Community-driven development with contributors             |
+| **Incentive** | Reputation (GitHub stars, recognition) for contributors    |
+| **Focus**     | Specific细分场景 (developer demand signal) - not broad     |
+
+### Why Open Source?
+
+- **Developer attention** is scarce — open source attracts organic interest
+- **Collaborative mode** reduces maintenance cost
+- **Community feedback** improves product faster than solo development
+
+### Success Metrics
+
+- GitHub stars and contributor count
+- Active submissions from community
+- Quality of clustering/insights generated
+
 ---
 
-_Last updated: $(date)_
+_Built with the belief that understanding what developers are building reveals market opportunities._
