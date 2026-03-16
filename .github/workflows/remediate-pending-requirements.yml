@@ -1,0 +1,34 @@
+name: Remediate Pending Requirements
+
+on:
+  workflow_dispatch:
+    inputs:
+      user_email:
+        description: "User email whose pending requirements should be remediated"
+        required: true
+        default: "zgchung@outlook.com"
+
+jobs:
+  remediate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Remediate pending requirements
+        run: node scripts/remediate-user-pending-requirements.mjs --email="${{ github.event.inputs.user_email }}"
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
