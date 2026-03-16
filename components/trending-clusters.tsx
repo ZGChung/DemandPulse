@@ -17,8 +17,7 @@ interface ClusterItem {
 
 async function getClusters(): Promise<ClusterItem[]> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const response = await fetch(`${baseUrl}/api/clusters?limit=5`, {
+    const response = await fetch("/api/clusters?limit=5", {
       cache: "no-store",
     });
 
@@ -47,48 +46,7 @@ async function getClusters(): Promise<ClusterItem[]> {
     throw new Error("Invalid response format");
   } catch (error) {
     console.error("Error fetching clusters:", error);
-    return [
-      {
-        id: "CLUSTER-001",
-        name: "Authentication Systems",
-        requirements: 42,
-        growth: 25,
-        trending: true,
-        description: "Login, OAuth, 2FA, and security requirements",
-      },
-      {
-        id: "CLUSTER-002",
-        name: "Data Visualization",
-        requirements: 38,
-        growth: 18,
-        trending: true,
-        description: "Dashboards, charts, and analytics tools",
-      },
-      {
-        id: "CLUSTER-003",
-        name: "API Development",
-        requirements: 35,
-        growth: 12,
-        trending: false,
-        description: "REST APIs, GraphQL, and integration tools",
-      },
-      {
-        id: "CLUSTER-004",
-        name: "Mobile Optimization",
-        requirements: 28,
-        growth: 32,
-        trending: true,
-        description: "Responsive design and mobile features",
-      },
-      {
-        id: "CLUSTER-005",
-        name: "DevOps Automation",
-        requirements: 24,
-        growth: 8,
-        trending: false,
-        description: "CI/CD, deployment, and infrastructure",
-      },
-    ];
+    return [];
   }
 }
 
@@ -185,6 +143,11 @@ export default function TrendingClusters() {
               </div>
             </li>
           ))}
+          {clusters.length === 0 && (
+            <li className="px-6 py-8 text-sm text-gray-500">
+              No trend data is available right now.
+            </li>
+          )}
         </ul>
       </div>
 
