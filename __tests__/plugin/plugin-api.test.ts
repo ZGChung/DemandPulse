@@ -34,6 +34,7 @@ jest.mock("@/services/database-service", () => ({
   DatabaseService: jest.fn().mockImplementation(() => ({
     storeRequirement: jest.fn().mockResolvedValue("stored-test-id"),
     updateRequirementEmbedding: jest.fn().mockResolvedValue(undefined),
+    updateRequirementStatus: jest.fn().mockResolvedValue(undefined),
   })),
 }));
 
@@ -159,6 +160,69 @@ describe("Plugin API Endpoint", () => {
       expect(response.status).toBe(400);
       const data = await response.json();
       expect(data.error).toContain("Validation");
+    });
+
+    it("should mark records processed when AI processing is disabled", async () => {
+      process.env = {
+        ...originalEnv,
+        NODE_ENV: "test",
+        DATABASE_URL: "postgresql://example.test/db",
+        PLUGIN_API_KEY: "test-plugin-api-key-123",
+        ENABLE_AI_PROCESSING: "false",
+      };
+
+      const { DatabaseService } = jest.requireMock("@/services/database-service");
+      const updateRequirementStatus = jest.fn().mockResolvedValue(undefined);
+      DatabaseService.mockImplementation(() => ({
+        storeRequirement: jest.fn().mockResolvedValue("stored-test-id"),
+        updateRequirementEmbedding: jest.fn().mockResolvedValue(undefined),
+        updateRequirementStatus,
+      }));
+
+      const request = createMockRequest({
+        method: "POST",
+        url: "http://localhost:3000/api/plugin/requirements",
+        headers: { "Content-Type": "application/json" },
+        body: validBody,
+      });
+
+      const response = await POST(request as any);
+      expect(response.status).toBe(201);
+      expect(updateRequirementStatus).toHaveBeenCalledWith("stored-test-id", "PROCESSED");
+    });
+
+    it("should mark records processed when AI processing throws", async () => {
+      process.env = {
+        ...originalEnv,
+        NODE_ENV: "test",
+        DATABASE_URL: "postgresql://example.test/db",
+        PLUGIN_API_KEY: "test-plugin-api-key-123",
+        ENABLE_AI_PROCESSING: "true",
+      };
+
+      const { DatabaseService } = jest.requireMock("@/services/database-service");
+      const updateRequirementStatus = jest.fn().mockResolvedValue(undefined);
+      DatabaseService.mockImplementation(() => ({
+        storeRequirement: jest.fn().mockResolvedValue("stored-test-id"),
+        updateRequirementEmbedding: jest.fn().mockResolvedValue(undefined),
+        updateRequirementStatus,
+      }));
+
+      const { AIProcessingService } = jest.requireMock("@/services/ai-processing");
+      AIProcessingService.mockImplementation(() => ({
+        analyzeRequirement: jest.fn().mockRejectedValue(new Error("AI failed")),
+      }));
+
+      const request = createMockRequest({
+        method: "POST",
+        url: "http://localhost:3000/api/plugin/requirements",
+        headers: { "Content-Type": "application/json" },
+        body: validBody,
+      });
+
+      const response = await POST(request as any);
+      expect(response.status).toBe(201);
+      expect(updateRequirementStatus).toHaveBeenCalledWith("stored-test-id", "PROCESSED");
     });
   });
 

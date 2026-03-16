@@ -216,7 +216,10 @@ export async function POST(request: NextRequest) {
             apiLogger.warn("[Plugin] AI processing failed (non-fatal)", {
               error: (aiError as Error).message,
             });
+            await databaseService.updateRequirementStatus(storedRequirementId, "PROCESSED");
           }
+        } else {
+          await databaseService.updateRequirementStatus(storedRequirementId, "PROCESSED");
         }
 
         apiLogger.info("[Plugin] Requirement stored", {
