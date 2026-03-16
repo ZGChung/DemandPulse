@@ -52,10 +52,13 @@ async function getClusters(): Promise<ClusterItem[]> {
 
 export default function TrendingClusters() {
   const [clusters, setClusters] = useState<ClusterItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { t } = useLocale();
 
   useEffect(() => {
-    getClusters().then(setClusters);
+    getClusters()
+      .then(setClusters)
+      .finally(() => setIsLoading(false));
   }, []);
 
   const showUnderDev = () => {
@@ -93,20 +96,36 @@ export default function TrendingClusters() {
 
       <div className="flow-root">
         <ul className="divide-y divide-gray-200">
+          {isLoading &&
+            Array.from({ length: 5 }).map((_, index) => (
+              <li key={`loading-${index}`} className="px-6 py-4 animate-pulse">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="h-4 w-40 rounded bg-gray-200" />
+                    <div className="mt-2 h-4 w-64 max-w-full rounded bg-gray-100" />
+                    <div className="mt-3 h-4 w-32 rounded bg-gray-100" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-full bg-gray-100" />
+                    <div className="h-4 w-12 rounded bg-gray-200" />
+                  </div>
+                </div>
+              </li>
+            ))}
           {clusters.map((cluster) => (
             <li key={cluster.id} className="px-6 py-4 hover:bg-gray-50">
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center">
-                    <h4 className="text-sm font-medium text-gray-900 truncate">{cluster.name}</h4>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="text-sm font-medium text-gray-900">{cluster.name}</h4>
                     {cluster.trending && (
-                      <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
+                      <span className="px-2 py-0.5 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
                         Trending
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-sm text-gray-500 truncate">{cluster.description}</p>
-                  <div className="mt-2 flex items-center text-sm text-gray-500">
+                  <p className="mt-1 text-sm text-gray-500">{cluster.description}</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
                     <span className="mr-4">
                       <span className="font-medium text-gray-900">{cluster.requirements}</span>{" "}
                       requirements
@@ -124,7 +143,7 @@ export default function TrendingClusters() {
                     </span>
                   </div>
                 </div>
-                <div className="ml-4 flex-shrink-0 flex items-center space-x-2">
+                <div className="flex flex-shrink-0 items-center gap-2 sm:ml-4">
                   <button
                     onClick={() => handleShare(cluster)}
                     className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
@@ -135,7 +154,7 @@ export default function TrendingClusters() {
                   </button>
                   <Link
                     href={`/trends/${cluster.id}`}
-                    className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                    className="inline-flex items-center rounded-md px-2 py-1 text-sm font-medium text-blue-600 hover:bg-blue-50 hover:text-blue-800"
                   >
                     View
                   </Link>
@@ -143,7 +162,7 @@ export default function TrendingClusters() {
               </div>
             </li>
           ))}
-          {clusters.length === 0 && (
+          {!isLoading && clusters.length === 0 && (
             <li className="px-6 py-8 text-sm text-gray-500">
               No trend data is available right now.
             </li>
