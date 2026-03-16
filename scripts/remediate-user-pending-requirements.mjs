@@ -1,3 +1,5 @@
+/* global console, process */
+
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
@@ -17,7 +19,7 @@ async function getEmbeddings(text, apiKey) {
   if (!apiKey) return null;
 
   const url = `${GEMINI_EMBED_URL}?key=${encodeURIComponent(apiKey)}`;
-  const response = await fetch(url, {
+  const response = await globalThis.fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
