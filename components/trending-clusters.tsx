@@ -82,14 +82,12 @@ export default function TrendingClusters() {
       <div className="px-6 py-5 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">{t("trendingClusters.title")}</h3>
-          <button
-            type="button"
-            onClick={showUnderDev}
-            title={t("trendingClusters.underDev")}
-            className="text-sm font-medium text-gray-400 cursor-not-allowed"
+          <Link
+            href="/trends#analysis"
+            className="text-sm font-medium text-blue-600 hover:text-blue-800"
           >
             Analyze trends →
-          </button>
+          </Link>
         </div>
         <p className="mt-1 text-sm text-gray-500">{t("trendingClusters.subtitle")}</p>
       </div>

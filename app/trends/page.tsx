@@ -5,6 +5,7 @@ import DashboardHeader from "@/components/dashboard-header";
 import TrendingClusters from "@/components/trending-clusters";
 import TrendsPageIntro from "@/components/trends-page-intro";
 import { authOptions } from "@/lib/auth";
+import { DatabaseService } from "@/services/database-service";
 
 export const dynamic = "force-dynamic";
 
@@ -18,35 +19,184 @@ export const metadata = {
   },
 };
 
-async function getPublicStatistics() {
+async function getTrendData() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const response = await fetch(`${baseUrl}/api/clusters?limit=1`, {
-      cache: "no-store",
-    });
+    const databaseService = new DatabaseService();
+    const [statistics, clusters] = await Promise.all([
+      databaseService.getPublicStatistics(),
+      databaseService.getClusters(10, 0),
+    ]);
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch statistics: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    if (data.success && data.data?.statistics) {
-      return data.data.statistics;
-    }
-    throw new Error("Invalid response format");
+    return { statistics, clusters };
   } catch (error) {
-    console.error("Error fetching public statistics:", error);
+    console.error("Error fetching trend data:", error);
     return {
-      totalRequirements: 0,
-      totalClusters: 0,
-      totalUsers: 0,
-      recentRequirements: 0,
+      statistics: {
+        totalRequirements: 0,
+        totalClusters: 0,
+        totalUsers: 0,
+        recentRequirements: 0,
+      },
+      clusters: [],
     };
   }
 }
 
+function TrendAnalysisSection({
+  statistics,
+  clusters,
+}: {
+  statistics: {
+    totalRequirements: number;
+    totalClusters: number;
+    totalUsers: number;
+    recentRequirements: number;
+  };
+  clusters: Array<{
+    id: string;
+    name: string;
+    description: string;
+    requirementCount: number;
+  }>;
+}) {
+  const topThreeTotal = clusters
+    .slice(0, 3)
+    .reduce((sum, cluster) => sum + cluster.requirementCount, 0);
+  const averageClusterSize =
+    statistics.totalClusters > 0
+      ? Math.round(statistics.totalRequirements / statistics.totalClusters)
+      : 0;
+
+  return (
+    <div id="analysis" className="mb-12 scroll-mt-24">
+      <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Trend Analysis</h2>
+          <p className="text-gray-600">
+            A quick analysis of the strongest demand signals currently visible in DemandPulse.
+          </p>
+        </div>
+        <a
+          href="#trends"
+          className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800"
+        >
+          Back to cluster list
+        </a>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="text-sm text-gray-500">Tracked Requirements</div>
+          <div className="mt-2 text-3xl font-bold text-gray-900">
+            {statistics.totalRequirements.toLocaleString()}
+          </div>
+          <div className="mt-2 text-sm text-gray-500">
+            All submitted requirements in the current dataset
+          </div>
+        </div>
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="text-sm text-gray-500">Recent Velocity</div>
+          <div className="mt-2 text-3xl font-bold text-gray-900">
+            {statistics.recentRequirements.toLocaleString()}
+          </div>
+          <div className="mt-2 text-sm text-gray-500">
+            New requirements detected in the last 7 days
+          </div>
+        </div>
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="text-sm text-gray-500">Average Cluster Size</div>
+          <div className="mt-2 text-3xl font-bold text-gray-900">{averageClusterSize}</div>
+          <div className="mt-2 text-sm text-gray-500">
+            Average number of requirements per cluster
+          </div>
+        </div>
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="text-sm text-gray-500">Top 3 Coverage</div>
+          <div className="mt-2 text-3xl font-bold text-gray-900">{topThreeTotal}</div>
+          <div className="mt-2 text-sm text-gray-500">
+            Requirements concentrated in the top three clusters
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="mb-5">
+            <h3 className="text-xl font-semibold text-gray-900">Highest Demand Clusters</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Sorted by real requirement volume in the production database.
+            </p>
+          </div>
+          <div className="space-y-4">
+            {clusters.slice(0, 10).map((cluster, index) => (
+              <div
+                key={cluster.id}
+                className="flex flex-col gap-3 rounded-lg border border-gray-100 bg-gray-50 p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-blue-600 px-2 text-xs font-semibold text-white">
+                      #{index + 1}
+                    </span>
+                    <h4 className="text-sm font-semibold text-gray-900">{cluster.name}</h4>
+                    <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-800">
+                      {cluster.requirementCount} requirements
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm text-gray-600">{cluster.description}</p>
+                </div>
+                <a
+                  href={`/trends/${cluster.id}`}
+                  className="inline-flex items-center rounded-md border border-blue-200 bg-white px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 hover:text-blue-800"
+                >
+                  View cluster
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-900">What Stands Out</h3>
+            <ul className="mt-4 space-y-3 text-sm text-gray-600">
+              <li>
+                <span className="font-medium text-gray-900">Demand concentration:</span> top
+                clusters absorb the bulk of current developer requests.
+              </li>
+              <li>
+                <span className="font-medium text-gray-900">Fresh activity:</span> recent
+                submissions show which topics are still actively growing.
+              </li>
+              <li>
+                <span className="font-medium text-gray-900">Execution hint:</span> clusters with
+                both volume and recency are the best roadmap candidates.
+              </li>
+            </ul>
+          </div>
+
+          <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-900">Use This Analysis</h3>
+            <p className="mt-2 text-sm text-gray-700">
+              Use the rankings to prioritize discovery, roadmap validation, and customer-facing
+              messaging.
+            </p>
+            <a
+              href="#trends"
+              className="mt-4 inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800"
+            >
+              Jump back to current trends
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default async function PublicTrendsPage() {
   const session = await getServerSession(authOptions);
+  const { statistics, clusters } = await getTrendData();
   if (session) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -54,11 +204,13 @@ export default async function PublicTrendsPage() {
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <TrendsPageIntro />
           <TrendingClusters />
+          <div className="mt-10">
+            <TrendAnalysisSection statistics={statistics} clusters={clusters} />
+          </div>
         </main>
       </div>
     );
   }
-  const statistics = await getPublicStatistics();
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Header */}
@@ -243,6 +395,8 @@ export default async function PublicTrendsPage() {
             </div>
           </div>
         </div>
+
+        <TrendAnalysisSection statistics={statistics} clusters={clusters} />
 
         {/* Use cases */}
         <div className="mb-12">
