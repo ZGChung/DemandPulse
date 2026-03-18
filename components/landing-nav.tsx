@@ -26,9 +26,6 @@ export default function LandingNav() {
             <Link href="/trends" className="text-gray-700 hover:text-blue-600 font-medium">
               {t("nav.trends")}
             </Link>
-            <Link href="/api-docs" className="text-gray-700 hover:text-blue-600 font-medium">
-              {t("nav.api")}
-            </Link>
             <span className="flex items-center gap-1 border border-gray-200 rounded-lg p-0.5">
               {SUPPORTED_LOCALES.map((l) => (
                 <button
@@ -42,9 +39,6 @@ export default function LandingNav() {
                 </button>
               ))}
             </span>
-            <Link href="/auth/signin" className="text-gray-700 hover:text-gray-900 font-medium">
-              {t("nav.signIn")}
-            </Link>
             <Link
               href="/auth/signin"
               className="px-4 py-2 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
@@ -91,13 +85,6 @@ export default function LandingNav() {
             >
               {t("nav.trends")}
             </Link>
-            <Link
-              href="/api-docs"
-              className="px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
-              onClick={() => setOpen(false)}
-            >
-              {t("nav.api")}
-            </Link>
             <div className="px-3 py-2 flex gap-2">
               {SUPPORTED_LOCALES.map((l) => (
                 <button
@@ -110,13 +97,6 @@ export default function LandingNav() {
                 </button>
               ))}
             </div>
-            <Link
-              href="/auth/signin"
-              className="px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
-              onClick={() => setOpen(false)}
-            >
-              {t("nav.signIn")}
-            </Link>
             <Link
               href="/auth/signin"
               className="mx-3 mt-2 px-4 py-2.5 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 text-center"
