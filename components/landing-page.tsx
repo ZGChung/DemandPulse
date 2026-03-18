@@ -52,21 +52,21 @@ export default function LandingPage({ stats }: { stats?: LandingStats | null }) 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/auth/signin"
-                className="px-8 py-4 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors text-lg flex items-center justify-center"
+                className="w-full sm:w-56 px-8 py-4 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors text-lg flex items-center justify-center"
               >
                 <FaRocket className="mr-2" />
                 {t("hero.ctaStart")}
               </Link>
               <Link
                 href="/trends"
-                className="px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors text-lg flex items-center justify-center"
+                className="w-full sm:w-56 px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors text-lg flex items-center justify-center"
               >
                 <FaEye className="mr-2" />
                 {t("hero.ctaViewTrends")}
               </Link>
               <a
                 href="#how-it-works"
-                className="px-8 py-4 bg-white text-gray-900 font-semibold rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors text-lg"
+                className="w-full sm:w-56 px-8 py-4 bg-white text-gray-900 font-semibold rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors text-lg flex items-center justify-center"
               >
                 {t("hero.howItWorks")}
               </a>
