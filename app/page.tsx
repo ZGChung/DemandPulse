@@ -3,17 +3,14 @@ import { getServerSession } from "next-auth";
 import Dashboard from "@/components/dashboard";
 import LandingPage from "@/components/landing-page";
 import { authOptions } from "@/lib/auth";
+import { DatabaseService } from "@/services/database-service";
 
 export const dynamic = "force-dynamic";
 
 async function getPublicStats() {
   try {
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
-    const res = await fetch(`${baseUrl}/api/clusters?limit=1`, { cache: "no-store" });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.success && data.data?.statistics ? data.data.statistics : null;
+    const databaseService = new DatabaseService();
+    return await databaseService.getPublicStatistics();
   } catch {
     return null;
   }
