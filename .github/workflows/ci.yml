@@ -165,11 +165,10 @@ jobs:
           working-directory: .
 
       - name: Run database migrations
-        continue-on-error: true
         run: |
-          echo "Running Prisma migrations..."
+          echo "Running Prisma migrations with failed-migration remediation..."
           echo "DATABASE_URL is set: ${#DATABASE_URL} characters"
-          npx prisma migrate deploy
+          node scripts/remediate-organizations-migration.mjs
           echo "Migrations completed"
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

@@ -1,0 +1,28 @@
+name: Remediate Organizations Migration
+
+on:
+  workflow_dispatch:
+
+jobs:
+  remediate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Remediate organizations migration
+        run: node scripts/remediate-organizations-migration.mjs
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
