@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 
+import { useLocale } from "@/components/LocaleProvider";
+
 declare global {
   interface Window {
     SwaggerUIBundle?: (opts: {
@@ -16,6 +18,27 @@ declare global {
 
 export default function ApiDocsPage() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const { locale } = useLocale();
+
+  const copy =
+    locale === "zh"
+      ? {
+          title: "API 文档",
+          trends: "趋势",
+          signIn: "登录",
+          openApi: "打开 OpenAPI YAML",
+          introPrefix: "用于需求、聚类与健康检查的 REST API。网页端使用 NextAuth 认证，插件端使用",
+          introSuffix: "进行认证。",
+        }
+      : {
+          title: "API Docs",
+          trends: "Trends",
+          signIn: "Sign in",
+          openApi: "OpenAPI YAML",
+          introPrefix:
+            "REST API for requirements, clusters, and health. Authenticate with NextAuth (web) or",
+          introSuffix: "(plugin).",
+        };
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -65,20 +88,20 @@ export default function ApiDocsPage() {
                 DemandPulse
               </Link>
               <span className="text-gray-500">/</span>
-              <h1 className="text-lg font-semibold text-gray-700">API Docs</h1>
+              <h1 className="text-lg font-semibold text-gray-700">{copy.title}</h1>
             </div>
             <nav className="flex items-center gap-4">
               <Link
                 href="/trends"
                 className="text-sm font-medium text-gray-600 hover:text-gray-900"
               >
-                Trends
+                {copy.trends}
               </Link>
               <Link
                 href="/auth/signin"
                 className="text-sm font-medium text-gray-600 hover:text-gray-900"
               >
-                Sign in
+                {copy.signIn}
               </Link>
               <a
                 href="/api/openapi"
@@ -86,7 +109,7 @@ export default function ApiDocsPage() {
                 rel="noopener noreferrer"
                 className="text-sm font-medium text-blue-600 hover:text-blue-800"
               >
-                OpenAPI YAML
+                {copy.openApi}
               </a>
             </nav>
           </div>
@@ -95,8 +118,8 @@ export default function ApiDocsPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="mb-4 text-sm text-gray-600">
-          REST API for requirements, clusters, and health. Authenticate with NextAuth (web) or{" "}
-          <code className="bg-gray-100 px-1 rounded">x-api-key</code> (plugin).
+          {copy.introPrefix} <code className="bg-gray-100 px-1 rounded">x-api-key</code>{" "}
+          {copy.introSuffix}
         </div>
         <div ref={containerRef} className="swagger-container" />
       </main>
