@@ -44,11 +44,6 @@ function isPublicRoute(req: NextRequest): boolean {
     return true;
   }
 
-  // OpenAPI spec
-  if (pathname === "/api/openapi") {
-    return true;
-  }
-
   // Locale API
   if (pathname === "/api/locale") {
     return true;

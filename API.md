@@ -12,18 +12,21 @@ DemandPulse provides a REST API for submitting and analyzing development require
 DemandPulse supports multiple authentication methods for different use cases:
 
 ### 1. NextAuth Session (Web Users)
+
 - **Method**: GitHub OAuth
 - **Usage**: Web application users
 - **How it works**: Users log in via GitHub, receive a JWT session cookie
 - **Required for**: `POST /api/requirements` (submitting requirements via web)
 
 ### 2. API Key (Plugin Integration)
+
 - **Method**: `x-api-key` header
 - **Usage**: Claude Code plugin and external integrations
 - **Setup**: Set `PLUGIN_API_KEY` environment variable on server, use same key in `x-api-key` header
 - **Required for**: `/api/plugin/requirements` endpoints
 
 ### 3. Public Access (Read-only)
+
 - **Method**: No authentication required
 - **Usage**: Public read access to requirements and health checks
 - **Endpoints**: `GET /api/requirements`, `/api/health`
@@ -31,12 +34,15 @@ DemandPulse supports multiple authentication methods for different use cases:
 ## Endpoints
 
 ### Health Check
+
 ```http
 GET /api/health
 ```
+
 Check if the API is running and get system information.
 
 **Response**:
+
 ```json
 {
   "status": "healthy",
@@ -54,17 +60,21 @@ Check if the API is running and get system information.
 ```
 
 ### Get Requirements
+
 ```http
 GET /api/requirements
 ```
+
 Retrieve requirements with optional filtering. Public read access.
 
 **Query Parameters**:
+
 - `status` (optional): Filter by status: `pending`, `processed`, or `rejected`
 - `limit` (optional): Number of requirements to return (1-100, default: 50)
 - `offset` (optional): Pagination offset (default: 0)
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -108,16 +118,20 @@ Retrieve requirements with optional filtering. Public read access.
 ```
 
 ### Submit Requirement
+
 ```http
 POST /api/requirements
 ```
+
 Submit a new development requirement with user consent. Requires authentication.
 
 **Headers**:
+
 - `Content-Type: application/json`
 - Authentication via NextAuth session cookie
 
 **Request Body**:
+
 ```json
 {
   "requirementId": "550e8400-e29b-41d4-a716-446655440000",
@@ -143,6 +157,7 @@ Submit a new development requirement with user consent. Requires authentication.
 ```
 
 **Response** (201 Created):
+
 ```json
 {
   "success": true,
@@ -154,16 +169,20 @@ Submit a new development requirement with user consent. Requires authentication.
 ```
 
 ### Get Clusters
+
 ```http
 GET /api/clusters
 ```
+
 Retrieve requirement clusters and public statistics for trends analysis.
 
 **Query Parameters**:
+
 - `limit` (optional): Number of clusters to return (1-100, default: 10)
 - `offset` (optional): Pagination offset (default: 0)
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -198,12 +217,15 @@ Retrieve requirement clusters and public statistics for trends analysis.
 ### Plugin Integration
 
 #### Submit Requirement via Plugin
+
 ```http
 POST /api/plugin/requirements
 ```
+
 Submit a requirement from Claude Code plugin. Requires API key authentication.
 
 **Headers**:
+
 - `Content-Type: application/json`
 - `x-api-key: your-plugin-api-key`
 
@@ -212,15 +234,19 @@ Submit a requirement from Claude Code plugin. Requires API key authentication.
 **Response**: Same as regular requirement submission
 
 #### Generate Plugin Test Requirements
+
 ```http
 GET /api/plugin/requirements
 ```
+
 Generate mock requirements for plugin testing. Requires API key authentication.
 
 **Query Parameters**:
+
 - `count` (optional): Number of requirements to generate (1-100, default: 1)
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -273,6 +299,7 @@ All errors follow a consistent format:
 ```
 
 **Common Error Codes**:
+
 - `400`: Bad Request (validation failed)
 - `401`: Unauthorized (missing/invalid authentication)
 - `403`: Forbidden (insufficient permissions)
@@ -283,6 +310,7 @@ All errors follow a consistent format:
 ## CORS
 
 CORS is configured to allow requests from:
+
 - The application's own domain (`NEXT_PUBLIC_APP_URL`)
 - `localhost:3000` (development)
 - Additional origins can be configured via environment variables
@@ -301,6 +329,7 @@ All submissions include consent metadata for GDPR compliance. Key privacy featur
 ### Using cURL
 
 **Submit a requirement via plugin**:
+
 ```bash
 curl -X POST http://localhost:3000/api/plugin/requirements \
   -H "Content-Type: application/json" \
@@ -326,6 +355,7 @@ curl -X POST http://localhost:3000/api/plugin/requirements \
 ```
 
 **Get public requirements**:
+
 ```bash
 curl "http://localhost:3000/api/requirements?limit=5&status=processed"
 ```
@@ -341,9 +371,9 @@ Currently, DemandPulse doesn't provide official SDKs. However, you can use the A
 
 ## OpenAPI Specification
 
-A complete OpenAPI 3.0 specification is available at `/docs/api/swagger.yaml` or can be downloaded from the repository.
+The legacy public OpenAPI specification has been retired and is no longer exposed or maintained as a product surface.
 
 ---
 
-*Last Updated: 2025-01-15*
-*API Version: 1.0.0*
+_Last Updated: 2025-01-15_
+_API Version: 1.0.0_
