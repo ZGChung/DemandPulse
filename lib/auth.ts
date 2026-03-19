@@ -6,7 +6,6 @@ import { prisma } from "@/lib/prisma";
 
 const GITHUB_ID = process.env.GITHUB_ID?.trim() || "";
 const GITHUB_SECRET = process.env.GITHUB_SECRET?.trim() || "";
-const isProduction = process.env.NODE_ENV === "production";
 const isPlaceholder = (v: string) => !v || v === "test" || /your_|example|placeholder/i.test(v);
 const isGitHubConfigured =
   GITHUB_ID.length > 0 &&

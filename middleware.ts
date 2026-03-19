@@ -29,6 +29,11 @@ function isPublicRoute(req: NextRequest): boolean {
     return true;
   }
 
+  // GET /api/clusters (public trend discovery)
+  if (method === "GET" && pathname === "/api/clusters") {
+    return true;
+  }
+
   // Plugin endpoints (API key auth, not session)
   if (pathname.startsWith("/api/plugin/")) {
     return true;
