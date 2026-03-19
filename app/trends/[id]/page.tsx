@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 
 import DashboardHeader from "@/components/dashboard-header";
@@ -77,6 +77,10 @@ export default async function TrendClusterDetailsPage({
   const limit = parseInt(searchParams?.limit || "50");
   const offset = (page - 1) * limit;
   const session = await getServerSession(authOptions);
+
+  if (!session) {
+    redirect("/trends");
+  }
 
   const databaseService = new DatabaseService();
   const cluster = await databaseService.getClusterDetailsPublic(params.id, {
@@ -175,14 +179,10 @@ export default async function TrendClusterDetailsPage({
     </main>
   );
 
-  if (session) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <DashboardHeader session={session} />
-        {content}
-      </div>
-    );
-  }
-
-  return <div className="min-h-screen bg-gray-50">{content}</div>;
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <DashboardHeader session={session} />
+      {content}
+    </div>
+  );
 }

@@ -60,6 +60,7 @@ function isPublicRoute(req: NextRequest): boolean {
     pathname === "/landing" ||
     pathname === "/connect-plugin" ||
     pathname === "/trends" ||
+    pathname.startsWith("/trends/") ||
     pathname.startsWith("/auth/")
   ) {
     return true;
