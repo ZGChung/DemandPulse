@@ -49,6 +49,11 @@ function isPublicRoute(req: NextRequest): boolean {
     return true;
   }
 
+  // Retired routes are handled explicitly in middleware and should not trigger auth redirects
+  if (pathname === "/api-docs" || pathname === "/api/openapi") {
+    return true;
+  }
+
   // Public pages — allow unauthenticated access so middleware never blocks or throws on these
   if (
     pathname === "/" ||
