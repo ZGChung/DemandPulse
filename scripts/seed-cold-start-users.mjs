@@ -83,42 +83,42 @@ function buildGeneratedRequirementText(summary, clusterName, clusterDescription,
 
 async function ensureColdStartUsers(prisma) {
   const now = new Date();
-  const users = [];
+  const usersToCreate = Array.from({ length: USER_COUNT }, (_, index) => {
+    const userNumber = index + 1;
+    return {
+      email: makeUserEmail(userNumber),
+      name: makeUserName(userNumber),
+      role: "USER",
+      emailVerified: now,
+      createdAt: new Date(now.getTime() - userNumber * 24 * 60 * 60 * 1000),
+    };
+  });
 
-  for (let index = 1; index <= USER_COUNT; index += 1) {
-    const createdAt = new Date(now.getTime() - index * 24 * 60 * 60 * 1000);
-    const email = makeUserEmail(index);
-    const name = makeUserName(index);
+  await prisma.user.createMany({
+    data: usersToCreate,
+    skipDuplicates: true,
+  });
 
-    const user = await prisma.user.upsert({
-      where: { email },
-      update: {
-        name,
-        role: "USER",
-        emailVerified: now,
+  return prisma.user.findMany({
+    where: {
+      email: {
+        startsWith: `${USER_EMAIL_PREFIX}-`,
       },
-      create: {
-        email,
-        name,
-        role: "USER",
-        emailVerified: now,
-        createdAt,
+    },
+    orderBy: {
+      email: "asc",
+    },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      createdAt: true,
+      _count: {
+        select: { requirements: true },
       },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        createdAt: true,
-        _count: {
-          select: { requirements: true },
-        },
-      },
-    });
-
-    users.push(user);
-  }
-
-  return users;
+    },
+    take: USER_COUNT,
+  });
 }
 
 async function getReusableRequirements(prisma) {
@@ -138,7 +138,7 @@ async function getReusableRequirements(prisma) {
   return requirements.filter((requirement) => shouldReuseRequirement(requirement.conversationId));
 }
 
-async function createColdStartRequirement(prisma, cluster, generationIndex) {
+async function createColdStartRequirement(prisma, cluster, generationIndex, userId) {
   const templates = CLUSTER_TEMPLATES[cluster.name] || [
     `Add more seeded demand signals for ${cluster.name}`,
   ];
@@ -162,6 +162,7 @@ async function createColdStartRequirement(prisma, cluster, generationIndex) {
       dataCollectionConsent: true,
       contactConsent: false,
       anonymizationConsent: false,
+      userId,
       status: "CLUSTERED",
       processedAt: now,
       dataRetentionDays: 3650,
@@ -176,6 +177,13 @@ async function createColdStartRequirement(prisma, cluster, generationIndex) {
   });
 
   return requirement.id;
+}
+
+async function runInChunks(items, chunkSize, callback) {
+  for (let index = 0; index < items.length; index += chunkSize) {
+    const chunk = items.slice(index, index + chunkSize);
+    await callback(chunk);
+  }
 }
 
 async function syncClusterStats(prisma) {
@@ -243,27 +251,21 @@ async function main() {
     let generatedRequirements = 0;
     let assignments = 0;
     let generationIndex = 0;
+    const reusableAssignments = [];
 
     for (const user of users) {
       const currentCount = user._count.requirements;
       const neededAssignments = Math.max(TARGET_REQUIREMENTS_PER_USER - currentCount, 0);
 
       for (let slot = 0; slot < neededAssignments; slot += 1) {
-        let requirementId;
-
         if (reusableRequirements.length > 0) {
-          requirementId = reusableRequirements.shift().id;
-          await prisma.requirement.update({
-            where: { id: requirementId },
-            data: { userId: user.id },
+          reusableAssignments.push({
+            requirementId: reusableRequirements.shift().id,
+            userId: user.id,
           });
         } else {
           const cluster = clusters[generationIndex % clusters.length];
-          requirementId = await createColdStartRequirement(prisma, cluster, generationIndex);
-          await prisma.requirement.update({
-            where: { id: requirementId },
-            data: { userId: user.id },
-          });
+          await createColdStartRequirement(prisma, cluster, generationIndex, user.id);
           generatedRequirements += 1;
           generationIndex += 1;
         }
@@ -271,6 +273,17 @@ async function main() {
         assignments += 1;
       }
     }
+
+    await runInChunks(reusableAssignments, 50, async (chunk) => {
+      await prisma.$transaction(
+        chunk.map(({ requirementId, userId }) =>
+          prisma.requirement.update({
+            where: { id: requirementId },
+            data: { userId },
+          })
+        )
+      );
+    });
 
     await syncClusterStats(prisma);
 
