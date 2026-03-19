@@ -63,7 +63,7 @@ function getServerLocale(): Locale {
   return locale && isLocale(locale) ? locale : getDefaultLocale();
 }
 
-function formatDateTime(value: string, locale: Locale): string {
+function formatDateTime(value: string | Date, locale: Locale): string {
   return new Date(value).toLocaleString(locale === "zh" ? "zh-CN" : "en-US");
 }
 
