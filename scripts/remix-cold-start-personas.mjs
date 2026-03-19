@@ -114,6 +114,13 @@ async function runInChunks(items, chunkSize, callback) {
   }
 }
 
+async function runWithConcurrency(items, concurrency, callback) {
+  for (let index = 0; index < items.length; index += concurrency) {
+    const chunk = items.slice(index, index + concurrency);
+    await Promise.all(chunk.map((item, chunkIndex) => callback(item, index + chunkIndex)));
+  }
+}
+
 async function syncClusterStats(prisma) {
   const clusters = await prisma.requirementCluster.findMany({
     select: { id: true },
@@ -192,38 +199,36 @@ async function main() {
       },
     });
 
-    await runInChunks(users, 50, async (chunk, startIndex) => {
-      await prisma.$transaction(
-        chunk.map((user, chunkIndex) => {
-          const absoluteIndex = startIndex + chunkIndex;
-          const name = buildUserName(absoluteIndex);
-          return prisma.user.update({
-            where: { id: user.id },
-            data: {
-              name,
-              image: buildUserImage(name, absoluteIndex),
-              createdAt: buildCreatedAt(absoluteIndex, now),
-            },
-          });
-        })
-      );
+    await runInChunks(users, 20, async (chunk, startIndex) => {
+      await runWithConcurrency(chunk, 5, async (user, chunkIndex) => {
+        const absoluteIndex = startIndex + chunkIndex;
+        const name = buildUserName(absoluteIndex);
+
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            name,
+            image: buildUserImage(name, absoluteIndex),
+            createdAt: buildCreatedAt(absoluteIndex, now),
+          },
+        });
+      });
     });
 
-    await runInChunks(requirements, 50, async (chunk, startIndex) => {
-      await prisma.$transaction(
-        chunk.map((requirement, chunkIndex) => {
-          const absoluteIndex = startIndex + chunkIndex;
-          const detectedAt = buildDetectedAt(absoluteIndex, now);
-          return prisma.requirement.update({
-            where: { id: requirement.id },
-            data: {
-              detectedAt,
-              processedAt: new Date(detectedAt.getTime() + 5 * 60 * 1000),
-              createdAt: detectedAt,
-            },
-          });
-        })
-      );
+    await runInChunks(requirements, 20, async (chunk, startIndex) => {
+      await runWithConcurrency(chunk, 5, async (requirement, chunkIndex) => {
+        const absoluteIndex = startIndex + chunkIndex;
+        const detectedAt = buildDetectedAt(absoluteIndex, now);
+
+        await prisma.requirement.update({
+          where: { id: requirement.id },
+          data: {
+            detectedAt,
+            processedAt: new Date(detectedAt.getTime() + 5 * 60 * 1000),
+            createdAt: detectedAt,
+          },
+        });
+      });
     });
 
     await syncClusterStats(prisma);
