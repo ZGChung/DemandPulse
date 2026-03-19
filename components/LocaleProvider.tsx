@@ -37,8 +37,15 @@ export function useLocale(): LocaleContextValue {
   return ctx;
 }
 
-export function LocaleProvider({ children }: { children: React.ReactNode }) {
+export function LocaleProvider({
+  children,
+  initialLocale,
+}: {
+  children: React.ReactNode;
+  initialLocale?: Locale;
+}) {
   const [locale, setLocaleState] = useState<Locale>(() => {
+    if (initialLocale) return initialLocale;
     const raw = getCookie(LOCALE_COOKIE);
     return raw && isLocale(raw) ? raw : getDefaultLocale();
   });

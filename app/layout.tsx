@@ -38,11 +38,15 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = cookies();
+  const localeRaw = cookieStore.get(LOCALE_COOKIE)?.value;
+  const locale = localeRaw && isLocale(localeRaw) ? localeRaw : getDefaultLocale();
+
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body className={`${inter.variable} antialiased`}>
         <SessionProvider>
-          <LocaleProvider>{children}</LocaleProvider>
+          <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>
         </SessionProvider>
       </body>
     </html>
