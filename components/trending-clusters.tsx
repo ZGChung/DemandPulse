@@ -53,7 +53,7 @@ async function getClusters(): Promise<ClusterItem[]> {
 export default function TrendingClusters() {
   const [clusters, setClusters] = useState<ClusterItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
 
   useEffect(() => {
     getClusters()
@@ -68,7 +68,10 @@ export default function TrendingClusters() {
   };
 
   const handleShare = async (cluster: ClusterItem) => {
-    const text = `Check out this trending developer need: ${cluster.name} - ${cluster.description}. Discover more on DemandPulse!`;
+    const text =
+      locale === "zh"
+        ? `看看这个热门开发者需求：${cluster.name} - ${cluster.description}。更多趋势请访问 DemandPulse！`
+        : `Check out this trending developer need: ${cluster.name} - ${cluster.description}. Discover more on DemandPulse!`;
     try {
       await navigator.clipboard.writeText(text);
       (globalThis as { alert?: (s: string) => void }).alert?.(t("trendingClusters.copied"));
@@ -86,7 +89,7 @@ export default function TrendingClusters() {
             href="/trends#analysis"
             className="text-sm font-medium text-blue-600 hover:text-blue-800"
           >
-            Analyze trends →
+            {t("trendingClusters.analyze")}
           </Link>
         </div>
         <p className="mt-1 text-sm text-gray-500">{t("trendingClusters.subtitle")}</p>
@@ -118,7 +121,7 @@ export default function TrendingClusters() {
                     <h4 className="text-sm font-medium text-gray-900">{cluster.name}</h4>
                     {cluster.trending && (
                       <span className="px-2 py-0.5 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
-                        Trending
+                        {t("trendingClusters.badgeTrending")}
                       </span>
                     )}
                   </div>
@@ -126,7 +129,7 @@ export default function TrendingClusters() {
                   <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
                     <span className="mr-4">
                       <span className="font-medium text-gray-900">{cluster.requirements}</span>{" "}
-                      requirements
+                      {t("trendingClusters.requirementsUnit")}
                     </span>
                     <span className="flex items-center">
                       <span
@@ -137,7 +140,7 @@ export default function TrendingClusters() {
                       <span className={cluster.growth > 0 ? "text-green-600" : "text-red-600"}>
                         {cluster.growth}%
                       </span>{" "}
-                      growth
+                      {t("trendingClusters.growth")}
                     </span>
                   </div>
                 </div>
@@ -154,16 +157,14 @@ export default function TrendingClusters() {
                     href={`/trends/${cluster.id}`}
                     className="inline-flex items-center rounded-md px-2 py-1 text-sm font-medium text-blue-600 hover:bg-blue-50 hover:text-blue-800"
                   >
-                    View
+                    {t("trendingClusters.view")}
                   </Link>
                 </div>
               </div>
             </li>
           ))}
           {!isLoading && clusters.length === 0 && (
-            <li className="px-6 py-8 text-sm text-gray-500">
-              No trend data is available right now.
-            </li>
+            <li className="px-6 py-8 text-sm text-gray-500">{t("trendingClusters.empty")}</li>
           )}
         </ul>
       </div>
@@ -189,7 +190,7 @@ export default function TrendingClusters() {
                 d="M12 6v6m0 0v6m0-6h6m-6 0H6"
               />
             </svg>
-            View all trends
+            {t("trendingClusters.viewAll")}
           </button>
           <button
             type="button"
@@ -210,7 +211,7 @@ export default function TrendingClusters() {
                 d="M12 6v6m0 0v6m0-6h6m-6 0H6"
               />
             </svg>
-            Create custom cluster
+            {t("trendingClusters.createCustom")}
           </button>
         </div>
       </div>

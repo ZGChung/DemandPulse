@@ -145,5 +145,13 @@
   "trendingClusters.shareTitle": "Share this trend",
   "trendingClusters.underDev": "Under development",
   "trendingClusters.copied": "Copied to clipboard!",
+  "trendingClusters.analyze": "Analyze trends →",
+  "trendingClusters.badgeTrending": "Trending",
+  "trendingClusters.requirementsUnit": "requirements",
+  "trendingClusters.growth": "growth",
+  "trendingClusters.view": "View",
+  "trendingClusters.empty": "No trend data is available right now.",
+  "trendingClusters.viewAll": "View all trends",
+  "trendingClusters.createCustom": "Create custom cluster",
   "trendsPage.introDesc": "Groups of similar developer requirements. Click Analyze trends or View for details."
 }

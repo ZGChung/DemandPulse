@@ -146,5 +146,13 @@
   "trendingClusters.shareTitle": "分享此趋势",
   "trendingClusters.underDev": "开发中",
   "trendingClusters.copied": "已复制到剪贴板！",
+  "trendingClusters.analyze": "分析趋势 →",
+  "trendingClusters.badgeTrending": "热门",
+  "trendingClusters.requirementsUnit": "条需求",
+  "trendingClusters.growth": "增长",
+  "trendingClusters.view": "查看",
+  "trendingClusters.empty": "当前暂无可显示的趋势数据。",
+  "trendingClusters.viewAll": "查看全部趋势",
+  "trendingClusters.createCustom": "创建自定义聚类",
   "trendsPage.introDesc": "相似开发者需求的分组。点击分析趋势或查看了解详情。"
 }
