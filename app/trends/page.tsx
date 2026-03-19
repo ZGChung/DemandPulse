@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
@@ -13,15 +14,40 @@ import { DatabaseService } from "@/services/database-service";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Trends | DemandPulse – Developer demand in real time",
-  description:
-    "See what developers are building. Live trends and clusters from AI coding workflows.",
-  openGraph: {
-    title: "DemandPulse Trends – Developer demand in real time",
-    description: "Live trends and clusters from developer requirements.",
+const trendsMetadataMessages = {
+  en: {
+    title: "Trends | DemandPulse – Developer demand in real time",
+    description:
+      "See what developers are building. Live trends and clusters from AI coding workflows.",
+    openGraphTitle: "DemandPulse Trends – Developer demand in real time",
+    openGraphDescription: "Live trends and clusters from developer requirements.",
   },
-};
+  zh: {
+    title: "趋势 | DemandPulse – 实时开发者需求洞察",
+    description: "查看开发者正在构建什么，实时追踪来自 AI 编程工作流的趋势与聚类。",
+    openGraphTitle: "DemandPulse 趋势 – 实时开发者需求洞察",
+    openGraphDescription: "来自开发者需求的实时趋势与聚类。",
+  },
+} as const;
+
+export function generateMetadata(): Metadata {
+  const locale = getServerLocale();
+  const copy = trendsMetadataMessages[locale];
+
+  return {
+    title: copy.title,
+    description: copy.description,
+    openGraph: {
+      title: copy.openGraphTitle,
+      description: copy.openGraphDescription,
+    },
+    twitter: {
+      card: "summary",
+      title: copy.openGraphTitle,
+      description: copy.openGraphDescription,
+    },
+  };
+}
 
 async function getTrendData() {
   try {

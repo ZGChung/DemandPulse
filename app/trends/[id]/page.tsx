@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
@@ -18,6 +19,17 @@ interface ClusterDetailsPageProps {
 }
 
 export const dynamic = "force-dynamic";
+
+const detailMetadataMessages = {
+  en: {
+    title: "Trend Details | DemandPulse",
+    description: "View the requirements grouped under a specific developer trend cluster.",
+  },
+  zh: {
+    title: "趋势详情 | DemandPulse",
+    description: "查看某个开发者趋势聚类下归档的需求明细。",
+  },
+} as const;
 
 const detailMessages = {
   en: {
@@ -65,6 +77,25 @@ function getServerLocale(): Locale {
 
 function formatDateTime(value: string | Date, locale: Locale): string {
   return new Date(value).toLocaleString(locale === "zh" ? "zh-CN" : "en-US");
+}
+
+export function generateMetadata(): Metadata {
+  const locale = getServerLocale();
+  const copy = detailMetadataMessages[locale];
+
+  return {
+    title: copy.title,
+    description: copy.description,
+    openGraph: {
+      title: copy.title,
+      description: copy.description,
+    },
+    twitter: {
+      card: "summary",
+      title: copy.title,
+      description: copy.description,
+    },
+  };
 }
 
 export default async function TrendClusterDetailsPage({
