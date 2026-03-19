@@ -1,0 +1,34 @@
+name: Remix Cold Start Personas
+
+on:
+  workflow_dispatch:
+    inputs:
+      batch_label:
+        description: Optional batch label to retune (for example b2). Leave empty to process all cold-start data.
+        required: false
+        default: ""
+
+jobs:
+  remix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Remix cold-start personas
+        run: node scripts/remix-cold-start-personas.mjs
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BATCH_LABEL: ${{ github.event.inputs.batch_label || '' }}

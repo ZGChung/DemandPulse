@@ -13,6 +13,50 @@ const USER_EMAIL_DOMAIN = process.env.USER_EMAIL_DOMAIN || "example.com";
 const BATCH_LABEL = process.env.BATCH_LABEL || "";
 const USER_INDEX_OFFSET = Number(process.env.USER_INDEX_OFFSET || 0);
 const REUSABLE_REQUIREMENT_PREFIXES = ["seed-", "coldstart-"];
+const FIRST_NAMES = [
+  "Alex",
+  "Jordan",
+  "Taylor",
+  "Morgan",
+  "Casey",
+  "Riley",
+  "Avery",
+  "Parker",
+  "Cameron",
+  "Quinn",
+  "Drew",
+  "Logan",
+  "Hayden",
+  "Sydney",
+  "Reese",
+  "Harper",
+  "Rowan",
+  "Emerson",
+  "Blake",
+  "Finley",
+];
+const LAST_NAMES = [
+  "Chen",
+  "Patel",
+  "Martinez",
+  "Nguyen",
+  "Kim",
+  "Johnson",
+  "Garcia",
+  "Wright",
+  "Singh",
+  "Brown",
+  "Lopez",
+  "Lee",
+  "Clark",
+  "Young",
+  "Walker",
+  "Hall",
+  "Allen",
+  "Scott",
+  "Green",
+  "Baker",
+];
 
 const CLUSTER_TEMPLATES = {
   "Authentication Systems": [
@@ -72,9 +116,15 @@ function makeUserEmail(index) {
   return `${prefix}-${String(index).padStart(3, "0")}@${USER_EMAIL_DOMAIN}`;
 }
 
+function pseudoRandom(seed) {
+  const value = Math.sin(seed * 9999) * 10000;
+  return value - Math.floor(value);
+}
+
 function makeUserName(index) {
-  const batchSuffix = BATCH_LABEL ? ` ${BATCH_LABEL.toUpperCase()}` : "";
-  return `Seed User${batchSuffix} ${String(index).padStart(3, "0")}`;
+  const first = FIRST_NAMES[index % FIRST_NAMES.length];
+  const last = LAST_NAMES[Math.floor(index / FIRST_NAMES.length) % LAST_NAMES.length];
+  return `${first} ${last}`;
 }
 
 function shouldReuseRequirement(conversationId) {
@@ -86,6 +136,33 @@ function buildGeneratedRequirementText(summary, clusterName, clusterDescription,
   return `${summary}. Cold-start seed item ${seedNumber} for ${clusterName}.${batchText} Context: ${clusterDescription}. Acceptance criteria: production-ready implementation, measurable impact, admin visibility, and clear rollout notes.`;
 }
 
+function buildCreatedAt(userNumber, now) {
+  const recencySeed = userNumber + USER_INDEX_OFFSET + 17;
+  const dayOffset = Math.floor(pseudoRandom(recencySeed) * 180) + 2;
+  return new Date(now.getTime() - dayOffset * 24 * 60 * 60 * 1000);
+}
+
+function buildDetectedAt(generationIndex, now) {
+  const seed = generationIndex + USER_INDEX_OFFSET + 31;
+  const bucket = pseudoRandom(seed);
+  let dayOffset;
+
+  if (bucket < 0.18) {
+    dayOffset = Math.floor(pseudoRandom(seed + 1) * 3);
+  } else if (bucket < 0.42) {
+    dayOffset = 3 + Math.floor(pseudoRandom(seed + 2) * 7);
+  } else if (bucket < 0.68) {
+    dayOffset = 10 + Math.floor(pseudoRandom(seed + 3) * 14);
+  } else if (bucket < 0.88) {
+    dayOffset = 24 + Math.floor(pseudoRandom(seed + 4) * 21);
+  } else {
+    dayOffset = 45 + Math.floor(pseudoRandom(seed + 5) * 45);
+  }
+
+  const minuteOffset = Math.floor(pseudoRandom(seed + 6) * 24 * 60);
+  return new Date(now.getTime() - (dayOffset * 24 * 60 + minuteOffset) * 60 * 1000);
+}
+
 async function ensureColdStartUsers(prisma) {
   const now = new Date();
   const usersToCreate = Array.from({ length: USER_COUNT }, (_, index) => {
@@ -95,7 +172,7 @@ async function ensureColdStartUsers(prisma) {
       name: makeUserName(userNumber),
       role: "USER",
       emailVerified: now,
-      createdAt: new Date(now.getTime() - userNumber * 24 * 60 * 60 * 1000),
+      createdAt: buildCreatedAt(userNumber, now),
     };
   });
 
@@ -149,7 +226,7 @@ async function createColdStartRequirement(prisma, cluster, generationIndex, user
   ];
   const template = templates[generationIndex % templates.length];
   const now = new Date();
-  const detectedAt = new Date(now.getTime() - generationIndex * 60 * 60 * 1000);
+  const detectedAt = buildDetectedAt(generationIndex, now);
   const batchSegment = BATCH_LABEL ? `${BATCH_LABEL}-` : "";
   const conversationId = `coldstart-${batchSegment}${cluster.id}-${String(generationIndex).padStart(4, "0")}`;
 
