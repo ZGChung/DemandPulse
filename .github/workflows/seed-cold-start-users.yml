@@ -7,6 +7,14 @@ on:
         description: Number of cold-start user accounts to ensure
         required: false
         default: "100"
+      user_index_offset:
+        description: Starting offset for generated user numbering
+        required: false
+        default: "0"
+      batch_label:
+        description: Optional batch label to stamp into seeded users and generated requirements
+        required: false
+        default: ""
       requirements_per_user:
         description: Minimum requirements to assign to each cold-start user
         required: false
@@ -36,4 +44,6 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           USER_COUNT: ${{ github.event.inputs.user_count || '100' }}
+          USER_INDEX_OFFSET: ${{ github.event.inputs.user_index_offset || '0' }}
+          BATCH_LABEL: ${{ github.event.inputs.batch_label || '' }}
           TARGET_REQUIREMENTS_PER_USER: ${{ github.event.inputs.requirements_per_user || '2' }}

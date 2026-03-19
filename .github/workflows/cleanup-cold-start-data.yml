@@ -1,0 +1,39 @@
+name: Cleanup Cold Start Data
+
+on:
+  workflow_dispatch:
+    inputs:
+      batch_label:
+        description: Optional batch label to clean up (for example b2). Leave empty to target all seeded users.
+        required: false
+        default: ""
+      delete_seeded_requirements:
+        description: Also delete cluster seed requirements with conversationId starting with seed-
+        required: false
+        default: "false"
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Cleanup cold-start data
+        run: node scripts/cleanup-cold-start-data.mjs
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BATCH_LABEL: ${{ github.event.inputs.batch_label || '' }}
+          DELETE_SEEDED_REQUIREMENTS: ${{ github.event.inputs.delete_seeded_requirements || 'false' }}

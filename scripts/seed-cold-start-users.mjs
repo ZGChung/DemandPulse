@@ -10,6 +10,8 @@ const USER_COUNT = Number(process.env.USER_COUNT || 100);
 const TARGET_REQUIREMENTS_PER_USER = Number(process.env.TARGET_REQUIREMENTS_PER_USER || 2);
 const USER_EMAIL_PREFIX = process.env.USER_EMAIL_PREFIX || "seed-user";
 const USER_EMAIL_DOMAIN = process.env.USER_EMAIL_DOMAIN || "example.com";
+const BATCH_LABEL = process.env.BATCH_LABEL || "";
+const USER_INDEX_OFFSET = Number(process.env.USER_INDEX_OFFSET || 0);
 const REUSABLE_REQUIREMENT_PREFIXES = ["seed-", "coldstart-"];
 
 const CLUSTER_TEMPLATES = {
@@ -66,11 +68,13 @@ const CLUSTER_TEMPLATES = {
 };
 
 function makeUserEmail(index) {
-  return `${USER_EMAIL_PREFIX}-${String(index).padStart(3, "0")}@${USER_EMAIL_DOMAIN}`;
+  const prefix = BATCH_LABEL ? `${USER_EMAIL_PREFIX}-${BATCH_LABEL}` : USER_EMAIL_PREFIX;
+  return `${prefix}-${String(index).padStart(3, "0")}@${USER_EMAIL_DOMAIN}`;
 }
 
 function makeUserName(index) {
-  return `Seed User ${String(index).padStart(3, "0")}`;
+  const batchSuffix = BATCH_LABEL ? ` ${BATCH_LABEL.toUpperCase()}` : "";
+  return `Seed User${batchSuffix} ${String(index).padStart(3, "0")}`;
 }
 
 function shouldReuseRequirement(conversationId) {
@@ -78,13 +82,14 @@ function shouldReuseRequirement(conversationId) {
 }
 
 function buildGeneratedRequirementText(summary, clusterName, clusterDescription, seedNumber) {
-  return `${summary}. Cold-start seed item ${seedNumber} for ${clusterName}. Context: ${clusterDescription}. Acceptance criteria: production-ready implementation, measurable impact, admin visibility, and clear rollout notes.`;
+  const batchText = BATCH_LABEL ? ` Batch ${BATCH_LABEL}.` : "";
+  return `${summary}. Cold-start seed item ${seedNumber} for ${clusterName}.${batchText} Context: ${clusterDescription}. Acceptance criteria: production-ready implementation, measurable impact, admin visibility, and clear rollout notes.`;
 }
 
 async function ensureColdStartUsers(prisma) {
   const now = new Date();
   const usersToCreate = Array.from({ length: USER_COUNT }, (_, index) => {
-    const userNumber = index + 1;
+    const userNumber = USER_INDEX_OFFSET + index + 1;
     return {
       email: makeUserEmail(userNumber),
       name: makeUserName(userNumber),
@@ -102,7 +107,7 @@ async function ensureColdStartUsers(prisma) {
   return prisma.user.findMany({
     where: {
       email: {
-        startsWith: `${USER_EMAIL_PREFIX}-`,
+        startsWith: BATCH_LABEL ? `${USER_EMAIL_PREFIX}-${BATCH_LABEL}-` : `${USER_EMAIL_PREFIX}-`,
       },
     },
     orderBy: {
@@ -145,7 +150,8 @@ async function createColdStartRequirement(prisma, cluster, generationIndex, user
   const template = templates[generationIndex % templates.length];
   const now = new Date();
   const detectedAt = new Date(now.getTime() - generationIndex * 60 * 60 * 1000);
-  const conversationId = `coldstart-${cluster.id}-${String(generationIndex).padStart(4, "0")}`;
+  const batchSegment = BATCH_LABEL ? `${BATCH_LABEL}-` : "";
+  const conversationId = `coldstart-${batchSegment}${cluster.id}-${String(generationIndex).padStart(4, "0")}`;
 
   const requirement = await prisma.requirement.create({
     data: {
@@ -157,7 +163,7 @@ async function createColdStartRequirement(prisma, cluster, generationIndex, user
       ),
       summarizedRequirement: template,
       conversationId,
-      workspacePath: `/seed/cold-start/${cluster.name.toLowerCase().replace(/\s+/g, "-")}`,
+      workspacePath: `/seed/cold-start/${BATCH_LABEL || "default"}/${cluster.name.toLowerCase().replace(/\s+/g, "-")}`,
       detectedAt,
       dataCollectionConsent: true,
       contactConsent: false,
@@ -291,7 +297,7 @@ async function main() {
       prisma.user.count({
         where: {
           email: {
-            startsWith: `${USER_EMAIL_PREFIX}-`,
+            startsWith: BATCH_LABEL ? `${USER_EMAIL_PREFIX}-${BATCH_LABEL}-` : `${USER_EMAIL_PREFIX}-`,
           },
         },
       }),
@@ -317,6 +323,8 @@ async function main() {
     console.log(
       JSON.stringify(
         {
+          batchLabel: BATCH_LABEL || null,
+          userIndexOffset: USER_INDEX_OFFSET,
           userCountTarget: USER_COUNT,
           targetRequirementsPerUser: TARGET_REQUIREMENTS_PER_USER,
           coldStartUserCount,
