@@ -73,6 +73,19 @@ export default withAuth(
   async function middleware(req) {
     const startTime = Date.now();
     try {
+      if (req.nextUrl.pathname === "/api-docs") {
+        return NextResponse.redirect(new URL("/landing", req.url), 307);
+      }
+
+      if (req.nextUrl.pathname === "/api/openapi") {
+        return NextResponse.json(
+          {
+            error: "This endpoint has been retired",
+          },
+          { status: 410 }
+        );
+      }
+
       // Handle CORS preflight requests
       if (req.method === "OPTIONS" && req.nextUrl.pathname.startsWith("/api/")) {
         const response = new NextResponse(null, { status: 204 });
