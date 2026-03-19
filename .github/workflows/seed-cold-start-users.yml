@@ -1,0 +1,39 @@
+name: Seed Cold Start Users
+
+on:
+  workflow_dispatch:
+    inputs:
+      user_count:
+        description: Number of cold-start user accounts to ensure
+        required: false
+        default: "100"
+      requirements_per_user:
+        description: Minimum requirements to assign to each cold-start user
+        required: false
+        default: "2"
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Seed cold-start users
+        run: node scripts/seed-cold-start-users.mjs
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          USER_COUNT: ${{ github.event.inputs.user_count || '100' }}
+          TARGET_REQUIREMENTS_PER_USER: ${{ github.event.inputs.requirements_per_user || '2' }}
