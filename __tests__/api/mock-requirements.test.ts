@@ -77,7 +77,7 @@ describe("Mock Requirements API", () => {
   });
 
   describe("POST", () => {
-    it("should return 403 in production", async () => {
+    it("should return 410 in production", async () => {
       process.env = { ...originalEnv, NODE_ENV: "production" };
 
       const { POST } = await import("@/app/api/mock/requirements/route");
@@ -87,9 +87,9 @@ describe("Mock Requirements API", () => {
       });
 
       const response = await POST(request);
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(410);
       const data = await response.json();
-      expect(data.error).toContain("development");
+      expect(data.error).toContain("retired");
     });
 
     it("should return 400 for invalid JSON", async () => {
@@ -163,7 +163,7 @@ describe("Mock Requirements API", () => {
   });
 
   describe("GET", () => {
-    it("should return 403 in production", async () => {
+    it("should return 410 in production", async () => {
       process.env = { ...originalEnv, NODE_ENV: "production" };
 
       const { GET } = await import("@/app/api/mock/requirements/route");
@@ -172,7 +172,7 @@ describe("Mock Requirements API", () => {
       });
 
       const response = await GET(request);
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(410);
     });
 
     it("should return mock requirements", async () => {

@@ -295,7 +295,7 @@ model DataDeletionQueue {
 
 - `POST /api/requirements` - Submit a requirement (authenticated)
 - `GET /api/requirements` - List requirements (admin only)
-- `POST /api/mock/requirements` - Mock endpoint for development
+- `POST /api/mock/requirements` - 已退役；仅本地开发时临时可用
 
 ### Admin Endpoints (require ADMIN role)
 

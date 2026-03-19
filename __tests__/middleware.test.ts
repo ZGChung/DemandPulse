@@ -47,7 +47,7 @@ describe("Middleware", () => {
       expect(isPublic).toBe(true);
     });
 
-    it("should identify mock routes as public", () => {
+    it("should identify mock routes for explicit middleware handling", () => {
       const pathname = "/api/mock/requirements";
       const isPublic = pathname.startsWith("/api/mock/");
       expect(isPublic).toBe(true);

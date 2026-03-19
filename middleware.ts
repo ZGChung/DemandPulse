@@ -19,7 +19,7 @@ function isPublicRoute(req: NextRequest): boolean {
     return true;
   }
 
-  // Mock endpoints (development only)
+  // Mock endpoints are only public in development; in other environments they are retired
   if (pathname.startsWith("/api/mock/")) {
     return true;
   }
@@ -83,6 +83,15 @@ export default withAuth(
       }
 
       if (req.nextUrl.pathname === "/api/openapi") {
+        return NextResponse.json(
+          {
+            error: "This endpoint has been retired",
+          },
+          { status: 410 }
+        );
+      }
+
+      if (req.nextUrl.pathname.startsWith("/api/mock/") && process.env.NODE_ENV !== "development") {
         return NextResponse.json(
           {
             error: "This endpoint has been retired",

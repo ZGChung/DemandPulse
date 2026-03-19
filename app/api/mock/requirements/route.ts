@@ -22,10 +22,7 @@ const dataCollectionFlow = new DataCollectionFlow();
 export async function POST(request: NextRequest) {
   // Only allow in development
   if (process.env.NODE_ENV !== "development") {
-    return NextResponse.json(
-      { error: "Mock endpoint only available in development mode" },
-      { status: 403 }
-    );
+    return NextResponse.json({ error: "This endpoint has been retired" }, { status: 410 });
   }
 
   try {
@@ -185,10 +182,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   // Only allow in development
   if (process.env.NODE_ENV !== "development") {
-    return NextResponse.json(
-      { error: "Mock endpoint only available in development mode" },
-      { status: 403 }
-    );
+    return NextResponse.json({ error: "This endpoint has been retired" }, { status: 410 });
   }
 
   try {
