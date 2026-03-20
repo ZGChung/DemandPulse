@@ -23,6 +23,14 @@ describe("EmailService", () => {
       });
       expect(service).toBeDefined();
     });
+
+    it("should export a singleton email service", () => {
+      const { emailService } = require("../../services/email-service") as {
+        emailService: EmailService;
+      };
+
+      expect(emailService).toBeInstanceOf(EmailService);
+    });
   });
 
   describe("sendEmail", () => {

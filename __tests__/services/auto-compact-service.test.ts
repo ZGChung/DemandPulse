@@ -298,6 +298,28 @@ describe("AutoCompactService", () => {
       expect(stats.isExecuting).toBeDefined();
       expect(stats.config).toBeDefined();
     });
+
+    it("should count successful and failed compacts from history", () => {
+      (service as any).compactHistory = [
+        {
+          timestamp: new Date(),
+          strategy: "summarize_oldest",
+          status: "success",
+          contextBefore: {},
+        },
+        {
+          timestamp: new Date(),
+          strategy: "remove_oldest",
+          status: "failed",
+          contextBefore: {},
+        },
+      ];
+
+      const stats = service.getStatistics();
+
+      expect(stats.successfulCompacts).toBe(1);
+      expect(stats.failedCompacts).toBe(1);
+    });
   });
 
   describe("enable/disable", () => {

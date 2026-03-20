@@ -123,6 +123,32 @@ describe("ContextMonitorService", () => {
       expect(stats.monitoringActive).toBe(false);
       expect(stats.config).toBeDefined();
     });
+
+    it("should aggregate important message and token counts", () => {
+      (service as any).conversation = [
+        {
+          id: "1",
+          role: "user",
+          content: "important",
+          timestamp: new Date(),
+          estimatedTokens: 20,
+          important: true,
+        },
+        {
+          id: "2",
+          role: "assistant",
+          content: "normal",
+          timestamp: new Date(),
+          estimatedTokens: 30,
+          important: false,
+        },
+      ];
+
+      const stats = service.getStatistics();
+
+      expect(stats.importantMessages).toBe(1);
+      expect(stats.totalTokens).toBe(50);
+    });
   });
 
   describe("configuration management", () => {

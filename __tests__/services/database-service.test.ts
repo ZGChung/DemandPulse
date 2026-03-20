@@ -2434,5 +2434,172 @@ describe("Mock implementation branch coverage", () => {
         })
       );
     });
+
+    it("should exercise mock storage branches for requirement lookup and embedding updates", async () => {
+      const mockService = new DatabaseService(null);
+      (mockService as any).mockRequirements = [
+        {
+          id: "mock-1",
+          originalRequirement: "Encrypted original",
+          summarizedRequirement: "Encrypted summary",
+          conversationId: "conv-1",
+          workspacePath: "/tmp/project",
+          detectedAt: new Date("2024-01-01T00:00:00Z"),
+          dataCollectionConsent: true,
+          contactConsent: false,
+          anonymizationConsent: false,
+          consentedAt: new Date("2024-01-01T00:00:00Z"),
+          userId: "user-1",
+          dataRetentionDays: 30,
+          scheduledDeletionAt: new Date("2024-02-01T00:00:00Z"),
+          status: "PENDING",
+          createdAt: new Date("2024-01-01T00:00:00Z"),
+          updatedAt: new Date("2024-01-01T00:00:00Z"),
+        },
+      ];
+      jest
+        .spyOn(mockService as any, "applyPrivacyControls")
+        .mockImplementation(async (requirement: any) => requirement);
+
+      await mockService.updateRequirementEmbedding("mock-1", [0.1, 0.2]);
+      const requirement = await mockService.getRequirement("mock-1");
+      const requirements = await mockService.getRequirementsByStatus("PENDING", 10, "user-1");
+
+      expect((mockService as any).mockRequirements[0].embedding).toEqual([0.1, 0.2]);
+      expect(requirement).toMatchObject({ id: "mock-1" });
+      expect(requirements).toHaveLength(1);
+    });
+
+    it("should exercise mock statistics and admin filtering branches", async () => {
+      const mockService = new DatabaseService(null);
+      const recentDate = new Date();
+      (mockService as any).mockRequirements = [
+        {
+          id: "mock-1",
+          originalRequirement: "Req 1",
+          summarizedRequirement: "Req 1",
+          conversationId: "conv-1",
+          workspacePath: "/tmp/a",
+          detectedAt: recentDate,
+          dataCollectionConsent: true,
+          contactConsent: true,
+          anonymizationConsent: false,
+          consentedAt: recentDate,
+          userId: "user-1",
+          dataRetentionDays: 30,
+          scheduledDeletionAt: new Date("2024-02-01T00:00:00Z"),
+          status: "PENDING",
+          createdAt: recentDate,
+          updatedAt: recentDate,
+        },
+        {
+          id: "mock-2",
+          originalRequirement: "Req 2",
+          summarizedRequirement: "Req 2",
+          conversationId: "conv-2",
+          workspacePath: "/tmp/b",
+          detectedAt: recentDate,
+          dataCollectionConsent: true,
+          contactConsent: false,
+          anonymizationConsent: true,
+          consentedAt: recentDate,
+          userId: "user-2",
+          dataRetentionDays: 30,
+          scheduledDeletionAt: new Date("2024-02-01T00:00:00Z"),
+          status: "CLUSTERED",
+          createdAt: recentDate,
+          updatedAt: recentDate,
+        },
+      ];
+      jest
+        .spyOn(mockService as any, "applyPrivacyControls")
+        .mockImplementation(async (requirement: any) => requirement);
+
+      const stats = await mockService.getStatistics();
+      const adminRequirements = await mockService.getRequirementsForAdmin(
+        { status: "PENDING", userId: "user-1" },
+        "admin"
+      );
+      const adminCount = await mockService.getRequirementsCountForAdmin({
+        status: "PENDING",
+        userId: "user-1",
+      });
+
+      expect(stats.byStatus).toEqual({ pending: 1, processed: 0, clustered: 1 });
+      expect(stats.privacyMetrics).toEqual({ withContactConsent: 1, withAnonymization: 1 });
+      expect(adminRequirements).toHaveLength(1);
+      expect(adminCount).toBe(1);
+    });
+
+    it("should log privacy actions and return mock admin cluster details", async () => {
+      const mockService = new DatabaseService(null);
+
+      await (mockService as any).logPrivacyAction({
+        action: "CREATE",
+        entityType: "Requirement",
+        entityId: "mock-1",
+        actorType: "SYSTEM",
+      });
+
+      const result = await mockService.getClusterDetailsForAdmin("mock-cluster-1");
+
+      expect(result).toMatchObject({
+        id: "mock-cluster-1",
+        requirements: [],
+      });
+    });
+
+    it("should return public cluster details from the prisma branch", async () => {
+      const { prisma } = require("@/lib/prisma");
+      const service = new DatabaseService();
+      (prisma as any).requirementCluster.findUnique = jest.fn().mockResolvedValue({
+        id: "cluster-2",
+        name: "Cluster 2",
+        description: "Public cluster",
+        firstDetectedAt: new Date("2024-01-01T00:00:00Z"),
+        lastDetectedAt: new Date("2024-01-03T00:00:00Z"),
+        _count: { requirements: 1 },
+        requirements: [
+          {
+            id: "req-public-1",
+            summarizedRequirement: "Public summary",
+            detectedAt: new Date("2024-01-03T00:00:00Z"),
+            status: "CLUSTERED",
+          },
+        ],
+      });
+
+      const result = await service.getClusterDetailsPublic("cluster-2", { limit: 1, offset: 0 });
+
+      expect(result).toMatchObject({
+        id: "cluster-2",
+        requirementCount: 1,
+      });
+      expect(result?.requirements).toHaveLength(1);
+    });
+
+    it("should prioritize prisma requirements using recency and cluster counts", async () => {
+      const { prisma } = require("@/lib/prisma");
+      const service = new DatabaseService();
+      (prisma as any).requirement.findMany.mockResolvedValue([
+        {
+          id: "req-low",
+          detectedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+          clusters: [{ requirementCount: 1 }],
+        },
+        {
+          id: "req-high",
+          detectedAt: new Date(),
+          clusters: [{ requirementCount: 5 }],
+        },
+      ]);
+      jest
+        .spyOn(service as any, "applyPrivacyControls")
+        .mockImplementation(async (requirement: any) => requirement);
+
+      const requirements = await service.getPrioritizedRequirements(2);
+
+      expect(requirements.map((req: any) => req.id)).toEqual(["req-high", "req-low"]);
+    });
   });
 });
