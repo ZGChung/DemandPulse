@@ -35,6 +35,10 @@ import {
 } from "@/services/claude-code-integration";
 
 describe("ClaudeCodeIntegrationService", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe("constructor", () => {
     it("should use default config when no config provided", () => {
       const service = new ClaudeCodeIntegrationService();
@@ -241,6 +245,24 @@ describe("ClaudeCodeIntegrationService", () => {
 
       expect(service.getStatus().initialized).toBe(true);
     });
+
+    it("should surface initialization errors from hook registration", async () => {
+      const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+      const service = new ClaudeCodeIntegrationService({ autoStart: false });
+      const hookManager = service.getHookManager();
+      const registerSpy = jest.spyOn(hookManager, "register").mockImplementationOnce(() => {
+        throw new Error("hook registration failed");
+      });
+
+      await expect(service.initialize()).rejects.toThrow("hook registration failed");
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Failed to initialize Claude Code integration:",
+        expect.any(Error)
+      );
+
+      registerSpy.mockRestore();
+      errorSpy.mockRestore();
+    });
   });
 
   describe("generateConversationSummary", () => {
@@ -270,6 +292,31 @@ describe("ClaudeCodeIntegrationService", () => {
 
       expect(service.getStatus().initialized).toBe(true);
     });
+
+    it("should swallow summary generation errors", async () => {
+      const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+      const service = new ClaudeCodeIntegrationService({
+        autoStart: false,
+        persistenceEnabled: true,
+      });
+      await service.initialize();
+
+      const statsSpy = jest
+        .spyOn(service.getContextMonitor(), "getStatistics")
+        .mockImplementationOnce(() => {
+          throw new Error("summary failed");
+        });
+
+      await (service as any).generateConversationSummary();
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Failed to generate conversation summary:",
+        expect.any(Error)
+      );
+
+      statsSpy.mockRestore();
+      errorSpy.mockRestore();
+    });
   });
 
   describe("recordCompactEvent", () => {
@@ -297,6 +344,27 @@ describe("ClaudeCodeIntegrationService", () => {
 
       expect(service.getStatus().initialized).toBe(true);
     });
+
+    it("should swallow compact event logging errors", async () => {
+      const service = new ClaudeCodeIntegrationService({
+        autoStart: false,
+        persistenceEnabled: true,
+        verboseLogging: true,
+      });
+      await service.initialize();
+
+      const logSpy = jest.spyOn(console, "log").mockImplementation(() => {
+        throw new Error("log failed");
+      });
+      const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+      await (service as any).recordCompactEvent({ source: "test" });
+
+      expect(errorSpy).toHaveBeenCalledWith("Failed to record compact event:", expect.any(Error));
+
+      logSpy.mockRestore();
+      errorSpy.mockRestore();
+    });
   });
 
   describe("verbose logging", () => {
@@ -309,6 +377,34 @@ describe("ClaudeCodeIntegrationService", () => {
 
       // Just verify it doesn't throw
       expect(service.getConfig().verboseLogging).toBe(true);
+    });
+
+    it("should log context warnings through the registered hook", async () => {
+      const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+      const service = new ClaudeCodeIntegrationService({
+        autoStart: false,
+        verboseLogging: true,
+        enableAutoCompact: true,
+      });
+      await service.initialize();
+
+      await service.triggerTestEvent("context_limit_approaching", { usage: 0.92 });
+
+      expect(
+        logSpy.mock.calls.some(
+          ([message, data]) =>
+            message === "[ClaudeCodeIntegration] Context limit approaching:" &&
+            (data as { usage?: number } | undefined)?.usage === 0.92
+        )
+      ).toBe(true);
+      expect(
+        logSpy.mock.calls.some(
+          ([message]) =>
+            message === "[ClaudeCodeIntegration] Auto-compact will handle context warning"
+        )
+      ).toBe(true);
+
+      logSpy.mockRestore();
     });
   });
 

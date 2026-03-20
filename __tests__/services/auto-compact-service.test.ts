@@ -42,6 +42,40 @@ describe("AutoCompactService", () => {
       });
       expect(customService).toBeDefined();
     });
+
+    it("should delegate registered limit-reached hooks to the service handler", async () => {
+      const { hookManager } = require("@/services/hook-manager");
+      const handlers = hookManager.register.mock.calls.map(([handler]: [any]) => handler);
+      const limitReachedHandler = handlers.find(
+        (handler: { event: string }) => handler.event === "context_limit_reached"
+      );
+
+      await limitReachedHandler.handler({ reason: "critical" });
+
+      expect(hookManager.trigger).toHaveBeenCalledWith(
+        "auto_compact_triggered",
+        expect.objectContaining({
+          reason: "critical",
+          critical: true,
+          strategy: "remove_oldest",
+        })
+      );
+    });
+
+    it("should delegate registered warning hooks to the service handler", async () => {
+      const { hookManager } = require("@/services/hook-manager");
+      const handlers = hookManager.register.mock.calls.map(([handler]: [any]) => handler);
+      const warningHandler = handlers.find(
+        (handler: { event: string }) => handler.event === "context_limit_approaching"
+      );
+
+      await warningHandler.handler({ status: { shouldWarn: true } });
+
+      expect(hookManager.trigger).not.toHaveBeenCalledWith(
+        "auto_compact_triggered",
+        expect.anything()
+      );
+    });
   });
 
   describe("getConfig", () => {
@@ -121,6 +155,46 @@ describe("AutoCompactService", () => {
       const result = await service.manualCompact("summarize_oldest");
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
+    });
+  });
+
+  describe("error handling", () => {
+    it("should record a failed history entry when auto-compact processing throws", async () => {
+      const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+      const notifySpy = jest.spyOn(service as any, "notify");
+      notifySpy.mockImplementationOnce(() => {
+        throw new Error("notify failed");
+      });
+
+      await (service as any).handleAutoCompactTrigger({ strategy: "summarize_oldest" });
+
+      const history = service.getHistory();
+      expect(history[0]).toEqual(
+        expect.objectContaining({
+          strategy: "unknown",
+          status: "failed",
+          reason: "notify failed",
+        })
+      );
+
+      errorSpy.mockRestore();
+      notifySpy.mockRestore();
+    });
+
+    it("should return a failed result when compact execution throws", async () => {
+      const executeSpy = jest
+        .spyOn(service as any, "executeCompactSimulated")
+        .mockRejectedValue(new Error("simulated failure"));
+
+      const result = await (service as any).executeCompact("summarize_oldest");
+
+      expect(result).toEqual({
+        success: false,
+        message: "Compact execution failed",
+        reason: "simulated failure",
+      });
+
+      executeSpy.mockRestore();
     });
   });
 

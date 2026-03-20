@@ -350,6 +350,21 @@ describe("EmailService", () => {
   });
 
   describe("sendRealEmail error handling", () => {
+    it("should return failure when sendRealEmail is called without a resend client", async () => {
+      const service = new EmailService({ enabled: true, useMock: false });
+      const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+      const result = await (service as any).sendRealEmail({
+        to: { email: "test@example.com" },
+        template: { subject: "Test", body: "Body" },
+      });
+
+      expect(result).toEqual({ success: false });
+      expect(errorSpy).toHaveBeenCalledWith("[EmailService] Resend client not initialized");
+
+      errorSpy.mockRestore();
+    });
+
     it("should handle sendMockEmail with no metadata", async () => {
       const service = new EmailService({ enabled: true, useMock: true });
       const result = await service.sendEmail({
@@ -472,6 +487,25 @@ describe("EmailService", () => {
       );
       expect(result.sent).toBe(2);
       expect(result.failed).toBe(0);
+    });
+
+    it("should count failed sends", async () => {
+      const service = new EmailService({ enabled: true, useMock: true });
+      const sendSpy = jest
+        .spyOn(service, "sendEmail")
+        .mockResolvedValueOnce({ success: true, messageId: "msg-1" })
+        .mockResolvedValueOnce({ success: false });
+
+      const result = await service.sendAdminNotification(
+        [
+          { name: "Admin1", email: "admin1@example.com" },
+          { name: "Admin2", email: "admin2@example.com" },
+        ],
+        { subject: "Test", body: "Body" }
+      );
+
+      expect(result).toEqual({ sent: 1, failed: 1 });
+      sendSpy.mockRestore();
     });
   });
 

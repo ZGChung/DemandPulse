@@ -1,10 +1,12 @@
 // ContextMonitorService tests
 import { ContextMonitorService } from "../../services/context-monitor";
+import { hookManager } from "../../services/hook-manager";
 
 describe("ContextMonitorService", () => {
   let service: ContextMonitorService;
 
   beforeEach(() => {
+    hookManager.clearHandlers();
     service = new ContextMonitorService({
       contextWindowSize: 10000,
       warningThreshold: 0.75,
@@ -23,6 +25,7 @@ describe("ContextMonitorService", () => {
 
   afterEach(() => {
     service.stopMonitoring();
+    hookManager.clearHandlers();
   });
 
   describe("constructor", () => {
@@ -87,6 +90,19 @@ describe("ContextMonitorService", () => {
       const conversation = (service as any).conversation;
       expect(Array.isArray(conversation)).toBe(true);
       expect(conversation.length).toBe(0);
+    });
+
+    it("should process messages through the registered hook handler", async () => {
+      const handlers = hookManager.getHandlers("message_received");
+
+      await handlers[0].handler({
+        content: "I need a requirement for the roadmap",
+        role: "assistant",
+      });
+
+      const conversation = service.getConversation();
+      expect(conversation).toHaveLength(1);
+      expect(conversation[0].role).toBe("assistant");
     });
   });
 
@@ -841,6 +857,94 @@ describe("ContextMonitorService", () => {
 
       const status3 = edgeCaseService.getContextStatus();
       expect(status3.status).toBe("limit_reached");
+    });
+  });
+
+  describe("hook-triggered context checks", () => {
+    it("should trigger approaching and auto-compact hooks for critical usage", async () => {
+      const triggerSpy = jest.spyOn(hookManager, "trigger").mockResolvedValue(undefined);
+      const criticalService = new ContextMonitorService({
+        contextWindowSize: 1000,
+        compactThreshold: 0.85,
+        criticalThreshold: 0.95,
+        autoCompactEnabled: true,
+        compactStrategy: "remove_oldest",
+      });
+
+      (criticalService as any).conversation.push({
+        id: "critical-1",
+        role: "user" as const,
+        content: "x".repeat(3600),
+        timestamp: new Date(),
+        estimatedTokens: 900,
+        important: false,
+      });
+
+      await (criticalService as any).checkContextStatus();
+
+      expect(triggerSpy).toHaveBeenCalledWith(
+        "context_limit_approaching",
+        expect.objectContaining({
+          status: expect.objectContaining({ status: "critical", shouldCompact: true }),
+        })
+      );
+      expect(triggerSpy).toHaveBeenCalledWith(
+        "auto_compact_triggered",
+        expect.objectContaining({ strategy: "remove_oldest" })
+      );
+
+      triggerSpy.mockRestore();
+    });
+
+    it("should trigger only the warning hook for warning usage", async () => {
+      const triggerSpy = jest.spyOn(hookManager, "trigger").mockResolvedValue(undefined);
+      const warningService = new ContextMonitorService({
+        contextWindowSize: 1000,
+        warningThreshold: 0.75,
+        compactThreshold: 0.85,
+        autoCompactEnabled: false,
+      });
+
+      (warningService as any).conversation.push({
+        id: "warning-1",
+        role: "user" as const,
+        content: "x".repeat(3200),
+        timestamp: new Date(),
+        estimatedTokens: 800,
+        important: false,
+      });
+
+      await (warningService as any).checkContextStatus();
+
+      expect(triggerSpy).toHaveBeenCalledTimes(1);
+      expect(triggerSpy).toHaveBeenCalledWith(
+        "context_limit_approaching",
+        expect.objectContaining({
+          status: expect.objectContaining({ status: "warning", shouldCompact: false }),
+        })
+      );
+
+      triggerSpy.mockRestore();
+    });
+  });
+
+  describe("monitoring interval", () => {
+    it("should swallow polling errors from the interval callback", async () => {
+      jest.useFakeTimers();
+      const intervalService = new ContextMonitorService({ checkInterval: 10 });
+      const checkSpy = jest
+        .spyOn(intervalService as any, "checkContextStatus")
+        .mockRejectedValue(new Error("poll failure"));
+
+      intervalService.startMonitoring();
+      jest.advanceTimersByTime(20);
+      await Promise.resolve();
+
+      expect(checkSpy).toHaveBeenCalled();
+
+      intervalService.stopMonitoring();
+      checkSpy.mockRestore();
+      jest.useRealTimers();
     });
   });
 });

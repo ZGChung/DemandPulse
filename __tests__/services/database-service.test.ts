@@ -2398,4 +2398,41 @@ describe("Mock implementation branch coverage", () => {
       expect(result).toBe(1);
     });
   });
+
+  describe("additional uncovered branches", () => {
+    it("should fall back to mock storage when prisma inspection throws", () => {
+      const explodingClient = new Proxy(
+        {},
+        {
+          has() {
+            throw new Error("proxy failure");
+          },
+        }
+      );
+
+      const fallbackService = new DatabaseService(explodingClient as any);
+
+      expect((fallbackService as any).prisma).toBeNull();
+    });
+
+    it("should return public cluster details from the mock branch", async () => {
+      const mockService = new DatabaseService(null);
+
+      const result = await mockService.getClusterDetailsPublic("mock-cluster-1", {
+        limit: 10,
+        offset: 0,
+      });
+
+      expect(result).toMatchObject({
+        id: "mock-cluster-1",
+        name: "Authentication Systems",
+      });
+      expect(result?.requirements).toHaveLength(2);
+      expect(result?.requirements[0]).toEqual(
+        expect.objectContaining({
+          status: "CLUSTERED",
+        })
+      );
+    });
+  });
 });
