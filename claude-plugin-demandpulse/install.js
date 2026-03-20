@@ -6,10 +6,10 @@
  * It copies the plugin directory to the appropriate location.
  */
 
-import { existsSync, mkdirSync, cpSync } from 'fs';
-import { dirname, join } from 'path';
-import { homedir } from 'os';
-import { fileURLToPath } from 'url';
+import { existsSync, mkdirSync, cpSync } from "fs";
+import { dirname, join } from "path";
+import { homedir } from "os";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -20,9 +20,9 @@ const __dirname = dirname(__filename);
 // 2. ~/.claude-code/plugins/
 // 3. Project-specific: ./.claude/plugins/
 const possiblePluginDirs = [
-  join(homedir(), '.config', 'claude-code', 'plugins'),
-  join(homedir(), '.claude-code', 'plugins'),
-  join(process.cwd(), '.claude', 'plugins'),
+  join(homedir(), ".config", "claude-code", "plugins"),
+  join(homedir(), ".claude-code", "plugins"),
+  join(process.cwd(), ".claude", "plugins"),
 ];
 
 // Find the first existing directory, or create the first one
@@ -40,7 +40,7 @@ if (!targetDir) {
   mkdirSync(targetDir, { recursive: true });
 }
 
-const pluginName = 'demandpulse';
+const pluginName = "demandpulse";
 const sourceDir = __dirname;
 const destDir = join(targetDir, pluginName);
 
@@ -63,11 +63,13 @@ try {
   console.log(`✅ Plugin installed successfully!`);
   console.log(`\nNext steps:`);
   console.log(`1. Restart Claude Code`);
-  console.log(`2. Configure environment variables:`);
-  console.log(`   - DEMANDPULSE_API_URL (default: http://localhost:3000)`);
-  console.log(`   - DEMANDPULSE_API_KEY (if using authentication)`);
-  console.log(`   - ENABLE_AUTO_DETECTION (default: false)`);
-  console.log(`3. Test the plugin by running: /demandpulse:submit`);
+  console.log(
+    `2. Run /demandpulse:share after a conversation about a feature, bug, or workflow pain point`
+  );
+  console.log(`3. Optional configuration:`);
+  console.log(`   - DEMANDPULSE_ACCOUNT to link submissions to a DemandPulse account`);
+  console.log(`   - DEMANDPULSE_AUTO_SUBMIT=true to enable stop-hook auto-submit`);
+  console.log(`   - DEMANDPULSE_API_URL to override the default API endpoint`);
   console.log(`\nFor manual installation or troubleshooting, see README.md`);
 } catch (error) {
   console.error(`❌ Installation failed: ${error.message}`);

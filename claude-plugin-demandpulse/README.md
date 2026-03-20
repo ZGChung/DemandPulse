@@ -1,113 +1,147 @@
 # DemandPulse Claude Code Plugin
 
-Share developer requirements with the DemandPulse community — zero config by default.
+DemandPulse lets Claude Code users share real developer requirements with the DemandPulse community trends dashboard.
 
-**Requirements:** Claude Code 1.0.33 or later. Run `claude --version` to check.
+The plugin is designed for explicit, low-friction sharing:
 
-## Install (recommended)
+- `/demandpulse:share` turns the current conversation into a sanitized requirement draft
+- Claude shows the summary and asks for confirmation before anything is sent
+- Submissions are anonymous by default
+- Users can optionally link a DemandPulse account to see their own submissions later
+- An optional stop hook can auto-submit likely requirements for power users who opt in
 
-**Option A — From the plugin marketplace (if available)**  
-In Claude Code, run:
+## Requirements
 
-```bash
-/plugin install demandpulse
-```
+- Claude Code with plugin support
+- Node.js 18 or later
+- Internet access to reach `https://demand-pulse.vercel.app`
 
-**Option B — Load from source**  
-From the DemandPulse repo root (the directory that contains `claude-plugin-demandpulse/`), run:
+## Install
+
+### Marketplace install
+
+If the plugin is published in a Claude Code marketplace, install it there and restart Claude Code after installation.
+
+### Local install for development
+
+From the DemandPulse repo root:
 
 ```bash
 claude --plugin-dir ./claude-plugin-demandpulse
 ```
 
-Or with an absolute path so the plugin is always found:
+Or use the installer:
 
 ```bash
-claude --plugin-dir "$(pwd)/claude-plugin-demandpulse"
+cd claude-plugin-demandpulse
+npm install
+npm run install-plugin
 ```
 
-Then in Claude Code, run **`/demandpulse:share`** after a conversation where you discuss a feature, bug, or improvement.
+The installer copies the plugin into a Claude Code plugin directory so it can be loaded on restart.
+
+## What Gets Installed
+
+The plugin package contains:
+
+- `.claude-plugin/plugin.json` for Claude Code plugin metadata
+- `commands/share.md` for the `/demandpulse:share` slash command
+- `skills/share/` for the guided sharing workflow
+- `skills/submit-requirement/` for model-invoked requirement submission behavior
+- `hooks/hooks.json` and `bin/hook-handler.mjs` for optional stop-hook auto-submit
 
 ## Usage
 
-After a conversation where you discuss a feature need, bug, or improvement:
+After a conversation where the user discusses a feature request, bug, missing integration, workflow pain point, or improvement:
 
-```
+```text
 /demandpulse:share
 ```
 
-Claude will:
+The plugin should then:
 
-1. Extract the requirement from your conversation
-2. Summarize it in one sentence
-3. Show you the summary and ask for confirmation
-4. Optionally ask for your DemandPulse account (GitHub email or username) to link the submission to your account
-5. Submit to the DemandPulse community
+1. Extract the main requirement from the current conversation.
+2. Summarize it in one sentence.
+3. Show the summary and extracted source text.
+4. Ask for explicit confirmation.
+5. Check for a saved DemandPulse account.
+6. Submit the requirement to DemandPulse.
 
-See what developers are building at **https://demand-pulse.vercel.app/trends**
+## Account Linking
 
-## Linking to your DemandPulse account
+Submissions can be linked to the user’s DemandPulse account using the same GitHub email or username they use to sign in at `demand-pulse.vercel.app`.
 
-Submissions can be linked to your DemandPulse account (the same GitHub email or username you use to sign in at demand-pulse.vercel.app) so they appear under "My requirements". No API key or Anthropic account needed.
+Supported account sources:
 
-- **Technical users**: Set your account once so you're never prompted:
-  ```bash
-  export DEMANDPULSE_ACCOUNT=your@email.com
-  ```
-  Or create `~/.config/demandpulse/account` with one line (your email or GitHub username).
-- **Others**: The first time you run `/demandpulse:share`, Claude will ask you to enter your DemandPulse account. You can then choose to save it locally so you won't be asked again.
+- `DEMANDPULSE_ACCOUNT`
+- `~/.config/demandpulse/account`
+- Direct user input at submit time
 
-## No config required by default
+If no account is available, the submission stays anonymous.
 
-The plugin works out of the box. If you don't provide an account, submissions are anonymous.
+## Environment Variables
 
-### Optional: Auto-submit (Power Users)
+Optional configuration:
 
-If you want requirements auto-detected and submitted on every session end:
+- `DEMANDPULSE_ACCOUNT`: Default account identifier for linked submissions
+- `DEMANDPULSE_AUTO_SUBMIT=true`: Enable stop-hook auto-submit
+- `DEMANDPULSE_API_URL`: Override the default API base URL
 
-```bash
-export DEMANDPULSE_AUTO_SUBMIT=true
+Default API base URL:
+
+```text
+https://demand-pulse.vercel.app
 ```
-
-If you have set `DEMANDPULSE_ACCOUNT` or saved your account to `~/.config/demandpulse/account`, auto-submitted requirements will be linked to your account. This is disabled by default; most users should use `/demandpulse:share` instead.
 
 ## Privacy
 
-- All submissions are anonymous by default
-- No file paths, usernames, or PII are included
-- You always see what will be shared before it's sent
-- Data collection requires your explicit confirmation
+The plugin is intended to collect product requirements, not workspace secrets.
 
-## Structure
+- Explicit confirmation is required before manual submission
+- Submissions should be sanitized to avoid file paths, usernames, tokens, and other PII
+- Anonymous submission is the default path
+- Linked submissions use only the account identifier the user chose to provide
 
-```
-claude-plugin-demandpulse/
-├── .claude-plugin/plugin.json    # Plugin manifest
-├── commands/share.md             # Slash command (same as skill)
-├── hooks/hooks.json              # Stop hook (for optional auto-submit)
-├── skills/share/
-│   └── SKILL.md                  # /demandpulse:share skill
-├── bin/hook-handler.mjs          # Hook handler
-└── README.md
-```
+## Release Checklist
 
-## Troubleshooting: `/demandpulse:share` not found
+For a marketplace release, verify all of the following:
 
-If the slash command is not recognized after loading the plugin with `--plugin-dir`:
+- `.claude-plugin/plugin.json` has the correct name, description, version, and paths
+- `commands/`, `skills/`, `hooks/`, and runtime files are included in the package artifact
+- README installation and usage instructions match the released plugin behavior
+- Command names in docs, installer output, and manifest are consistent
+- The stop hook remains opt-in and clearly documented
 
-1. **Run from the repo root** — `claude --plugin-dir ./claude-plugin-demandpulse` must be run from the directory that contains `claude-plugin-demandpulse/`.
-2. **Use an absolute path** — `claude --plugin-dir "$(pwd)/claude-plugin-demandpulse"` (from that same root).
-3. **Restart Claude Code** fully (quit and relaunch) after changing the plugin.
-4. **Check `/help`** — look for `demandpulse` or `demandpulse:share` in the list.
+## Validate The Package
 
-If the command still does not appear, some Claude Code versions have known issues with plugin slash commands when using `--plugin-dir`. As a **fallback**, add the skill as a personal skill so you can use **`/share`** (same behavior):
+From `claude-plugin-demandpulse/`:
 
 ```bash
-mkdir -p ~/.claude/skills
-ln -s "$(pwd)/claude-plugin-demandpulse/skills/share" ~/.claude/skills/share
+npm pack --dry-run --ignore-scripts
 ```
 
-Run the above from the DemandPulse repo root. Then in Claude Code use **`/share`** instead of `/demandpulse:share`.
+That should show the packaged files that a marketplace or npm-based install will receive.
+
+## Troubleshooting
+
+If `/demandpulse:share` is missing:
+
+- Restart Claude Code after installing or updating the plugin
+- Confirm the plugin package includes the `commands/` directory
+- Confirm the plugin was installed at the plugin root, not nested inside another directory
+- For local development, verify the `--plugin-dir` path points directly at `claude-plugin-demandpulse/`
+
+If account linking does not work:
+
+- Check `DEMANDPULSE_ACCOUNT`
+- Check `~/.config/demandpulse/account`
+- Submit once manually and save the account when prompted
+
+If auto-submit does not run:
+
+- Confirm `DEMANDPULSE_AUTO_SUBMIT=true`
+- Confirm Claude Code is loading the plugin hooks
+- Confirm the conversation contains a recognizable requirement-like user message
 
 ## License
 

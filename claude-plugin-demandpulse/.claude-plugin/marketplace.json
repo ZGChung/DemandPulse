@@ -5,19 +5,32 @@
     "email": "zijie@demandpulse.dev"
   },
   "metadata": {
-    "description": "DemandPulse plugin marketplace — share developer requirements with the community"
+    "description": "DemandPulse plugin marketplace for capturing and sharing developer requirements from Claude Code"
   },
   "plugins": [
     {
       "name": "demandpulse",
       "source": ".",
-      "description": "Share developer requirements with the DemandPulse community. Zero config, fully anonymous.",
-      "version": "2.0.0",
+      "description": "Share validated feature requests, bugs, and workflow pain points from Claude Code to the DemandPulse community trends dashboard.",
+      "version": "2.1.0",
       "author": {
         "name": "DemandPulse Team"
       },
       "homepage": "https://demand-pulse.vercel.app",
-      "keywords": ["requirements", "analytics", "community", "developer-tools"]
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/ZGChung/DemandPulse.git"
+      },
+      "license": "MIT",
+      "keywords": [
+        "claude-plugin",
+        "claude-code",
+        "requirements",
+        "feedback",
+        "analytics",
+        "community",
+        "developer-tools"
+      ]
     }
   ]
 }
