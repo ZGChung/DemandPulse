@@ -556,7 +556,6 @@ describe("AIProcessingService constructor", () => {
 
     // Re-import to trigger constructor
     expect(() => {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       new (require("@/services/ai-processing").AIProcessingService)();
     }).not.toThrow();
   });

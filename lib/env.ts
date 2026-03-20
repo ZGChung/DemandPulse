@@ -45,7 +45,6 @@ export function validateEnv() {
   const minimax = process.env.MINIMAX_API_KEY;
   if (!gemini && !minimax) {
     // AI 功能是增值项，没有这两个 key 也不影响应用基础功能。
-    // eslint-disable-next-line no-console
     console.warn(
       "Warning: Neither GEMINI_API_KEY nor MINIMAX_API_KEY is set; AI processing (embeddings, analysis) will be disabled."
     );

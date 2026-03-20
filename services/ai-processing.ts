@@ -26,7 +26,6 @@ export class AIProcessingService {
     if (!this.geminiApiKey && !this.minimaxApiKey) {
       // In production this just means: no embeddings, no LLM-based analysis.
       // The rest of the app still works; requirements will stay Pending.
-      // eslint-disable-next-line no-console
       console.warn(
         "AIProcessingService: Neither GEMINI_API_KEY nor MINIMAX_API_KEY is set; embeddings and AI analysis will be disabled."
       );
@@ -119,7 +118,6 @@ export class AIProcessingService {
         data.embedding?.values ?? data.embeddings?.[0]?.values ?? data.data?.[0]?.embedding ?? null;
       return Array.isArray(vec) ? (vec as number[]) : null;
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error("Error getting Gemini embeddings:", error);
       return null;
     }
@@ -512,7 +510,6 @@ export class AIProcessingService {
 
       return false;
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error("AI service connection test failed:", error);
       return false;
     }
