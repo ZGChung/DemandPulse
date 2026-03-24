@@ -1,0 +1,20 @@
+To: integrations@linear.app
+Subject: DemandPulse integration directory submission
+
+Hello Linear team,
+
+I am submitting DemandPulse for consideration in the Linear Integration Directory.
+
+DemandPulse captures sanitized developer requirement signals from AI-assisted development workflows, clusters repeated demand, and helps teams route the highest-signal opportunities into product planning.
+
+Submission materials:
+
+- Listing copy is included in the form submission.
+- Assets are attached or linked here: [insert asset link]
+- Product site: https://demand-pulse.vercel.app
+- Support / contact: https://github.com/ZGChung/DemandPulse/issues
+
+If helpful, I can also provide a short demo of the Linear sync workflow and the intended OAuth installation flow.
+
+Best,
+[name]

@@ -1,37 +1,40 @@
 # Linear Asset Brief
 
-Linear requests assets by email or by link in the submission form and provides a Figma template for directory visuals.
+## Confirmed requirement
 
-## Required submission assets
+Linear's docs state that assets should be submitted to `integrations@linear.app` or linked in the form, and they provide a Figma template for asset creation.
 
-- App icon or logo
-- Listing hero or cover assets based on Linear's Figma template
-- Product screenshots showing the Linear integration
-- Public website URL
-- Support contact
+Docs:
+
+- https://linear.app/docs/integration-directory
+- Figma template link referenced there
+
+## Asset package to prepare
+
+- App icon/logo in square format
+- 3-5 product screenshots
+- One cover / hero image if the Figma template expects it
+- A short design note describing the user flow shown in each screenshot
 
 ## Screenshot plan
 
-Prepare 3 screenshots once the integration exists:
+1. Requirement capture flow
+   - Show a sanitized requirement summary generated from an AI coding conversation.
+2. Trend clustering view
+   - Show grouped demand signals and the cluster title.
+3. Linear routing configuration
+   - Mock or future-state screen showing team, label, and project mapping.
+4. Issue creation result
+   - Show the resulting Linear issue or initiative created from a validated trend.
 
-1. DemandPulse workspace showing a demand trend linked to a Linear issue.
-2. OAuth connect flow or post-connect integrations settings screen.
-3. Prioritization view showing requirement clusters with linked Linear project or issue references.
+## Copy style notes from existing Linear listings
 
-## Copy style notes from live Linear listings
+Public listings use short sections, concrete workflow language, and minimal marketing copy. Assets should therefore:
 
-- Use a short, direct headline.
-- Keep the overview concise and product-oriented.
-- Use a plain-language "How it works" section.
-- Include a short "To configure" section with concrete setup steps.
-- Keep sidebar metadata simple: website, category, contact.
+- Show the real UI, not abstract banners
+- Emphasize setup and workflow outcome
+- Make the Linear touchpoint obvious in at least one screenshot
 
-## Submission handoff checklist
+## Asset production status
 
-- Final integration name confirmed
-- OAuth flow in production
-- Screenshots updated from the real product
-- Support inbox monitored
-- Privacy policy published
-- Form completed
-- Assets sent to `integrations@linear.app`
+Not yet produced in this package. This folder provides the content brief only.
