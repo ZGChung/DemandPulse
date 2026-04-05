@@ -6,6 +6,7 @@ import Dashboard from "@/components/dashboard";
 import LandingPage from "@/components/landing-page";
 import { authOptions } from "@/lib/auth";
 import { getDefaultLocale, isLocale, LOCALE_COOKIE } from "@/lib/i18n";
+import { getSiteUrl, getSoftwareApplicationJsonLd } from "@/lib/seo";
 import { DatabaseService } from "@/services/database-service";
 
 export const dynamic = "force-dynamic";
@@ -29,12 +30,17 @@ function getServerLocale() {
 
 export function generateMetadata(): Metadata {
   const copy = pageMetadata[getServerLocale()];
+  const siteUrl = getSiteUrl();
+
   return {
     title: copy.title,
     description: copy.description,
     openGraph: {
       title: copy.title,
       description: copy.description,
+      url: siteUrl,
+      siteName: "DemandPulse",
+      type: "website",
     },
     twitter: {
       card: "summary",
@@ -65,7 +71,21 @@ export default async function Home() {
 
   if (!session) {
     const stats = await getPublicStats();
-    return <LandingPage stats={stats} />;
+    const copy = pageMetadata[getServerLocale()];
+    const jsonLd = getSoftwareApplicationJsonLd({
+      title: copy.title,
+      description: copy.description,
+    });
+
+    return (
+      <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <LandingPage stats={stats} />
+      </>
+    );
   }
 
   return <Dashboard />;
