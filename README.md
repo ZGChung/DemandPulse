@@ -1,217 +1,177 @@
 # DemandPulse
 
-**Real-time demand radar for the AI-native developer era**
+> **Real-time demand radar for AI-native developers**
 
-DemandPulse aggregates and analyzes developer needs from AI coding workflows, providing a live signal of unmet market opportunities. The platform captures high-level requirement descriptions (not code) from developers using AI assistants, analyzes them with AI, and visualizes what developers are actually trying to build right now.
+[![CI](https://github.com/ZGChung/DemandPulse/actions/workflows/ci.yml/badge.svg)](https://github.com/ZGChung/DemandPulse/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 
-## 🚀 Live Demo
+DemandPulse connects **vibe coders** with **professional SWEs** by aggregating what developers are actually trying to build — revealing unmet market opportunities in real time.
 
-- **Production**: https://demand-pulse.vercel.app
-- **Connect plugin**: https://demand-pulse.vercel.app/connect-plugin — install the Claude Code plugin and link submissions to your account
-- **GitHub Actions**: CI/CD pipeline with automated testing and deployment
+## 🎯 Who is this for?
 
-## 🔌 Connect Claude Code (plugin)
+| User                  | How they benefit                                                    |
+| --------------------- | ------------------------------------------------------------------- |
+| **Vibe coders**       | Share requirements effortlessly, see your needs reflected in trends |
+| **Professional SWEs** | Discover emerging opportunities before they become mainstream       |
+| **Technical PMs**     | Real-time signal on what developers actually need                   |
+| **Indie hackers**     | Find underserved niches from authentic developer demand             |
 
-Requirements are collected from Claude Code via the DemandPulse plugin. You do **not** need to run the app locally; the plugin talks to the live site by default.
+## ✨ Why DemandPulse?
 
-1. **Install** (in Claude Code): `/plugin install demandpulse`  
-   Or from this repo (run from repo root): `claude --plugin-dir ./claude-plugin-demandpulse`
-2. **Share a requirement**: In a conversation, run **`/demandpulse:share`**.
-3. When prompted, enter your DemandPulse account (GitHub email or username) to link the submission to your account; or skip to submit anonymously.
-4. View your submissions and trends at https://demand-pulse.vercel.app (My requirements and Trends).
+Most trend data comes from:
 
-Submissions go to the **live** database and appear on the site once processed.
+- Job postings (lagging indicator)
+- GitHub stars (only popular repos)
+- Surveys (self-reported, often wrong)
 
-## 📋 Features
+DemandPulse captures **live developer intent** from actual coding sessions — not what people say they need, but what they _actually try to build_.
 
-### Current Implementation
+## 🔌 Quick Start (Claude Code Plugin)
 
-- ✅ Real-time dashboard with demand overview
-- ✅ Requirement statistics and trending clusters
-- ✅ Claude Code integration for data collection
-- ✅ **Mock Claude Code integration for testing**
-- ✅ AI-powered requirement processing
-- ✅ Privacy-first design with user consent
-- ✅ **User authentication with NextAuth.js + GitHub OAuth**
-- ✅ PostgreSQL database with Prisma ORM
-- ✅ **SQLite support for development/testing**
-- ✅ CI/CD pipeline with GitHub Actions
-- ✅ Automated deployment to Vercel
-- ✅ **Comprehensive security hardening (CORS, headers, validation)**
-- ✅ **Structured logging and monitoring**
-- ✅ **End-to-end testing framework**
+The plugin is the primary way to contribute requirements.
 
-### Coming Soon
+### 1. Install the plugin
 
-- 🔄 Real-time data ingestion from AI coding tools
-- 🔄 Advanced clustering and trend detection
-- 🔄 Developer opt-in connection layer
-- 🔄 B2B subscription dashboard
-- 🔄 API for demand intelligence
-
-## 📐 Design note (requirement vs contribution)
-
-In the backend there is only one concept: **requirement** (one row in the `Requirement` table per submission). In the UI we often say **contribution** (“You have contributed X requirements”) to emphasize that the user is contributing to the community; the count is still the number of requirements linked to that user. See [doc/DESIGN.md](doc/DESIGN.md) for details.
-
-## 🏗️ Architecture
-
-```
-Frontend: Next.js 14 (App Router) + TypeScript + Tailwind CSS
-Backend: Next.js API Routes + Prisma ORM
-Database: PostgreSQL (Neon.tech)
-AI Processing: DeepSeek API
-CI/CD: GitHub Actions → Vercel
-```
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 20+
-- PostgreSQL database
-- DeepSeek API key
-
-### Installation
-
-1. Clone the repository:
+**Option A — From this repo:**
 
 ```bash
 git clone https://github.com/ZGChung/DemandPulse.git
 cd DemandPulse
+claude --plugin-dir ./claude-plugin-demandpulse
 ```
 
-2. Install dependencies:
+**Option B — Marketplace (when available):**
+
+```
+/plugin install demandpulse
+```
+
+### 2. Share a requirement
+
+After a conversation about a feature, bug, or workflow pain point:
+
+```
+/demandpulse:share
+```
+
+The plugin will:
+
+1. Extract the main requirement from your conversation
+2. Summarize it in one sentence
+3. Ask for your confirmation
+4. Submit anonymously (or link your account)
+
+### 3. View trends
+
+Visit [demand-pulse.vercel.app/trends](https://demand-pulse.vercel.app/trends) to see what's emerging.
+
+## 📊 Live Demo
+
+- **Trends Dashboard**: https://demand-pulse.vercel.app/trends
+- **Submit Requirements**: https://demand-pulse.vercel.app/connect-plugin
+- **Your Submissions**: https://demand-pulse.vercel.app (My requirements)
+
+## 🏗️ Architecture
+
+```
+Frontend:     Next.js 14 (App Router) + TypeScript + Tailwind CSS
+Backend:      Next.js API Routes + Prisma ORM
+Database:     PostgreSQL (Neon.tech) / SQLite (dev)
+AI:           DeepSeek API for requirement clustering
+Auth:         NextAuth.js + GitHub OAuth
+Plugin:       Claude Code plugin (Node.js)
+CI/CD:        GitHub Actions → Vercel
+```
+
+## 🚀 Self-Hosting / Development
+
+### Prerequisites
+
+- Node.js 20+
+- Claude Code
+- PostgreSQL (production) or SQLite (dev)
+
+### Setup
 
 ```bash
+# Clone
+git clone https://github.com/ZGChung/DemandPulse.git
+cd DemandPulse
+
+# Install
 npm install
-```
 
-3. Set up environment variables:
-
-```bash
+# Environment
 cp .env.example .env.local
-# Edit .env.local with your configuration
-```
+# Edit .env.local with your credentials
 
-4. Set up database:
-
-```bash
+# Database
 npx prisma generate
 npx prisma db push
-```
 
-5. Run development server:
-
-```bash
+# Run
 npm run dev
 ```
 
-6. Open http://localhost:3000
-
-### Running with Docker
-
-Build and run the production image:
+### Environment Variables
 
 ```bash
-cp .env.example .env
-# Set NEXTAUTH_SECRET and optional DATABASE_URL in .env
-docker compose up --build
+# Auth (required)
+GITHUB_ID=<github-oauth-app-id>
+GITHUB_SECRET=<github-oauth-app-secret>
+NEXTAUTH_SECRET=<random-string>
+NEXTAUTH_URL=http://localhost:3000
+
+# Database
+DATABASE_URL="file:./dev.db"  # SQLite for dev
+# DATABASE_URL="postgresql://..." # PostgreSQL for prod
+
+# Plugin (for testing plugin integration)
+PLUGIN_API_KEY=<your-key>
 ```
 
-Or build only: `docker build -t demandpulse .` then run with `docker run -p 3000:3000 --env-file .env demandpulse`.  
-Requires `NEXTAUTH_SECRET` and (for auth) GitHub OAuth credentials in the env. For SQLite persistence, use a volume and `DATABASE_URL=file:/path/in/container/dev.db`.
-
-## 📊 Development Roadmap
-
-### Phase 1: Core Platform (Current)
-
-- [x] Basic dashboard UI
-- [x] API infrastructure
-- [x] Database schema
-- [x] CI/CD pipeline
-- [x] Claude Code integration
-
-### Phase 2: Data Collection & Processing
-
-- [ ] Real-time requirement ingestion
-- [ ] AI-powered clustering
-- [ ] Trend detection algorithms
-- [ ] Data anonymization pipeline
-
-### Phase 3: Intelligence Layer
-
-- [ ] Advanced analytics dashboard
-- [ ] Search and discovery
-- [ ] API for external access
-- [ ] Custom reporting
-
-### Phase 4: Monetization & Scale
-
-- [ ] B2B subscription system
-- [ ] Developer connection layer
-- [ ] Enterprise features
-- [ ] Multi-region deployment
-
-## 🔧 API Endpoints
-
-- `GET /api/health` - System health check
-- `POST /api/requirements` - Submit new requirements
-- `GET /api/requirements` - Get requirements (with filtering)
-
-## 🧪 Testing
+### Testing
 
 ```bash
-# Run tests
-npm test
-
-# Run tests with coverage
-npm run test:coverage
-
-# Run linting
-npm run lint
-
-# Type checking
-npm run typecheck
+npm test          # Run all tests
+npm run lint      # Lint
+npm run typecheck # Type check
 ```
+
+## 📋 Features
+
+### Current
+
+- ✅ `/demandpulse:share` — one-command requirement sharing from Claude Code
+- ✅ Real-time trends dashboard
+- ✅ AI-powered requirement clustering
+- ✅ Anonymous + account-linked submission modes
+- ✅ Privacy-first (opt-in, sanitized data)
+- ✅ GitHub OAuth authentication
+- ✅ Comprehensive test suite (55 suites, 1200+ tests)
+- ✅ CI/CD with GitHub Actions
+
+### Coming Soon
+
+- 🔄 Plugin marketplace listing
+- 🔄 Advanced trend detection
+- 🔄 Email digests for trend watchers
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
+Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, branch naming, and commit format.
 
 ## 📄 License
 
-MIT License - see LICENSE file for details
+MIT — see [LICENSE](LICENSE)
 
-## 📞 Contact
+## 📞 Resources
 
-For questions or feedback, please open an issue on GitHub.
-
-## 🎯 Strategic Positioning
-
-DemandPulse is positioned as an **open-source collaborative project** rather than a traditional startup:
-
-| Aspect        | Positioning                                                |
-| ------------- | ---------------------------------------------------------- |
-| **Goal**      | Solve cold start problem through open-source collaboration |
-| **Model**     | Community-driven development with contributors             |
-| **Incentive** | Reputation (GitHub stars, recognition) for contributors    |
-| **Focus**     | Specific细分场景 (developer demand signal) - not broad     |
-
-### Why Open Source?
-
-- **Developer attention** is scarce — open source attracts organic interest
-- **Collaborative mode** reduces maintenance cost
-- **Community feedback** improves product faster than solo development
-
-### Success Metrics
-
-- GitHub stars and contributor count
-- Active submissions from community
-- Quality of clustering/insights generated
+- [API Documentation](doc/API.md)
+- [Plugin Integration Guide](doc/PLUGIN-INTEGRATION.md)
+- [Claude Code Hooks Reference](doc/CLAUDE_CODE_API.md)
+- [Development Status](doc/current_status.md)
 
 ---
 

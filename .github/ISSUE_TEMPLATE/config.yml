@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://demand-pulse.vercel.app
+    about: Check the docs for help
+  - name: Discord Community
+    url: https://discord.gg/demandpulse
+    about: Join our community for discussions
