@@ -7,7 +7,11 @@
   "plugins": [
     {
       "name": "demandpulse",
-      "source": "./claude-plugin-demandpulse",
+      "source": {
+        "source": "github",
+        "repo": "ZGChung/DemandPulse",
+        "path": "claude-plugin-demandpulse"
+      },
       "description": "Share validated feature requests, bugs, and workflow pain points from Claude Code to the DemandPulse community trends dashboard.",
       "version": "2.1.0",
       "author": {
