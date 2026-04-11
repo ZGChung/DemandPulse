@@ -6,7 +6,7 @@
   "description": "Share validated feature requests, bugs, and workflow pain points from Claude Code to the DemandPulse community trends dashboard.",
   "version": "2.1.0",
   "author": {
-    "name": "DemandPulse Team"
+    "name": "ZGChung"
   },
   "homepage": "https://demand-pulse.vercel.app",
   "repository": {

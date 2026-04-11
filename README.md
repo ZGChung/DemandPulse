@@ -5,6 +5,7 @@
 [![CI](https://github.com/ZGChung/DemandPulse/actions/workflows/ci.yml/badge.svg)](https://github.com/ZGChung/DemandPulse/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+[![ Claude Code Plugin](https://img.shields.io/badge/Claude%20Code%20Plugin-v2.1.0-purple)](https://github.com/ZGChung/DemandPulse)
 
 DemandPulse connects **vibe coders** with **professional SWEs** by aggregating what developers are actually trying to build — revealing unmet market opportunities in real time.
 
@@ -41,10 +42,11 @@ cd DemandPulse
 claude --plugin-dir ./claude-plugin-demandpulse
 ```
 
-**Option B — Marketplace (when available):**
+**Option B — Claude Code Marketplace:**
 
 ```
-/plugin install demandpulse
+/plugin marketplace add https://github.com/ZGChung/DemandPulse
+/plugin install demandpulse@demandpulse
 ```
 
 ### 2. Share a requirement
@@ -152,11 +154,7 @@ npm run typecheck # Type check
 - ✅ Comprehensive test suite (55 suites, 1200+ tests)
 - ✅ CI/CD with GitHub Actions
 
-### Coming Soon
-
-- 🔄 Plugin marketplace listing
-- 🔄 Advanced trend detection
-- 🔄 Email digests for trend watchers
+> **Portfolio Note:** This project is maintained as a showcase of full-stack development skills. It is not actively developed but pull requests are welcome.
 
 ## 🤝 Contributing
 
