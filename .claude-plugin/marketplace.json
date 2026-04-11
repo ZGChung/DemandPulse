@@ -18,10 +18,7 @@
         "name": "ZGChung"
       },
       "homepage": "https://demand-pulse.vercel.app",
-      "repository": {
-        "type": "git",
-        "url": "https://github.com/ZGChung/DemandPulse.git"
-      },
+      "repository": "https://github.com/ZGChung/DemandPulse",
       "license": "MIT",
       "keywords": [
         "claude-plugin",
