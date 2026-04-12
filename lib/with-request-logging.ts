@@ -9,11 +9,11 @@ import { getTraceIdFromHeaders, setTraceIdOnHeaders } from "@/lib/trace";
 
 export type RouteHandler = (
   request: NextRequest,
-  context?: { params?: Record<string, string> }
+  context?: { params: Promise<Record<string, string>> }
 ) => Promise<NextResponse>;
 
 export function withRequestLogging(handler: RouteHandler): RouteHandler {
-  return async (request: NextRequest, context?: { params?: Record<string, string> }) => {
+  return async (request: NextRequest, context?: { params: Promise<Record<string, string>> }) => {
     const traceId = getTraceIdFromHeaders(request.headers);
     const path = request.nextUrl?.pathname ?? new URL(request.url).pathname;
     const method = request.method;
