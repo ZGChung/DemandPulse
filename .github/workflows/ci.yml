@@ -89,11 +89,6 @@ jobs:
           echo "Checking TypeScript configuration..."
           cat tsconfig.json | grep -A5 -B5 "\.prisma/client"
 
-      - name: Sync Prisma schema to database
-        run: npx prisma db push --accept-data-loss --skip-generate
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
       - name: Build application
         run: |
           # Enable debug output
@@ -158,6 +153,11 @@ jobs:
 
       - name: Create .prisma/client symlink
         run: mkdir -p .prisma && ln -sf node_modules/.prisma/client .prisma/client
+
+      - name: Sync Prisma schema to production database
+        run: npx prisma db push --accept-data-loss --skip-generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
