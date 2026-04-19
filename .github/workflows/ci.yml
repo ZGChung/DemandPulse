@@ -155,7 +155,7 @@ jobs:
         run: mkdir -p .prisma && ln -sf node_modules/.prisma/client .prisma/client
 
       - name: Sync Prisma schema to production database
-        run: npx prisma db push --accept-data-loss --skip-generate
+        run: npx prisma migrate deploy
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
