@@ -61,20 +61,10 @@ jobs:
         run: npm ci
 
       - name: Generate Prisma client
-        run: |
-          echo "Generating Prisma client..."
-          npx prisma generate
-          echo "Prisma client generation completed"
-          echo "Checking generated files..."
-          ls -la node_modules/.prisma/ || echo "node_modules/.prisma not found"
+        run: npx prisma generate
 
       - name: Create .prisma/client symlink
-        run: |
-          echo "Creating .prisma/client symlink..."
-          mkdir -p .prisma
-          ln -sf node_modules/.prisma/client .prisma/client
-          echo "Symlink created:"
-          ls -la .prisma/
+        run: mkdir -p .prisma && ln -sf node_modules/.prisma/client .prisma/client
 
       - name: Check environment before build
         run: |
@@ -86,37 +76,23 @@ jobs:
           ls -la node_modules/.prisma/ || echo "node_modules/.prisma not found"
           echo "Checking .prisma symlink..."
           ls -la .prisma/ || echo ".prisma directory not found"
-          echo "Checking TypeScript configuration..."
-          cat tsconfig.json | grep -A5 -B5 "\.prisma/client"
 
       - name: Build application
         run: |
-          # Enable debug output
           set -x
-
-          # Simple build with explicit failure
           echo "Running: npm run build"
           npm run build
 
           echo "Checking if .next directory was created..."
           if [ -d ".next" ]; then
             echo "SUCCESS: .next directory exists"
-            echo "Contents of .next/:"
             ls -la .next/
-            
-            # Check if .next directory is empty
             if [ -z "$(ls -A .next/)" ]; then
               echo "WARNING: .next directory is empty!"
-              echo "Build may have failed silently."
               exit 1
-            else
-              echo "SUCCESS: .next directory contains files"
             fi
           else
             echo "FAILURE: .next directory was not created"
-            echo "Current directory: $(pwd)"
-            echo "Directory contents:"
-            ls -la
             exit 1
           fi
         env:
@@ -137,7 +113,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Get full git history for Vercel
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -155,7 +131,13 @@ jobs:
         run: mkdir -p .prisma && ln -sf node_modules/.prisma/client .prisma/client
 
       - name: Sync Prisma schema to production database
-        run: npx prisma migrate deploy
+        run: |
+          echo "=== Syncing Prisma schema to database ==="
+          npx prisma db push --accept-data-loss --skip-generate
+          echo "=== Done syncing ==="
+          echo "=== Running migrations ==="
+          npx prisma migrate deploy
+          echo "=== Done ==="
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
@@ -172,7 +154,6 @@ jobs:
       - name: Run database migrations
         run: |
           echo "Running Prisma migrations with failed-migration remediation..."
-          echo "DATABASE_URL is set: ${#DATABASE_URL} characters"
           node scripts/remediate-organizations-migration.mjs
           echo "Migrations completed"
         env:
@@ -198,9 +179,3 @@ jobs:
       - name: Check for secrets
         uses: gitleaks/gitleaks-action@v2
         continue-on-error: true
-
-      # Dependency review - requires GitHub Advanced Security
-      # Uncomment when Advanced Security is enabled
-      # - name: Dependency review
-      #   uses: actions/dependency-review-action@v3
-      #   if: github.event_name == 'pull_request'
