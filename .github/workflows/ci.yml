@@ -131,7 +131,7 @@ jobs:
         run: mkdir -p .prisma && ln -sf node_modules/.prisma/client .prisma/client
 
       - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
+        uses: amondnet/vercel-action@v42
         continue-on-error: true
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
